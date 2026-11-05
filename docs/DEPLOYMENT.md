@@ -3,7 +3,7 @@
 **A public, read-only prototype is deployed on Vercel. It isn't production-ready:** see the checklist below.
 
 ## Public deployment
-There are two Vercel projects in team `ab-c4`, both deployed from this machine with the CLI, so pushing to GitHub doesn't change the site.
+There are two Vercel projects in team `ab-c4`. **Pushing to `main` redeploys the site.** The API isn't connected to GitHub, because its data snapshot isn't in git, so it's deployed from this machine with the CLI. A code change under `backend/` therefore reaches the public API only after a manual deploy, so deploy the API first when a site change depends on it.
 
 | Project | Folder | Notes |
 |---|---|---|

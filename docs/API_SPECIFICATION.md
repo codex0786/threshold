@@ -2,7 +2,7 @@
 
 Base path `/api/v1`. Interactive schema at `/docs` when the backend is running. Validation failures return 422 and unknown IDs return 404.
 
-**There is currently no authentication or rate limiting. Don't expose this API publicly until both exist.**
+**There is no authentication, so the public deployment runs read-only and stores nothing a student enters.** It has a rate limit counted per server instance, and API docs are off. Add authentication and a shared limit before enabling any writes publicly.
 
 ## Built
 

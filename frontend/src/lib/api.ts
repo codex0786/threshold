@@ -101,10 +101,16 @@ function describeError(detail: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+// Server-rendered pages share one server address, so they reuse answers for an hour rather than
+// counting every visitor against the API's rate limit. The data only changes on a new deployment.
+function freshness(): RequestInit {
+  return typeof window === "undefined" ? ({ next: { revalidate: 3600 } } as RequestInit) : { cache: "no-store" };
+}
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${apiBase()}/api/v1${path}`, { cache: "no-store", headers: { "Content-Type": "application/json" }, ...init });
+    response = await fetch(`${apiBase()}/api/v1${path}`, { ...freshness(), headers: { "Content-Type": "application/json" }, ...init });
   } catch {
     throw new ApiError("The data service could not be reached. Please try again shortly.");
   }

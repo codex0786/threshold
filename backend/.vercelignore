@@ -8,3 +8,6 @@ alembic
 alembic.ini
 pytest.ini
 requirements-dev.txt
+.env.local
+.vercel
+.gitignore

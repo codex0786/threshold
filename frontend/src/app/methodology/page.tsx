@@ -1,8 +1,8 @@
 import { Notice, PageHeader, Section, SourceLink } from "@/components/ui";
 import { api, type Completeness, type DataSource, type Meta, num } from "@/lib/api";
 
-// Figures come from the live database, so this page must not be frozen at build time.
-export const dynamic = "force-dynamic";
+// Figures come from the API, so the page is rebuilt hourly rather than frozen at build time.
+export const revalidate = 3600;
 
 const STATUS: Record<string, string> = { available: "In use", planned: "Planned", manual_only: "Manual import only", blocked: "Blocked" };
 

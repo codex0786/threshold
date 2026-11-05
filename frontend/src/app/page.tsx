@@ -6,8 +6,8 @@ import { CountUp, Reveal } from "@/components/motion";
 import { SourceLink } from "@/components/ui";
 import { api, type Comparison, type Completeness, type CutoffPoint, type InstitutionDetail, num, post } from "@/lib/api";
 
-// Figures come from the live database, so this page must not be frozen at build time.
-export const dynamic = "force-dynamic";
+// Figures come from the API, so the page is rebuilt hourly rather than frozen at build time.
+export const revalidate = 3600;
 
 async function findProgramme(slug: string, name: string): Promise<number | null> {
   const inst = await api<InstitutionDetail>(`/institutions/${slug}`);
@@ -126,7 +126,7 @@ export default async function Home() {
               <dl className="rise mt-10 grid max-w-xl grid-cols-3 gap-5 border-t border-line pt-6" style={{ "--i": 4 } as CSSProperties}>
                 <div><dt className="text-sm text-ink-3">Official cutoff records</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={stats.cutoff_records} /></dd></div>
                 <div><dt className="text-sm text-ink-3">Institutes in JoSAA data</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={stats.institutions} /></dd></div>
-                <div><dt className="text-sm text-ink-3">Admission years</dt><dd className="tnum mt-1 font-display text-2xl font-semibold sm:text-3xl">{stats.cutoff_years[0]}–{String(stats.cutoff_years.at(-1)).slice(2)}</dd></div>
+                <div><dt className="text-sm text-ink-3">Admission years</dt><dd className="tnum mt-1 whitespace-nowrap font-display text-xl font-semibold sm:text-3xl">{stats.cutoff_years[0]}–{String(stats.cutoff_years.at(-1)).slice(2)}</dd></div>
               </dl>
             )}
           </div>

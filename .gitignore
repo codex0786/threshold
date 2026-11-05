@@ -1,0 +1,14 @@
+.env
+.env.local
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+frontend/node_modules/
+frontend/.next/
+frontend/next-env.d.ts
+data/raw/
+.DS_Store
+backend/snapshot/
+frontend/tsconfig.tsbuildinfo
+.vercel/
+**/.vercel/

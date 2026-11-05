@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/*
+  Colour system.
+  Indigo carries trust and focus, for the analysis. Teal signals clarity and steadiness.
+  Saffron adds warmth and optimism, and is the colour families see on celebratory moments,
+  so it's kept for accents and never used to mean "good" or "bad" in the data.
+  Band colours stay separate from brand colours, so a highlight can't be read as a verdict.
+*/
+:root {
+  --bg: #f5f6fc;
+  --surface: #ffffff;
+  --surface-2: #eef0fa;
+  --ink: #12172f;
+  --ink-2: #444c6b;
+  --ink-3: #5f6785;
+  --line: #dfe2f1;
+  --brand: #4338ca;
+  --brand-ink: #ffffff;
+  --brand-soft: #e9e8fd;
+  --teal: #0b7a78;
+  --accent: #f59e0b;
+  --accent-soft: #fef2d6;
+  --safer: #0b7a66;
+  --safer-soft: #dcf5ef;
+  --competitive: #8f5d08;
+  --competitive-soft: #fdf0d3;
+  --ambitious: #b5375a;
+  --ambitious-soft: #fce6ec;
+  --neutral-soft: #eceef6;
+  --shadow-1: 0 1px 2px rgb(30 34 90 / 0.05), 0 4px 14px rgb(30 34 90 / 0.05);
+  --shadow-2: 0 2px 4px rgb(30 34 90 / 0.06), 0 16px 36px rgb(50 46 160 / 0.14);
+  --glow: rgb(67 56 202 / 0.09);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f23;
+    --surface: #131834;
+    --surface-2: #1c2346;
+    --ink: #eef0fb;
+    --ink-2: #bcc2dd;
+    --ink-3: #98a0c2;
+    --line: #2a3158;
+    --brand: #a5a1ff;
+    --brand-ink: #14123f;
+    --brand-soft: #24235a;
+    --teal: #4fd1c5;
+    --accent: #fbbf24;
+    --accent-soft: #3a2c10;
+    --safer: #5fe0c3;
+    --safer-soft: #0f3231;
+    --competitive: #f3c460;
+    --competitive-soft: #3a2c10;
+    --ambitious: #ff9db4;
+    --ambitious-soft: #421a28;
+    --neutral-soft: #20264a;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.22);
+    --shadow-2: 0 2px 4px rgb(0 0 0 / 0.3), 0 16px 36px rgb(0 0 0 / 0.45);
+    --glow: rgb(165 161 255 / 0.1);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-teal: var(--teal);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+}
+
+html { background: var(--bg); scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body), system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: clip; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: 460px; z-index: -1; pointer-events: none; background: radial-gradient(60% 100% at 20% 0%, var(--glow), transparent 70%), radial-gradient(50% 90% at 85% 0%, rgb(13 148 136 / 0.07), transparent 70%); }
+h1, h2, h3 { font-family: var(--font-heading), system-ui, sans-serif; font-weight: 600; letter-spacing: -0.022em; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
+.tnum { font-variant-numeric: tabular-nums; }
+input[type="range"] { accent-color: var(--brand); }
+::selection { background: var(--brand-soft); }
+
+@layer components {
+  .input {
+    width: 100%; background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.55rem 0.7rem; font-size: 0.95rem; transition: border-color 160ms, box-shadow 160ms;
+  }
+  .input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.95rem; font-weight: 600; transition: transform 160ms, box-shadow 200ms, background-color 160ms, border-color 160ms; cursor: pointer; }
+  .btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--brand); color: var(--brand-ink); box-shadow: 0 6px 18px -6px var(--brand); }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px -8px var(--brand); }
+  .btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+  .btn-secondary:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+  .btn-glow { position: relative; overflow: hidden; background: var(--accent); color: #2b1b00; box-shadow: 0 10px 30px -8px rgb(245 158 11 / 0.7); }
+  .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -8px rgb(245 158 11 / 0.8); }
+  .btn-glow::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%); transform: translateX(-120%); animation: sheen 4.5s ease-in-out infinite; }
+  .btn-ghost { background: rgb(255 255 255 / 0.08); color: #fff; border: 1px solid rgb(255 255 255 / 0.25); backdrop-filter: blur(6px); }
+  .btn-ghost:hover { background: rgb(255 255 255 / 0.16); transform: translateY(-1px); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-1); }
+  .card-hover { transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms, border-color 220ms; }
+  .card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: color-mix(in srgb, var(--brand) 45%, var(--line)); }
+  .band-card { position: relative; overflow: hidden; }
+  .band-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--band, var(--line)); }
+  .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--brand); }
+  .gradient-text { background: linear-gradient(100deg, #fcd34d, #fb923c 45%, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 200% auto; animation: drift-text 7s ease-in-out infinite alternate; }
+}
+
+/* The hero is dark in both themes, so it sets its own tokens. */
+.hero {
+  --ink: #f4f5ff; --ink-2: #cdd1ef; --ink-3: #a9aed6; --line: rgb(255 255 255 / 0.15); --surface: rgb(255 255 255 / 0.07); --surface-2: rgb(255 255 255 / 0.12);
+  position: relative; isolation: isolate; overflow: hidden; color: var(--ink);
+  background: linear-gradient(150deg, #0d1033 0%, #1b1a5e 52%, #0d3a55 100%);
+}
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgb(255 255 255 / 0.13) 1px, transparent 1px); background-size: 26px 26px; mask-image: radial-gradient(70% 80% at 60% 30%, #000, transparent 85%); }
+.orb { position: absolute; z-index: -1; border-radius: 9999px; filter: blur(70px); opacity: 0.55; animation: float 16s ease-in-out infinite alternate; }
+.glass { background: rgb(255 255 255 / 0.07); border: 1px solid rgb(255 255 255 / 0.16); border-radius: 18px; backdrop-filter: blur(14px); box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.55); }
+
+/* Motion */
+.page-enter { animation: page-in 420ms cubic-bezier(.2,.7,.2,1) both; }
+.rise { animation: rise 520ms cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(min(var(--i, 0), 10) * 55ms); }
+[data-reveal] { transition: opacity 720ms cubic-bezier(.2,.7,.2,1), transform 720ms cubic-bezier(.2,.7,.2,1); transition-delay: var(--delay, 0ms); }
+.js [data-reveal]:not(.is-in) { opacity: 0; transform: translateY(22px); }
+.grow-x { transform-origin: left; animation: grow-x 1000ms cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--delay, 120ms); }
+.js [data-reveal]:not(.is-in) .grow-x { animation-play-state: paused; }
+.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1800ms 300ms cubic-bezier(.4,0,.2,1) forwards; }
+.pop { animation: pop 460ms cubic-bezier(.2,1.4,.4,1) both; animation-delay: var(--delay, 0ms); transform-box: fill-box; transform-origin: center; }
+.fade-late { animation: fade 900ms both; animation-delay: var(--delay, 900ms); }
+.pulse-dot { animation: pulse-dot 2.4s ease-out infinite; }
+.shimmer { background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface) 50%, var(--surface-2) 70%); background-size: 220% 100%; animation: shimmer 1.5s linear infinite; }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] .chev { transform: rotate(180deg); }
+.chev { transition: transform 220ms; }
+details[open] > p { animation: rise 320ms both; }
+
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+@keyframes float { from { transform: translate3d(-3%, -4%, 0) scale(1); } to { transform: translate3d(6%, 7%, 0) scale(1.15); } }
+@keyframes sheen { 0%, 62% { transform: translateX(-120%); } 82%, 100% { transform: translateX(120%); } }
+@keyframes drift-text { from { background-position: 0% center; } to { background-position: 100% center; } }
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgb(251 191 36 / 0.65); } 75%, 100% { box-shadow: 0 0 0 9px rgb(251 191 36 / 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .js [data-reveal]:not(.is-in) { opacity: 1; transform: none; }
+  .js [data-reveal]:not(.is-in) .grow-x { animation-play-state: running; }
+}
+
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #f2f2f6; --ink: #111; --ink-2: #333; --ink-3: #555; --line: #ccc; --brand: #4338ca; --brand-ink: #fff; --brand-soft: #e9e8fd; --safer: #0b7a66; --safer-soft: #dcf5ef; --competitive: #8f5d08; --competitive-soft: #fdf0d3; --ambitious: #b5375a; --ambitious-soft: #fce6ec; --neutral-soft: #eceef6; --shadow-1: none; --shadow-2: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  [data-reveal], .js [data-reveal]:not(.is-in) { opacity: 1 !important; transform: none !important; }
+  body::before { display: none; }
+  .no-print { display: none !important; }
+  .print-break { break-before: page; }
+  .card { break-inside: avoid; }
+  body { font-size: 11pt; }
+  a { color: inherit; }
+}

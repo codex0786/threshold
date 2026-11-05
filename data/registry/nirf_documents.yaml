@@ -1,0 +1,139 @@
+# NIRF submissions on institutes' own websites. Tried in order. Each document's own institute name,
+# year and category are checked on load, by ingest.nirf_fetch and ingest.nirf_verify.
+iit-bombay:
+  - {year: 2026, category: Engineering, url: "https://www.iitb.ac.in/sites/default/files/2026-04/NIRF_IITBombay_2026_Engineering_Category.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.iitb.ac.in/sites/default/files/2025-02/NIRF_IITBombay_2025_Engineering_Category.pdf"}
+iit-delhi:
+  - {year: 2026, category: Engineering, url: "https://home.iitd.ac.in/uploads/nirf/2026/NIRF_2026_Engineering_Indian%20Institute%20of%20Technology%20Delhi20260402.pdf"}
+  - {year: 2025, category: Overall, url: "https://home.iitd.ac.in/uploads/nirf/2025/NIRF%202025_Overall_Indian%20Institute%20of%20Technology%20Delhi20250118-3.pdf"}
+iit-madras:
+  - {year: 2025, category: Engineering, url: "https://www.iitm.ac.in/sites/default/files/NIRF/IITM_Engineering_2025_NIRF.pdf"}
+iit-kanpur:
+  - {year: 2026, category: Engineering, url: "https://www.iitk.ac.in/data/nirf/nirf-2026/Engineering-2026.pdf"}
+  - {year: 2026, category: Engineering, url: "https://www.iitk.ac.in/nirf/data/nirf/nirf-2026/Engineering-2026.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.iitk.ac.in/data/nirf/nirf-2025/Engineering-2025.pdf"}
+iit-kharagpur:
+  - {year: 2026, category: Engineering, url: "https://www.iitkgp.ac.in/assets/pdf/nirf26_engg.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.iitkgp.ac.in/assets/pdf/nirf25_engg.pdf"}
+iit-roorkee:
+  - {year: 2026, category: Engineering, url: "https://iitr.ac.in/Careers/static/NIRF/2026/Engineering-NIRF_2026.pdf"}
+  - {year: 2025, category: Overall, url: "https://iitr.ac.in/Careers/static/NIRF/2025/Overall-NIRF_2025.pdf"}
+iit-hyderabad:
+  - {year: 2026, category: Engineering, url: "https://iith.ac.in/assets/files/NIRF-Reports/2026/nirf-2026-engineering-iith.pdf"}
+  - {year: 2025, category: Engineering, url: "https://iith.ac.in/assets/files/NIRF-Reports/2025/Indian_Institute_of_Technology_Hyderabad_Engineering_2025.pdf"}
+iit-bhu:
+  - {year: 2026, category: Engineering, url: "https://iitbhu.ac.in/contents/iitbhu/docs/nirf_2026_engg_report.pdf"}
+  - {year: 2025, category: Engineering, url: "https://iitbhu.ac.in/contents/iitbhu/docs/nirf_2025_engg_report.pdf"}
+nit-tiruchirappalli:
+  - {year: 2026, category: Engineering, url: "https://www.nitt.edu/home/academics/nirf/2.%20NIRF%202026%20IR-E-U-0467_Engineering.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.nitt.edu/home/academics/nirf/nirf2025/NIRF2025-Engineering.pdf"}
+nit-surathkal:
+  - {year: 2026, category: Engineering, url: "https://www.nitk.ac.in/document/attachments/9558/NIRF_NITK_2026_Engineering.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.nitk.ac.in/document/attachments/8177/Engineering.pdf"}
+nit-warangal:
+  - {year: 2025, category: Engineering, url: "https://nitw.ac.in/api/static/files/NIRF-2025_Submitted_data_Engineering_2025-2-3-9-46-25.pdf"}
+nit-rourkela:
+  - {year: 2026, category: Engineering, url: "https://www.nitrkl.ac.in/docs/Documents/Ranking/NIRF2026/Engineering-2026.pdf"}
+  - {year: 2025, category: Engineering, url: "https://www.nitrkl.ac.in/docs/Documents/Ranking/NIRF2025/ENGINEERING.pdf"}
+nit-calicut:
+  - {year: 2026, category: Engineering, url: "https://nitc.ac.in/imgserver/uploads/attachments/engineering_4a4422bd-6b10-4828-85e8-112935a6bdfc_0.pdf"}
+  - {year: 2025, category: Engineering, url: "https://nitc.ac.in/imgserver/uploads/attachments/engineering_73307662-d8cc-4437-aed3-cc0aa5e0844c_0.pdf"}
+mnnit-allahabad:
+  - {year: 2026, category: Engineering, url: "https://mnnit.ac.in/images/newstories/2026/NIRF/MNNIT_Engineering.pdf"}
+  - {year: 2025, category: Overall, url: "https://www.mnnit.ac.in/images/newstories/2025/nirf/NIRRF_overall_2025.pdf"}
+iiit-allahabad:
+  - {year: 2025, category: Engineering, url: "https://www.iiita.ac.in/uploads/20250116-NIRF%20(Engineering)%202025%20Submitted%20Report914.pdf"}
+abv-iiitm-gwalior:
+  - {year: 2025, category: Engineering, url: "https://www.iiitm.ac.in/public/uploads/media_uploads/1770707558_Atal-Bihari-Vajpayee-Indian-Institute-of-Information-Technology-and-Management20250109-Engineering.pdf"}
+iiitdm-jabalpur:
+  - {year: 2026, category: Engineering, url: "https://nirf.iiitdmj.ac.in/downloads/NIRF-2026/NIRF%20Engineering%202026.pdf"}
+  - {year: 2025, category: Engineering, url: "https://nirf.iiitdmj.ac.in/downloads/NIRF-2025/NIRF%202025%20Engnieering%20report.pdf"}
+bit-mesra:
+  - {year: 2026, category: Engineering, url: "https://bitmesra.ac.in/UploadedDocuments/admnirf/files/NIRF%202026%20Engineering%20updated.pdf"}
+  - {year: 2025, category: Engineering, url: "https://bitmesra.ac.in/UploadedDocuments/admnirf/files/Engg%202025.pdf"}
+pec-chandigarh:
+  - {year: 2026, category: Unconfirmed, url: "https://pec.ac.in/sites/default/files/2026-04/Punjab%20Engineering%20College%20%28Deemed%20to%20be%20University%29%2C%20Chandigarh20260404-.pdf"}
+iiest-shibpur: []
+iiit-bhagalpur:
+  - {year: 2026, category: Overall, url: "https://www.iiitbh.ac.in/sites/default/files/2026/News/Indian%20Institute%20of%20Information%20Technology%20Bhagalpur20260309%20Overall.pdf"}
+iiit-guwahati:
+  - {year: 2026, category: Engineering, url: "https://www.iiitg.ac.in/uploads/2026/04/02/9d88960a106447695e42d3b530162f1c.pdf"}
+iiit-raichur:
+  - {year: 2026, category: Engineering, url: "https://iiitr.ac.in/assets/files/2026/NIRF-Report-Engineering-2026.pdf"}
+iiit-sri-city:
+  - {year: 2026, category: Engineering, url: "https://iiits.ac.in/iiits-content/uploads/2026/05/Engg.IIITSRICITY-20260509.pdf"}
+iiitdm-kancheepuram:
+  - {year: 2026, category: Engineering, url: "http://old.iiitdm.ac.in/img/NIRF/2026/NIRF2026_Engineering.pdf"}
+iit-bhubaneswar:
+  - {year: 2026, category: Engineering, url: "https://www.iitbbs.ac.in/wp-content/uploads/2026/04/Engineering-Final-After-submission-2026.pdf"}
+iit-dharwad:
+  - {year: 2025, category: Engineering, url: "https://www.iitdh.ac.in/sites/default/files/2025-02/NIRF2025_IITDH_Engineering.pdf"}
+iit-goa:
+  - {year: 2026, category: Engineering, url: "https://iitgoa.ac.in/wp-content/uploads/Indian-Institute-of-Technology-Goa20260511-.pdf"}
+iit-guwahati:
+  - {year: 2026, category: Engineering, url: "https://www.iitg.ac.in/nirf/doc/NIRF_Engineering_2026.pdf"}
+  - {year: 2026, category: Overall, url: "https://www.iitg.ac.in/nirf/doc/NIRF_Overall_2026.pdf"}
+iit-palakkad:
+  - {year: 2025, category: Engineering, url: "https://www.iitpkd.ac.in/sites/default/files/2025-02/Engineering_2025_IndianInstituteofTechnologyPalakkad20250130.pdf"}
+iit-tirupati:
+  - {year: 2026, category: Engineering, url: "https://files.iittp.ac.in/pdfs/nirf/2026/NIRF_Engineering_2026.pdf"}
+manit-bhopal:
+  - {year: 2025, category: Engineering, url: "https://www.manit.ac.in/sites/default/files/ENGINEERING%20%28IR-E-U-0284%29%20Submitted%20Report%20%28NIRF%202025%29.pdf"}
+mnit-jaipur:
+  - {year: 2026, category: Engineering, url: "https://mnit.ac.in/uploads/nirf/NIRF2026_Engineering.pdf"}
+nit-durgapur:
+  - {year: 2026, category: Engineering, url: "https://nitdgp.ac.in/uploads/02666188dc9d1572b224e8c8cf36bd99.pdf"}
+nit-goa:
+  - {year: 2026, category: Engineering, url: "https://www.nitgoa.ac.in/uploads/National Institute of Technology Goa2026 Engg.pdf"}
+nit-hamirpur:
+  - {year: 2026, category: Engineering, url: "https://nith.ac.in/uploads/files/nirf/nirf-engineering-2026.pdf"}
+nit-jalandhar:
+  - {year: 2026, category: Engineering, url: "https://nitj.ac.in/files/1775453068872-NIRF%20Dr%20B%20R%20Ambedkar%20National%20Institute%20of%20Technology,%20Jalandhar%2020260405.pdf"}
+nit-jamshedpur:
+  - {year: 2026, category: Engineering, url: "https://www.nitjsr.ac.in/backend/uploads/old_rankings/NIRF/2026/NIRF-2026-DATA.pdf"}
+nit-kurukshetra:
+  - {year: 2025, category: Engineering, url: "https://nitkkr.ac.in/wp-content/uploads/2025/01/National-Institute-of-Technology-Kurukshetra-20250113-ENGG.pdf"}
+nit-meghalaya:
+  - {year: 2025, category: Engineering, url: "https://www.nitm.ac.in/nitm_files/pdf/engineering-2025-69f03d493539c.pdf"}
+nit-mizoram:
+  - {year: 2026, category: Engineering, url: "https://nitmz.ac.in/wp-content/uploads/2026/04/DCS_NIRF2026-Data_Engineering.pdf"}
+nit-silchar:
+  - {year: 2026, category: Engineering, url: "https://www.nits.ac.in/storage/files/nirf-2026.pdf"}
+nit-uttarakhand:
+  - {year: 2026, category: Engineering, url: "https://www.nituk.ac.in/uploads/topics/NIRF 2026 -Engineering.pdf"}
+smvdu-katra:
+  - {year: 2025, category: Engineering, url: "https://smvdu.ac.in/wp-content/uploads/2025/02/National-Institutional-Ranking-Framework-2025-Engineering.pdf"}
+svnit-surat:
+  - {year: 2026, category: Engineering, url: "https://www.svnit.ac.in/Data/nirf/Sardar%20Vallabhbhai%20National%20Institute%20of%20Technology20260402-.pdf"}
+gkv-haridwar:
+  - {year: 2025, category: Engineering, url: "https://www.gkv.ac.in/wp-content/uploads/2025/02/Engineering-descipline.pdf"}
+iiit-dharwad:
+  - {year: 2026, category: Overall, url: "https://assets.iiitdwd.ac.in/docs/OVERALL_INDIAN_INSTITUTE_OF_INFORMATION_TECHNOLOGY__DHARWAD20260428_OVERALL.pdf"}
+iiit-kalyani:
+  - {year: 2026, category: Engineering, url: "https://iiitkalyani.ac.in/api/serve/2026/04/16/nirf-new_1776317254_1314439f.pdf"}
+iiit-kottayam:
+  - {year: 2026, category: Engineering, url: "https://www.iiitkottayam.ac.in/data/pdf/IIITK_nirf2026_engineering.pdf"}
+iiit-nagpur:
+  - {year: 2026, category: Engineering, url: "https://iiitn.ac.in/media/916fc986a2a34669ab3760b1e1c6a36a.pdf"}
+iiit-ranchi:
+  - {year: 2026, category: Engineering, url: "https://www.iiitranchi.ac.in/docs/Engineering_Category_2026.pdf"}
+iiit-vadodara:
+  - {year: 2026, category: Engineering, url: "https://iiitvadodara.ac.in/assets/files/30_01_2026_INDIAN%20INSTITUTE%20OF%20INFORMATION%20TECHNOLOGY,%20VADODARA20260130-.pdf"}
+iiitdm-kurnool:
+  - {year: 2026, category: Engineering, url: "https://files.iiitk.ac.in/uploads/nirf/IIITDMK_2026_Engineering.pdf"}
+iit-mandi:
+  - {year: 2025, category: Engineering, url: "https://www.iitmandi.ac.in/pdf/nirf/NIRF%202025-Engineering.pdf"}
+iitram-ahmedabad:
+  - {year: 2026, category: Engineering, url: "https://www.iitram.ac.in/upload/NIRF/20260406_NIRF_Engineering_2026.pdf"}
+nerist-nirjuli:
+  - {year: 2026, category: Engineering, url: "https://nerist.ac.in/wp-content/uploads/2026/04/NIRF_Engineering_2026.pdf"}
+nit-andhra:
+  - {year: 2026, category: Engineering, url: "https://nitandhra.ac.in/main/nirf/NATIONAL%20INSTITUTE%20OF%20TECHNOLOGY,%20ANDHRA%20PRADESH%20ENGINEERING.pdf"}
+nit-nagaland:
+  - {year: 2026, category: Engineering, url: "https://www.nitnagaland.ac.in/templates/g5_helium/PDF/OTHERS/National%20Institute%20of%20Technology%20Nagaland20260306-.pdf"}
+nit-srinagar:
+  - {year: 2026, category: Engineering, url: "https://nitsri.ac.in/uploaded_files/Engineering_2026.pdf"}
+tezpur-university:
+  - {year: 2026, category: Engineering, url: "http://www.tezu.ernet.in/notice/2026/April/EngineeringNIRF2026.pdf"}
+iit-ism-dhanbad:
+  - {year: 2026, category: Engineering, url: "https://www.iitism.ac.in/storage/files/submitted-data-engineering-nirf-2026.pdf"}

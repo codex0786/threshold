@@ -1,0 +1,97 @@
+# Source registry. Access status reflects direct checks made on 2026-11-05.
+- key: josaa_orcr
+  name: JoSAA Opening and Closing Ranks
+  publisher: Joint Seat Allocation Authority
+  url: https://josaa.admissions.nic.in/applicant/seatmatrix/openingclosingrankarchieve.aspx
+  tier: official
+  access_method: Public ASP.NET form with no login or CAPTCHA. One ALL query per year and round, 2 seconds between requests. Raw HTML retained.
+  access_status: available
+  terms_note: The JoSAA terms page does not state whether reuse is allowed. Confirm with JoSAA before commercial launch and always attribute.
+- key: josaa_business_rules
+  name: JoSAA 2026 Business Rules
+  publisher: Joint Seat Allocation Authority
+  url: https://josaa.nic.in/document/business-rule-3/
+  tier: official
+  access_method: Public PDF, read by hand to write the eligibility rules. Rules are versioned by year.
+  access_status: available
+  terms_note: Referenced as the authority for rule logic; not republished.
+- key: josaa_seat_matrix
+  name: JoSAA Seat Matrix
+  publisher: Joint Seat Allocation Authority
+  url: https://josaa.admissions.nic.in/applicant/seatmatrix/seatmatrixinfo.aspx
+  tier: official
+  access_method: Public form. Reachable, but not yet ingested.
+  access_status: planned
+  terms_note: Same position as josaa_orcr.
+- key: csab_special
+  name: CSAB Special Round
+  publisher: Central Seat Allocation Board
+  url: https://csab.nic.in/
+  tier: official
+  access_method: Site reachable. Needs its own adapter because its rules differ from JoSAA.
+  access_status: planned
+  terms_note: Not yet reviewed.
+- key: nirf_official
+  name: NIRF India Rankings and institute data
+  publisher: Ministry of Education
+  url: https://www.nirfindia.org/
+  tier: official
+  access_method: Returned HTTP 403 to scripted requests on 2026-11-05. Not bypassed. A person can download the files and place them in data/import.
+  access_status: manual_only
+  terms_note: Preferred future source for rankings and institute-level graduate outcomes.
+- key: nirf_institute_submissions
+  name: NIRF submissions published by institutes
+  publisher: Each institute, on its own website
+  url: data/registry/nirf_documents.yaml
+  tier: official
+  access_method: Public PDFs on institute websites, downloaded individually. Self-reported by each institute and not audited.
+  access_status: available
+  terms_note: Figures cover a whole programme level, such as all 4-year UG students, and never one branch. Cite the institute and document.
+- key: institute_fee_circulars
+  name: Fee circulars published by institutes
+  publisher: Each institute, on its own website
+  url: data/import/fees_official.csv
+  tier: official
+  access_method: Public PDFs on institute websites, read by hand and transcribed.
+  access_status: available
+  terms_note: Institutes may revise fees. Hostel and mess charges often change by semester.
+- key: institute_placement_reports
+  name: Placement reports published by institutes
+  publisher: Each institute's placement office
+  url: data/import/placements_branch_reports.csv
+  tier: official
+  access_method: Public PDFs on institute websites, read and transcribed by hand.
+  access_status: available
+  terms_note: Self-reported. Each report defines its own base group and salary measure, so reports are not compared with each other.
+- key: wikidata_alumni
+  name: Wikidata, people listing an institute as alma mater
+  publisher: Wikimedia Foundation (CC0)
+  url: https://query.wikidata.org/
+  tier: secondary
+  access_method: Public query service at a low rate. Aggregate counts only, with no names stored.
+  access_status: available
+  terms_note: A sample of notable people, skewed to researchers, with no degree level recorded. It is not the alumni network.
+- key: nirf_2025_careers360
+  name: NIRF 2025 Engineering list, as republished by Careers360
+  publisher: Careers360
+  url: https://engineering.careers360.com/articles/nirf-ranking-2025-for-engineering-colleges-in-india-top-iits-nits-private-universities
+  tier: secondary
+  access_method: Top 50 transcribed from the public article on 2026-11-05.
+  access_status: available
+  terms_note: Secondary copy. Press sources disagree on some scores, so replace with nirfindia.org data when imported.
+- key: openalex
+  name: OpenAlex scholarly metadata
+  publisher: OurResearch
+  url: https://api.openalex.org/
+  tier: official
+  access_method: Open JSON API, confirmed reachable. Not yet ingested.
+  access_status: planned
+  terms_note: Research output only. Must not be presented as a measure of teaching quality.
+- key: manual_location
+  name: Institution locations entered by hand
+  publisher: Threshold research
+  url: data/registry/institutions.yaml
+  tier: manual
+  access_method: Hand-entered from names and general reference.
+  access_status: available
+  terms_note: Marked manual_unverified until checked against official institute pages.

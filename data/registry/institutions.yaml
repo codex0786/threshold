@@ -1,0 +1,149 @@
+# Canonical JoSAA institutions. The first name is the current official name as published
+# by JoSAA; any further names are historical spellings or earlier names of the same
+# institute. City and state are manually entered and marked manual_unverified until
+# reviewed. The loader fails on any source name missing from this file.
+#
+# Fields: slug, short name, type, city, state, website (pilot institutions only), names
+
+- {slug: iit-bombay, short: IIT Bombay, type: IIT, city: Mumbai, state: Maharashtra, website: "https://www.iitb.ac.in", names: [Indian Institute of Technology Bombay]}
+- {slug: iit-delhi, short: IIT Delhi, type: IIT, city: New Delhi, state: Delhi, website: "https://home.iitd.ac.in", names: [Indian Institute of Technology Delhi]}
+- {slug: iit-madras, short: IIT Madras, type: IIT, city: Chennai, state: Tamil Nadu, website: "https://www.iitm.ac.in", names: [Indian Institute of Technology Madras]}
+- {slug: iit-kanpur, short: IIT Kanpur, type: IIT, city: Kanpur, state: Uttar Pradesh, website: "https://www.iitk.ac.in", names: [Indian Institute of Technology Kanpur]}
+- {slug: iit-kharagpur, short: IIT Kharagpur, type: IIT, city: Kharagpur, state: West Bengal, website: "https://www.iitkgp.ac.in", names: [Indian Institute of Technology Kharagpur]}
+- {slug: iit-roorkee, short: IIT Roorkee, type: IIT, city: Roorkee, state: Uttarakhand, website: "https://www.iitr.ac.in", names: [Indian Institute of Technology Roorkee]}
+- {slug: iit-hyderabad, short: IIT Hyderabad, type: IIT, city: Hyderabad, state: Telangana, website: "https://www.iith.ac.in", names: [Indian Institute of Technology Hyderabad]}
+- {slug: iit-bhu, short: IIT (BHU) Varanasi, type: IIT, city: Varanasi, state: Uttar Pradesh, website: "https://iitbhu.ac.in", names: [Indian Institute of Technology (BHU) Varanasi]}
+- {slug: iit-ism-dhanbad, short: IIT (ISM) Dhanbad, type: IIT, city: Dhanbad, state: Jharkhand, names: [Indian Institute of Technology (ISM) Dhanbad]}
+- {slug: iit-bhilai, short: IIT Bhilai, type: IIT, city: Bhilai, state: Chhattisgarh, names: [Indian Institute of Technology Bhilai]}
+- {slug: iit-bhubaneswar, short: IIT Bhubaneswar, type: IIT, city: Bhubaneswar, state: Odisha, names: [Indian Institute of Technology Bhubaneswar]}
+- {slug: iit-dharwad, short: IIT Dharwad, type: IIT, city: Dharwad, state: Karnataka, names: [Indian Institute of Technology Dharwad]}
+- {slug: iit-gandhinagar, short: IIT Gandhinagar, type: IIT, city: Gandhinagar, state: Gujarat, names: [Indian Institute of Technology Gandhinagar]}
+- {slug: iit-goa, short: IIT Goa, type: IIT, city: Goa, state: Goa, names: [Indian Institute of Technology Goa]}
+- {slug: iit-guwahati, short: IIT Guwahati, type: IIT, city: Guwahati, state: Assam, names: [Indian Institute of Technology Guwahati]}
+- {slug: iit-indore, short: IIT Indore, type: IIT, city: Indore, state: Madhya Pradesh, names: [Indian Institute of Technology Indore]}
+- {slug: iit-jammu, short: IIT Jammu, type: IIT, city: Jammu, state: Jammu and Kashmir, names: [Indian Institute of Technology Jammu]}
+- {slug: iit-jodhpur, short: IIT Jodhpur, type: IIT, city: Jodhpur, state: Rajasthan, names: [Indian Institute of Technology Jodhpur]}
+- {slug: iit-mandi, short: IIT Mandi, type: IIT, city: Mandi, state: Himachal Pradesh, names: [Indian Institute of Technology Mandi]}
+- {slug: iit-palakkad, short: IIT Palakkad, type: IIT, city: Palakkad, state: Kerala, names: [Indian Institute of Technology Palakkad]}
+- {slug: iit-patna, short: IIT Patna, type: IIT, city: Patna, state: Bihar, names: [Indian Institute of Technology Patna]}
+- {slug: iit-ropar, short: IIT Ropar, type: IIT, city: Rupnagar, state: Punjab, names: [Indian Institute of Technology Ropar]}
+- {slug: iit-tirupati, short: IIT Tirupati, type: IIT, city: Tirupati, state: Andhra Pradesh, names: [Indian Institute of Technology Tirupati]}
+- {slug: iisc-bangalore, short: IISc Bengaluru, type: IISC, city: Bengaluru, state: Karnataka, names: ["Indian Institute of Science, Bangalore"]}
+
+- {slug: nit-tiruchirappalli, short: NIT Tiruchirappalli, type: NIT, city: Tiruchirappalli, state: Tamil Nadu, website: "https://www.nitt.edu", names: ["National Institute of Technology, Tiruchirappalli"]}
+- {slug: nit-surathkal, short: NIT Surathkal, type: NIT, city: Surathkal, state: Karnataka, website: "https://www.nitk.ac.in", names: ["National Institute of Technology Karnataka, Surathkal"]}
+- {slug: nit-warangal, short: NIT Warangal, type: NIT, city: Warangal, state: Telangana, website: "https://www.nitw.ac.in", names: ["National Institute of Technology, Warangal"]}
+- {slug: nit-rourkela, short: NIT Rourkela, type: NIT, city: Rourkela, state: Odisha, website: "https://www.nitrkl.ac.in", names: ["National Institute of Technology, Rourkela"]}
+- {slug: nit-calicut, short: NIT Calicut, type: NIT, city: Kozhikode, state: Kerala, website: "https://nitc.ac.in", names: [National Institute of Technology Calicut]}
+- {slug: mnnit-allahabad, short: MNNIT Allahabad, type: NIT, city: Prayagraj, state: Uttar Pradesh, website: "https://www.mnnit.ac.in", names: [Motilal Nehru National Institute of Technology Allahabad]}
+- {slug: nit-jalandhar, short: NIT Jalandhar, type: NIT, city: Jalandhar, state: Punjab, names: ["Dr. B R Ambedkar National Institute of Technology, Jalandhar"]}
+- {slug: mnit-jaipur, short: MNIT Jaipur, type: NIT, city: Jaipur, state: Rajasthan, names: [Malaviya National Institute of Technology Jaipur]}
+- {slug: manit-bhopal, short: MANIT Bhopal, type: NIT, city: Bhopal, state: Madhya Pradesh, names: [Maulana Azad National Institute of Technology Bhopal]}
+- {slug: nit-agartala, short: NIT Agartala, type: NIT, city: Agartala, state: Tripura, names: [National Institute of Technology Agartala]}
+- {slug: nit-arunachal, short: NIT Arunachal Pradesh, type: NIT, city: Jote, state: Arunachal Pradesh, names: [National Institute of Technology Arunachal Pradesh]}
+- {slug: nit-delhi, short: NIT Delhi, type: NIT, city: New Delhi, state: Delhi, names: [National Institute of Technology Delhi]}
+- {slug: nit-durgapur, short: NIT Durgapur, type: NIT, city: Durgapur, state: West Bengal, names: [National Institute of Technology Durgapur]}
+- {slug: nit-goa, short: NIT Goa, type: NIT, city: Goa, state: Goa, names: [National Institute of Technology Goa]}
+- {slug: nit-hamirpur, short: NIT Hamirpur, type: NIT, city: Hamirpur, state: Himachal Pradesh, names: [National Institute of Technology Hamirpur]}
+- {slug: nit-meghalaya, short: NIT Meghalaya, type: NIT, city: Shillong, state: Meghalaya, names: [National Institute of Technology Meghalaya]}
+- {slug: nit-nagaland, short: NIT Nagaland, type: NIT, city: Dimapur, state: Nagaland, names: [National Institute of Technology Nagaland]}
+- {slug: nit-patna, short: NIT Patna, type: NIT, city: Patna, state: Bihar, names: [National Institute of Technology Patna]}
+- {slug: nit-puducherry, short: NIT Puducherry, type: NIT, city: Karaikal, state: Puducherry, names: [National Institute of Technology Puducherry]}
+- {slug: nit-raipur, short: NIT Raipur, type: NIT, city: Raipur, state: Chhattisgarh, names: [National Institute of Technology Raipur]}
+- {slug: nit-sikkim, short: NIT Sikkim, type: NIT, city: Ravangla, state: Sikkim, names: [National Institute of Technology Sikkim]}
+- {slug: nit-andhra, short: NIT Andhra Pradesh, type: NIT, city: Tadepalligudem, state: Andhra Pradesh, names: ["National Institute of Technology, Andhra Pradesh"]}
+- {slug: nit-jamshedpur, short: NIT Jamshedpur, type: NIT, city: Jamshedpur, state: Jharkhand, names: ["National Institute of Technology, Jamshedpur"]}
+- {slug: nit-kurukshetra, short: NIT Kurukshetra, type: NIT, city: Kurukshetra, state: Haryana, names: ["National Institute of Technology, Kurukshetra"]}
+- {slug: nit-manipur, short: NIT Manipur, type: NIT, city: Imphal, state: Manipur, names: ["National Institute of Technology, Manipur"]}
+- {slug: nit-mizoram, short: NIT Mizoram, type: NIT, city: Aizawl, state: Mizoram, names: ["National Institute of Technology, Mizoram"]}
+- {slug: nit-silchar, short: NIT Silchar, type: NIT, city: Silchar, state: Assam, names: ["National Institute of Technology, Silchar"]}
+- {slug: nit-srinagar, short: NIT Srinagar, type: NIT, city: Srinagar, state: Jammu and Kashmir, names: ["National Institute of Technology, Srinagar"]}
+- {slug: nit-uttarakhand, short: NIT Uttarakhand, type: NIT, city: Srinagar (Garhwal), state: Uttarakhand, names: ["National Institute of Technology, Uttarakhand"]}
+- {slug: svnit-surat, short: SVNIT Surat, type: NIT, city: Surat, state: Gujarat, names: ["Sardar Vallabhbhai National Institute of Technology, Surat"]}
+- {slug: vnit-nagpur, short: VNIT Nagpur, type: NIT, city: Nagpur, state: Maharashtra, names: ["Visvesvaraya National Institute of Technology, Nagpur"]}
+
+- {slug: iiit-allahabad, short: IIIT Allahabad, type: IIIT, city: Prayagraj, state: Uttar Pradesh, website: "https://www.iiita.ac.in", names: ["Indian Institute of Information Technology, Allahabad"]}
+- {slug: abv-iiitm-gwalior, short: ABV-IIITM Gwalior, type: IIIT, city: Gwalior, state: Madhya Pradesh, website: "https://www.iiitm.ac.in", names: [Atal Bihari Vajpayee Indian Institute of Information Technology & Management Gwalior]}
+- {slug: iiitdm-jabalpur, short: IIITDM Jabalpur, type: IIIT, city: Jabalpur, state: Madhya Pradesh, website: "https://www.iiitdmj.ac.in", names: ["Pt. Dwarka Prasad Mishra Indian Institute of Information Technology, Design & Manufacture Jabalpur"]}
+- {slug: iiitdm-kancheepuram, short: IIITDM Kancheepuram, type: IIIT, city: Chennai, state: Tamil Nadu, names: ["Indian Institute of Information Technology, Design & Manufacturing, Kancheepuram"]}
+- {slug: iiitdm-kurnool, short: IIITDM Kurnool, type: IIIT, city: Kurnool, state: Andhra Pradesh, names: ["Indian Institute of Information Technology Design & Manufacturing Kurnool, Andhra Pradesh"]}
+- {slug: iiit-nagpur, short: IIIT Nagpur, type: IIIT, city: Nagpur, state: Maharashtra, names: [Indian Institute of Information Technology (IIIT) Nagpur]}
+- {slug: iiit-pune, short: IIIT Pune, type: IIIT, city: Pune, state: Maharashtra, names: [Indian Institute of Information Technology (IIIT) Pune]}
+- {slug: iiit-ranchi, short: IIIT Ranchi, type: IIIT, city: Ranchi, state: Jharkhand, names: [Indian Institute of Information Technology (IIIT) Ranchi]}
+- {slug: iiit-sri-city, short: IIIT Sri City, type: IIIT, city: Sri City, state: Andhra Pradesh, names: ["Indian Institute of Information Technology (IIIT), Sri City, Chittoor"]}
+- {slug: iiit-kota, short: IIIT Kota, type: IIIT, city: Kota, state: Rajasthan, names: ["Indian Institute of Information Technology (IIIT)Kota, Rajasthan"]}
+- {slug: iiit-bhagalpur, short: IIIT Bhagalpur, type: IIIT, city: Bhagalpur, state: Bihar, names: [Indian Institute of Information Technology Bhagalpur]}
+- {slug: iiit-bhopal, short: IIIT Bhopal, type: IIIT, city: Bhopal, state: Madhya Pradesh, names: [Indian Institute of Information Technology Bhopal]}
+- {slug: iiit-guwahati, short: IIIT Guwahati, type: IIIT, city: Guwahati, state: Assam, names: [Indian Institute of Information Technology Guwahati]}
+- {slug: iiit-lucknow, short: IIIT Lucknow, type: IIIT, city: Lucknow, state: Uttar Pradesh, names: [Indian Institute of Information Technology Lucknow]}
+- {slug: iiit-surat, short: IIIT Surat, type: IIIT, city: Surat, state: Gujarat, names: [Indian Institute of Information Technology Surat]}
+- {slug: iiit-tiruchirappalli, short: IIIT Tiruchirappalli, type: IIIT, city: Tiruchirappalli, state: Tamil Nadu, names: [Indian Institute of Information Technology Tiruchirappalli]}
+- {slug: iiit-dharwad, short: IIIT Dharwad, type: IIIT, city: Dharwad, state: Karnataka, names: [Indian Institute of Information Technology(IIIT) Dharwad]}
+- {slug: iiit-kalyani, short: IIIT Kalyani, type: IIIT, city: Kalyani, state: West Bengal, names: ["Indian Institute of Information Technology(IIIT) Kalyani, West Bengal"]}
+- {slug: iiit-sonepat, short: IIIT Sonepat, type: IIIT, city: Sonepat, state: Haryana, names: ["Indian Institute of Information Technology(IIIT) Kilohrad, Sonepat, Haryana"]}
+- {slug: iiit-kottayam, short: IIIT Kottayam, type: IIIT, city: Kottayam, state: Kerala, names: [Indian Institute of Information Technology(IIIT) Kottayam]}
+- {slug: iiit-una, short: IIIT Una, type: IIIT, city: Una, state: Himachal Pradesh, names: ["Indian Institute of Information Technology(IIIT) Una, Himachal Pradesh"]}
+- {slug: iiit-vadodara, short: IIIT Vadodara, type: IIIT, city: Vadodara, state: Gujarat, names: ["Indian Institute of Information Technology(IIIT), Vadodara, Gujrat"]}
+- {slug: iiit-agartala, short: IIIT Agartala, type: IIIT, city: Agartala, state: Tripura, names: ["Indian Institute of Information Technology, Agartala"]}
+- {slug: iiit-vadodara-diu, short: IIIT Vadodara (Diu campus), type: IIIT, city: Diu, state: Daman and Diu, names: ["Indian Institute of Information Technology, Vadodara International Campus Diu (IIITVICD)"]}
+- {slug: iiit-raichur, short: IIIT Raichur, type: IIIT, city: Raichur, state: Karnataka, names: ["Indian institute of information technology, Raichur, Karnataka"]}
+- {slug: iiit-manipur, short: IIIT Manipur, type: IIIT, city: Senapati, state: Manipur, names: [INDIAN INSTITUTE OF INFORMATION TECHNOLOGY SENAPATI MANIPUR, Indian Institute of Information Technology Manipur]}
+
+- {slug: bit-mesra, short: BIT Mesra, type: GFTI, city: Ranchi, state: Jharkhand, website: "https://www.bitmesra.ac.in", names: ["Birla Institute of Technology, Mesra, Ranchi"]}
+- {slug: pec-chandigarh, short: PEC Chandigarh, type: GFTI, city: Chandigarh, state: Chandigarh, website: "https://pec.ac.in", names: ["Punjab Engineering College, Chandigarh"]}
+- {slug: iiest-shibpur, short: IIEST Shibpur, type: GFTI, city: Howrah, state: West Bengal, website: "https://www.iiests.ac.in", names: ["Indian Institute of Engineering Science and Technology, Shibpur"]}
+- {slug: bit-deoghar, short: BIT Deoghar, type: GFTI, city: Deoghar, state: Jharkhand, names: ["Birla Institute of Technology, Deoghar Off-Campus"]}
+- {slug: bit-patna, short: BIT Patna, type: GFTI, city: Patna, state: Bihar, names: ["Birla Institute of Technology, Patna Off-Campus"]}
+- {slug: assam-university, short: Assam University, type: GFTI, city: Silchar, state: Assam, names: ["Assam University, Silchar"]}
+- {slug: cu-jharkhand, short: Central University of Jharkhand, type: GFTI, city: Ranchi, state: Jharkhand, names: [CU Jharkhand]}
+- {slug: cu-haryana, short: Central University of Haryana, type: GFTI, city: Mahendragarh, state: Haryana, names: [Central University of Haryana]}
+- {slug: cu-jammu, short: Central University of Jammu, type: GFTI, city: Jammu, state: Jammu and Kashmir, names: [Central University of Jammu]}
+- {slug: cu-karnataka, short: Central University of Karnataka, type: GFTI, city: Kalaburagi, state: Karnataka, names: [Central University of Karnataka]}
+- {slug: cu-punjab, short: Central University of Punjab, type: GFTI, city: Bathinda, state: Punjab, names: ["Central University of Punjab, Bathinda"]}
+- {slug: cu-rajasthan, short: Central University of Rajasthan, type: GFTI, city: Ajmer, state: Rajasthan, names: ["Central University of Rajasthan, Rajasthan"]}
+- {slug: cit-kokrajhar, short: CIT Kokrajhar, type: GFTI, city: Kokrajhar, state: Assam, names: ["Central institute of Technology Kokrajar, Assam"]}
+- {slug: csvtu-bhilai, short: CSVTU Bhilai, type: GFTI, city: Bhilai, state: Chhattisgarh, names: ["Chhattisgarh Swami Vivekanada Technical University, Bhilai (CSVTU Bhilai)"]}
+- {slug: gati-shakti-vadodara, short: Gati Shakti Vishwavidyalaya, type: GFTI, city: Vadodara, state: Gujarat, names: ["Gati Shakti Vishwavidyalaya, Vadodara"]}
+- {slug: gkciet-malda, short: GKCIET Malda, type: GFTI, city: Malda, state: West Bengal, names: ["Ghani Khan Choudhary Institute of Engineering and Technology, Malda, West Bengal"]}
+- {slug: gkv-haridwar, short: Gurukula Kangri Vishwavidyalaya, type: GFTI, city: Haridwar, state: Uttarakhand, names: ["Gurukula Kangri Vishwavidyalaya, Haridwar"]}
+- {slug: iict-bhadohi, short: IICT Bhadohi, type: GFTI, city: Bhadohi, state: Uttar Pradesh, names: ["Indian Institute of Carpet Technology, Bhadohi"]}
+- {slug: iiht-varanasi, short: IIHT Varanasi, type: GFTI, city: Varanasi, state: Uttar Pradesh, names: ["Indian Institute of Handloom Technology(IIHT), Varanasi"]}
+- {slug: iiht-salem, short: IIHT Salem, type: GFTI, city: Salem, state: Tamil Nadu, names: ["Indian Institute of Handloom Technology, Salem"]}
+- {slug: ict-bhubaneswar, short: ICT Mumbai (Odisha campus), type: GFTI, city: Bhubaneswar, state: Odisha, names: ["Institute of Chemical Technology, Mumbai: Indian Oil Odisha Campus, Bhubaneswar"]}
+- {slug: iet-sagar, short: IET Dr. H. S. Gour University, type: GFTI, city: Sagar, state: Madhya Pradesh, names: ["Institute of Engineering and Technology, Dr. H. S. Gour University. Sagar (A Central University)"]}
+- {slug: iitram-ahmedabad, short: IITRAM Ahmedabad, type: GFTI, city: Ahmedabad, state: Gujarat, names: ["Institute of Infrastructure, Technology, Research and Management-Ahmedabad"]}
+- {slug: iiit-bhubaneswar, short: IIIT Bhubaneswar, type: GFTI, city: Bhubaneswar, state: Odisha, names: ["International Institute of Information Technology, Bhubaneswar"]}
+- {slug: iiit-naya-raipur, short: IIIT Naya Raipur, type: GFTI, city: Naya Raipur, state: Chhattisgarh, names: ["International Institute of Information Technology, Naya Raipur"]}
+- {slug: iust-kashmir, short: IUST Kashmir, type: GFTI, city: Awantipora, state: Jammu and Kashmir, names: [Islamic University of Science and Technology Kashmir]}
+- {slug: jk-iapt-allahabad, short: JK Institute (University of Allahabad), type: GFTI, city: Prayagraj, state: Uttar Pradesh, names: ["J.K. Institute of Applied Physics & Technology, Department of Electronics & Communication, University of Allahabad- Allahabad"]}
+- {slug: jnu-delhi, short: JNU Delhi, type: GFTI, city: New Delhi, state: Delhi, names: ["Jawaharlal Nehru University, Delhi"]}
+- {slug: mizoram-university, short: Mizoram University, type: GFTI, city: Aizawl, state: Mizoram, names: ["Mizoram University, Aizawl"]}
+- {slug: niamt-ranchi, short: NIAMT Ranchi, type: GFTI, city: Ranchi, state: Jharkhand, names: ["National Institute of Advanced Manufacturing Technology, Ranchi", "National Institute of Foundry & Forge Technology, Hatia, Ranchi"]}
+- {slug: nielit-agartala, short: NIELIT Agartala, type: GFTI, city: Agartala, state: Tripura, names: ["National Institute of Electronics and Information Technology, Agartala"]}
+- {slug: nielit-aizawl, short: NIELIT Aizawl, type: GFTI, city: Aizawl, state: Mizoram, names: ["National Institute of Electronics and Information Technology, Aizawl"]}
+- {slug: nielit-ajmer, short: NIELIT Ajmer, type: GFTI, city: Ajmer, state: Rajasthan, names: ["National Institute of Electronics and Information Technology, Ajmer (Rajasthan)"]}
+- {slug: nielit-aurangabad, short: NIELIT Aurangabad, type: GFTI, city: Aurangabad, state: Maharashtra, names: ["National Institute of Electronics and Information Technology, Aurangabad (Maharashtra)"]}
+- {slug: nielit-calicut, short: NIELIT Calicut, type: GFTI, city: Kozhikode, state: Kerala, names: ["National Institute of Electronics and Information Technology, Calicut"]}
+- {slug: nielit-gorakhpur, short: NIELIT Gorakhpur, type: GFTI, city: Gorakhpur, state: Uttar Pradesh, names: ["National Institute of Electronics and Information Technology, Gorakhpur (UP)"]}
+- {slug: nielit-imphal, short: NIELIT Imphal, type: GFTI, city: Imphal, state: Manipur, names: ["National Institute of Electronics and Information Technology, Imphal"]}
+- {slug: nielit-kohima, short: NIELIT Kohima, type: GFTI, city: Kohima, state: Nagaland, names: ["National Institute of Electronics and Information Technology, Kohima"]}
+- {slug: nielit-patna, short: NIELIT Patna, type: GFTI, city: Patna, state: Bihar, names: ["National Institute of Electronics and Information Technology, Patna (Bihar)"]}
+- {slug: nielit-ropar, short: NIELIT Ropar, type: GFTI, city: Rupnagar, state: Punjab, names: ["National Institute of Electronics and Information Technology, Ropar (Punjab)"]}
+- {slug: nielit-srinagar, short: NIELIT Srinagar, type: GFTI, city: Srinagar, state: Jammu and Kashmir, names: ["National Institute of Electronics and Information Technology, Srinagar"]}
+- {slug: niftem-kundli, short: NIFTEM Kundli, type: GFTI, city: Sonepat, state: Haryana, names: ["National Institute of Food Technology Entrepreneurship and Management, Kundli", "National Institute of Food Technology Entrepreneurship and Management, Sonepat, Haryana"]}
+- {slug: niftem-thanjavur, short: NIFTEM Thanjavur, type: GFTI, city: Thanjavur, state: Tamil Nadu, names: ["National Institute of Food Technology Entrepreneurship and Management, Thanjavur", "National Institute of Food Technology, Entrepreneurship and Management (NIFTEM) - Thanjavur", "lndian Institute of Food Processing Technology, Thanjavur, Tamil Naidu."]}
+- {slug: nittr-bhopal, short: NITTTR Bhopal, type: GFTI, city: Bhopal, state: Madhya Pradesh, names: [National Institute of Technical Teachers Training and Research Bhopal]}
+- {slug: nerist-nirjuli, short: NERIST Nirjuli, type: GFTI, city: Nirjuli, state: Arunachal Pradesh, names: ["North Eastern Regional Institute of Science and Technology, Nirjuli-791109 (Itanagar),Arunachal Pradesh"]}
+- {slug: nehu-shillong, short: North-Eastern Hill University, type: GFTI, city: Shillong, state: Meghalaya, names: ["North-Eastern Hill University, Shillong"]}
+- {slug: puducherry-tech-university, short: Puducherry Technological University, type: GFTI, city: Puducherry, state: Puducherry, names: ["Puducherry Technological University, Puducherry", "Pondicherry Engineering College, Puducherry"]}
+- {slug: rgnau-amethi, short: RGNAU Amethi, type: GFTI, city: Amethi, state: Uttar Pradesh, names: ["Rajiv Gandhi National Aviation University, Fursatganj, Amethi (UP)"]}
+- {slug: sliet-longowal, short: SLIET Longowal, type: GFTI, city: Longowal, state: Punjab, names: [Sant Longowal Institute of Engineering and Technology]}
+- {slug: tezpur-university, short: Tezpur University, type: GFTI, city: Tezpur, state: Assam, names: ["School of Engineering, Tezpur University, Napaam, Tezpur"]}
+- {slug: spa-bhopal, short: SPA Bhopal, type: GFTI, city: Bhopal, state: Madhya Pradesh, names: ["School of Planning & Architecture, Bhopal"]}
+- {slug: spa-delhi, short: SPA New Delhi, type: GFTI, city: New Delhi, state: Delhi, names: ["School of Planning & Architecture, New Delhi"]}
+- {slug: spa-vijayawada, short: SPA Vijayawada, type: GFTI, city: Vijayawada, state: Andhra Pradesh, names: ["School of Planning & Architecture: Vijayawada"]}
+- {slug: ggv-bilaspur, short: Guru Ghasidas Vishwavidyalaya, type: GFTI, city: Bilaspur, state: Chhattisgarh, names: ["School of Studies of Engineering and Technology, Guru Ghasidas Vishwavidyalaya, Bilaspur", "Institute of Technology, Guru Ghasidas Vishwavidyalaya (A Central University), Bilaspur, (C.G.)"]}
+- {slug: sgsits-indore, short: SGSITS Indore, type: GFTI, city: Indore, state: Madhya Pradesh, names: [Shri G. S. Institute of Technology and Science Indore]}
+- {slug: smvdu-katra, short: SMVDU Katra, type: GFTI, city: Katra, state: Jammu and Kashmir, names: ["Shri Mata Vaishno Devi University, Katra, Jammu & Kashmir"]}
+- {slug: university-of-hyderabad, short: University of Hyderabad, type: GFTI, city: Hyderabad, state: Telangana, names: [University of Hyderabad]}
+- {slug: hnb-garhwal, short: HNB Garhwal University, type: GFTI, city: Srinagar (Garhwal), state: Uttarakhand, names: [HNB Garhwal University Srinagar (Garhwal)]}

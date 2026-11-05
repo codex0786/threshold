@@ -1,0 +1,10 @@
+.venv
+.env
+.pytest_cache
+**/__pycache__
+tests
+ingest
+alembic
+alembic.ini
+pytest.ini
+requirements-dev.txt

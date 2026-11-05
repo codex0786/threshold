@@ -1,0 +1,4 @@
+# Rows where a document's digits and words disagree, reviewed by reading the document.
+# The digits are kept only when another source supports them.
+iit-guwahati:
+  "2022-23": "Digits say 21,60,000 and the words say 21.63 lakh. The institute's Overall submission gives 21,60,000 in digits and in words."

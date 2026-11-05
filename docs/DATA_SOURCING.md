@@ -1,0 +1,117 @@
+# Data sourcing
+
+The live registry is `data/registry/sources.yaml`, and it is shown on the Methodology page. Access was checked directly on 2026-11-05.
+
+| Source | Status | Notes |
+|---|---|---|
+| JoSAA opening and closing ranks | **In use** | Public forms with no login or CAPTCHA. Archive offers 2016-2025, and a separate page has the current year |
+| JoSAA Business Rules 2026 | **In use** | Read by hand to write the eligibility rules |
+| NIRF 2025 Engineering via Careers360 | **In use, secondary** | Top 50 only, 26 JoSAA institutes. Marked `secondary_unverified`. Press sources disagree on some scores |
+| Manually entered locations | **In use, unverified** | City and state for all 139 institutes. `manual_unverified` until checked |
+| NIRF submissions on institute websites | **In use** | 59 institutes, 3 graduating years each. Self-reported and unaudited. Whole programme level, never a branch |
+| Institute fee circulars | **In use** | 6 of 20 pilots, for 2026-27 |
+| Institute placement reports | **In use** | Branch-level: NIT Warangal (2 years), NIT Kurukshetra, IIT Guwahati, IIT (ISM). Definitions differ, so they aren't compared or scored |
+| Wikidata | **In use, secondary** | Aggregate counts of documented people. No names stored. Not the alumni network |
+| LinkedIn and similar | **Rejected** | Scraping is prohibited and it holds restricted personal data |
+| JoSAA seat matrix | Planned | Reachable, not ingested |
+| CSAB | Planned | Reachable. Needs its own adapter |
+| OpenAlex | Planned | Open API confirmed reachable. Research output only |
+| NIRF official | **Blocked for scripts** | Returned HTTP 403 to scripted requests. Not bypassed |
+| JoSAA fee PDF | Rejected | The latest found is a *tentative* CSAB 2022 document, too old and uncertain to present as fees |
+| IIT (BHU) 2026-27 fee notice | Rejected | It explicitly excludes first-semester students |
+| Aggregator placement and fee figures | Rejected | Institute documents exist, and aggregators disagree with each other |
+
+## Pilot data collected (2026-11-05)
+
+### Placements (177 rows, 59 institutes)
+Each row is `All 4-year UG programmes`, stored with `scope=institution`. Each institute's document is listed in `data/registry/nirf_documents.yaml`.
+
+| | Institutes |
+|---|---:|
+| Engineering submissions | 56 (45 from NIRF 2026, 11 from NIRF 2025) |
+| Overall submissions, kept apart and not scored | 3 (IIT Roorkee, IIIT Bhagalpur, IIIT Dharwad) |
+| Used in salary comparison after removing classes under 100 | 52 per year for 2023 and 2024 |
+| Pilots covered | 18 of 20. **Missing:** IIIT Allahabad (links return 404), IIEST Shibpur (no recent document found) |
+
+**Other gaps:** 80 of 139 JoSAA institutes have no data here. Sites that failed or showed no document include NIT Patna, Agartala, Raipur (TLS error), Puducherry, Manipur and Sikkim; IIT Patna, Indore, Gandhinagar, Jodhpur, Ropar, Jammu and Bhilai; and many newer IIITs and GFTIs. Their documents may exist. **Absence here doesn't mean an institute doesn't publish one.**
+
+**Automatic checks, each of which keeps a document out if it fails:**
+- The institute name printed in the document must match exactly, or match a reviewed exception in `nirf_name_overrides.yaml`. Fuzzy matching isn't used, because NIT names differ only by place.
+- The document's stated year must be 2025 or later. This correctly rejected IIT Indore's file stored under a 2026 path, which is really from 2024.
+- It must be an Engineering or Overall submission, with a table titled `UG [4 Years Program(s)]`.
+- Each median in digits must agree with the same amount in words, allowing for misspellings.
+- Placed students can't exceed graduating students, and medians must be in a plausible range.
+
+**Reviewed exceptions:** the name list above, and one discrepancy in `nirf_reviewed_discrepancies.yaml`. IIT Guwahati's Engineering submission gives 21,60,000 in digits and 21.63 lakh in words for 2022-23. Its Overall submission gives 21,60,000 in both, so the digits are kept with a note on the row.
+
+**Visual checks:** five tables were compared with the rendered page (IIT Bombay, BIT Mesra, MNNIT, NIT Nagaland, IIT Mandi). Not every document was read by eye.
+
+**Not checked:** whether institutes reported accurately. NIRF figures are self-reported, and this project has not audited them. No second person has reviewed the rows, so they are `official` and not `verified`.
+
+**Engineering and Overall differ.** They matched for IIT Bombay, IIT Kanpur and NIT Surathkal, but not for IIIT Jabalpur or IIT (BHU), probably because Overall covers more programmes. They are stored under separate reporting definitions and never compared.
+
+### Branch-level placements, sectors and recruiters (47 rows, 8 sectors, 107 recruiters)
+Transcribed by hand from the institutes' reports, because formats differ and one trap would have defeated a parser: NIT Warangal's 2024-25 table reads Median then Average, and its 2025-26 table reads Average then Median.
+
+| Institute | Graduating | Measured against | Median published per branch |
+|---|---|---|---|
+| NIT Warangal | 2025, 2026 | Eligible students (CGPA at least 6.5 and took part in all drives), plus total students | Yes |
+| NIT Kurukshetra | 2025 | Eligible students, plus offers | Yes |
+| IIT Guwahati | 2025 | Registered students | Yes |
+| IIT (ISM) Dhanbad | 2025 | Actively participating students | No, only for all B.Tech |
+
+**Checks:** rows were added up and compared with each report's totals. NIT Warangal 2026: 660 plus 6 expected PPO conversions gives its 666. NIT Warangal 2025: 697. NIT Kurukshetra: 676 placed, 787 eligible. IIT (ISM): 632. IIT Guwahati's registered students add up to 842, but its placed figures disagree in its own report: branches sum to 634, its summary says 637 and its salary table 632. That's recorded on those rows.
+
+**Left out:** BIT Mesra (charts without counts or medians, so values would have to be estimated), NIT Tiruchirappalli (rates only), MNNIT and PEC (not yet read).
+
+**Sectors:** IIT (ISM) only, because IIT Guwahati's are in a chart without counts. **Recruiters:** IIT Guwahati only, read from logos in its 2024-25 report, leaving out unclear ones. A listing doesn't show how many were hired or from which branch.
+
+**Recent placements don't measure the alumni network.** They show where new graduates were hired. Nothing here tracks careers over time.
+
+### Alumni sample (Wikidata)
+Counts people who list an institute as alma mater, by occupation and employer. Institutes are matched only on an exact name (`data/registry/wikidata_institutions.yaml`), which gave 24 institutes. Samples under 30 aren't shown, leaving 15: 13 IITs, VNIT Nagpur and IIIT Allahabad. So this section is mostly absent for NITs and other institutes, and the matches haven't been individually reviewed. IIT Bombay's sample was dominated by researchers (597 of 906), and no degree level is recorded, so this mostly reflects academic and PhD careers. Names and person identifiers aren't stored.
+
+### Fees (6 institutes, 2026-27, new entrants)
+IIT Bombay, Madras, Delhi and Roorkee; NIT Warangal and Calicut. All are for General/OBC-NCL/EWS students with family income above Rs 5 lakh, transcribed by hand. Totals were checked against each document's stated total.
+
+Only IIT Roorkee publishes tuition, hostel and mess in one document, so it is the only one with a complete yearly cost. IIT Delhi has no yearly figures because its circular doesn't state which charges repeat.
+
+**Missing:** IIT Kanpur (the linked file returns 404), Kharagpur, Hyderabad, BHU; NIT Tiruchirappalli (no 2026 B.Tech schedule found), Surathkal, Rourkela; MNNIT; all IIITs and GFTIs.
+
+## What was fetched
+Round 1 and the last round for each of 2021-2026, which is 12 tables and 132,982 rows. Each table takes one `ALL` query, with 2 seconds between requests and an identifying user agent.
+
+```
+python -m ingest.josaa_fetch --years 2021-2025 --current
+python -m ingest.load
+```
+
+## Pipeline
+1. **Fetch**: raw HTML goes to `data/raw/josaa`, with a JSON file recording URL, time and SHA-256.
+2. **Parse**: `josaa_parse.py` rejects any table whose header has changed.
+3. **Normalise**: names map through `institutions.yaml`. Unknown names stop the load, so no duplicate institutes are created.
+4. **Load**: upserts are safe to re-run, and past records stay unchanged.
+
+Built so far: JoSAA fetch and load, NIRF PDF extraction, and the CSV importer for placements and fees (see `data/import/README.md`). Not built: Excel import, general PDF extraction, review queues, scheduled refresh and the admin interface.
+
+## Open items for a person to resolve
+1. **JoSAA reuse rights.** The terms page neither allows nor forbids reuse. Ask JoSAA before commercial launch.
+2. **Official NIRF rankings.** nirfindia.org still blocks scripts. Institute submissions now supply outcomes, but ranks still come from a secondary source. Someone needs to enter ranks from the official site. Also, look for the missing pilot submissions (IIIT Allahabad, IIEST Shibpur).
+7. **Sample review of placement rows.** Have a person check a sample against the source PDFs, then mark checked rows `verified`.
+3. **Home State seats outside clause 11.** `ICT Mumbai (Odisha campus)` and `IUST Kashmir` publish HS rows, but clause 11 doesn't name them. They currently use their own state as home state. Check against seat matrix notes.
+4. **BIT Mesra, BIT Patna, BIT Deoghar and Assam University.** Clause 11 confirms HS and AI seats but the state mapping is assumed to be each campus's own state. Check against the Business Rules annexures.
+5. **2026 final round.** The source offered 5 rounds when fetched. Confirm no later round exists.
+6. **Location check.** Review all 139 institute locations, starting with the 20 pilots.
+
+## First 20 pilot institutions
+Chosen to cover institution types, regions and a range of cutoffs. They get deeper data collection first. Cutoffs already cover all institutes.
+
+- **IITs (8):** Bombay, Delhi, Madras, Kanpur, Kharagpur, Roorkee, Hyderabad, BHU Varanasi
+- **NITs (6):** Tiruchirappalli, Surathkal, Warangal, Rourkela, Calicut, MNNIT Allahabad
+- **IIITs (3):** IIIT Allahabad, ABV-IIITM Gwalior, IIITDM Jabalpur
+- **GFTIs (3):** BIT Mesra, PEC Chandigarh, IIEST Shibpur
+
+Their website addresses were entered from general knowledge and have not been individually verified.
+
+## Scraping rules
+Use only permitted access. Never bypass CAPTCHAs, logins or blocks. Don't collect restricted personal data. Keep raw documents apart from validated records.

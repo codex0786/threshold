@@ -1,0 +1,45 @@
+{
+  "university-of-hyderabad": [
+    {
+      "url": "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20250128-engg.pdf",
+      "year": 2025,
+      "category": "Engineering",
+      "name": "UniversityofHyderabad",
+      "problems": [
+        "No outcomes table found",
+        "No outcome rows"
+      ]
+    },
+    {
+      "url": "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20250128-overall.pdf",
+      "year": 2025,
+      "category": "Overall",
+      "name": "UniversityofHyderabad",
+      "problems": [
+        "Page 2, 2022-23: unreadable median '0(Zero)'",
+        "Page 2, 2023-24: unreadable median '0(Zero)'"
+      ]
+    },
+    {
+      "url": "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20260402-engineering.pdf",
+      "year": 2026,
+      "category": "Engineering",
+      "name": "UniversityofHyderabad",
+      "problems": [
+        "No outcomes table found",
+        "No outcome rows"
+      ]
+    },
+    {
+      "url": "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20260402-overall.pdf",
+      "year": 2026,
+      "category": "Overall",
+      "name": "UniversityofHyderabad",
+      "problems": [
+        "Page 1, 2022-23: unreadable median '0(Zero)'",
+        "Page 1, 2023-24: unreadable median '0(Zero)'",
+        "Page 1, 2024-25: unreadable median '0(Zero)'"
+      ]
+    }
+  ]
+}

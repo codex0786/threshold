@@ -1,0 +1,806 @@
+{
+  "iit-ism-dhanbad": {
+    "domain": "www.iitism.ac.in",
+    "pages_read": [
+      "https://people.iitism.ac.in/~download/nirf_data/Enterpreneurship.xlsx",
+      "https://people.iitism.ac.in/~download/nirf_data/Higher-Studies-Form3A.xlsx",
+      "https://people.iitism.ac.in/~download/nirf_data/Placement.xlsx",
+      "https://www.iitism.ac.in/",
+      "https://www.iitism.ac.in/nirf",
+      "https://www.iitism.ac.in/old-nirf"
+    ],
+    "pdfs": [
+      "http://www.iitism.ac.in/storage/files/submitted-data-engineering-nirf-2026.pdf",
+      "http://www.iitism.ac.in/storage/files/submitted-data-overall-nirf-2026.pdf"
+    ]
+  },
+  "iit-bhilai": {
+    "domain": "www.iitbhilai.ac.in",
+    "pages_read": [
+      "https://www.iitbhilai.ac.in/",
+      "https://www.iitbhilai.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-bhubaneswar": {
+    "domain": "www.iitbbs.ac.in",
+    "pages_read": [
+      "https://www.iitbbs.ac.in/",
+      "https://www.iitbbs.ac.in/index.php/home/nirf-statistics/",
+      "https://www.iitbbs.ac.in/index.php/home/ranking/",
+      "https://www.iitbbs.ac.in/index.php/national-green-university-ranking-2026/",
+      "https://www.iitbbs.ac.in/nirf",
+      "https://www.iitbbs.ac.in/wp-content/uploads/2026/08/Green-University-Ranking.png"
+    ],
+    "pdfs": [
+      "https://www.iitbbs.ac.in/wp-content/uploads/2025/02/Engineering-2025.pdf",
+      "https://www.iitbbs.ac.in/wp-content/uploads/2025/02/Overall-2025.pdf",
+      "https://www.iitbbs.ac.in/wp-content/uploads/2026/04/Engineering-Final-After-submission-2026.pdf",
+      "https://www.iitbbs.ac.in/wp-content/uploads/2026/04/Overall-Final-after-submission-2026.pdf"
+    ]
+  },
+  "iit-dharwad": {
+    "domain": "www.iitdh.ac.in",
+    "pages_read": [
+      "https://www.iitdh.ac.in/",
+      "https://www.iitdh.ac.in/national-institutional-ranking-framework-nirf",
+      "https://www.iitdh.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.iitdh.ac.in/sites/default/files/2025-02/NIRF2025_IITDH_Engineering.pdf"
+    ]
+  },
+  "iit-gandhinagar": {
+    "domain": "www.iitgn.ac.in",
+    "pages_read": [
+      "https://www.iitgn.ac.in/",
+      "https://www.iitgn.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-goa": {
+    "domain": "www.iitgoa.ac.in",
+    "pages_read": [
+      "https://iitgoa.ac.in/national-institutional-ranking-framework/",
+      "https://iitgoa.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fiitgoa.ac.in%2Fnational-institutional-ranking-framework%2F",
+      "https://www.iitgoa.ac.in/",
+      "https://www.iitgoa.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-guwahati": {
+    "domain": "www.iitg.ac.in",
+    "pages_read": [
+      "https://www.iitg.ac.in/",
+      "https://www.iitg.ac.in/nirf",
+      "https://www.iitg.ac.in/nirf/",
+      "https://www.iitg.ac.in/storage/homeimg/5861658237nirf.png",
+      "https://www.iitg.ac.in/storage/homeimg/59675QS_World_University_Rankings_Logo.jpg",
+      "https://www.iitg.ac.in/storage/homeimg/8971359675QS_World_University_Rankings_Logo.jpg"
+    ],
+    "pdfs": [
+      "https://www.iitg.ac.in/doc/NIRF_Engineering_2025.pdf",
+      "https://www.iitg.ac.in/doc/NIRF_Engineering_2026.pdf",
+      "https://www.iitg.ac.in/doc/NIRF_Overall_2025.pdf",
+      "https://www.iitg.ac.in/doc/NIRF_Overall_2026.pdf",
+      "https://www.iitg.ac.in/nirf/doc/NIRF_Engineering_2025.pdf",
+      "https://www.iitg.ac.in/nirf/doc/NIRF_Engineering_2026.pdf",
+      "https://www.iitg.ac.in/nirf/doc/NIRF_Overall_2025.pdf",
+      "https://www.iitg.ac.in/nirf/doc/NIRF_Overall_2026.pdf"
+    ]
+  },
+  "iit-indore": {
+    "domain": "www.iiti.ac.in",
+    "pages_read": [
+      "https://www.iiti.ac.in/",
+      "https://www.iiti.ac.in/about/ranking",
+      "https://www.iiti.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-jammu": {
+    "domain": "www.iitjammu.ac.in",
+    "pages_read": [
+      "https://www.iitjammu.ac.in/",
+      "https://www.iitjammu.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-jodhpur": {
+    "domain": "www.iitj.ac.in",
+    "pages_read": [
+      "https://www.iitj.ac.in/",
+      "https://www.iitj.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-mandi": {
+    "domain": "www.iitmandi.ac.in",
+    "pages_read": [
+      "http://iitmandi.ac.in/nirf",
+      "http://iitmandi.ac.in/rankings",
+      "https://www.iitmandi.ac.in/",
+      "https://www.iitmandi.ac.in/nirf"
+    ],
+    "pdfs": [
+      "http://iitmandi.ac.in/pdf/nirf/Indian_Institute_of_Technology_Mandi20260219_Overall.pdf",
+      "http://iitmandi.ac.in/pdf/nirf/NIRF 2025- Overall-2.pdf",
+      "http://iitmandi.ac.in/pdf/nirf/NIRF 2025-Engineering.pdf"
+    ]
+  },
+  "iit-palakkad": {
+    "domain": "www.iitpkd.ac.in",
+    "pages_read": [
+      "https://www.iitpkd.ac.in/",
+      "https://www.iitpkd.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.iitpkd.ac.in/sites/default/files/2025-02/Engineering_2025_IndianInstituteofTechnologyPalakkad20250130.pdf",
+      "https://www.iitpkd.ac.in/sites/default/files/2025-02/Overall_2025_IndianInstituteofTechnologyPalakkad20250130.pdf"
+    ]
+  },
+  "iit-patna": {
+    "domain": "www.iitp.ac.in",
+    "pages_read": [
+      "https://www.iitp.ac.in/",
+      "https://www.iitp.ac.in/_next/static/chunks/app/(basic%20pages)/student/ranking/page-636b35dc96b829a9.js",
+      "https://www.iitp.ac.in/nirf",
+      "https://www.iitp.ac.in/student/ranking"
+    ],
+    "pdfs": []
+  },
+  "iit-ropar": {
+    "domain": "www.iitrpr.ac.in",
+    "pages_read": [
+      "https://www.iitrpr.ac.in/",
+      "https://www.iitrpr.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iit-tirupati": {
+    "domain": "www.iittp.ac.in",
+    "pages_read": [
+      "https://www.iittp.ac.in/",
+      "https://www.iittp.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-jalandhar": {
+    "domain": "www.nitj.ac.in",
+    "pages_read": [
+      "https://www.nitj.ac.in/",
+      "https://www.nitj.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "mnit-jaipur": {
+    "domain": "www.mnit.ac.in",
+    "pages_read": [
+      "https://www.mnit.ac.in/",
+      "https://www.mnit.ac.in/Images/quick_link/nirf.png",
+      "https://www.mnit.ac.in/about_us/nirf.php",
+      "https://www.mnit.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.mnit.ac.in/uploads/nirf/NIRF2025_Engineering.pdf",
+      "https://www.mnit.ac.in/uploads/nirf/NIRF2025_Overall.pdf",
+      "https://www.mnit.ac.in/uploads/nirf/NIRF2026_Engineering.pdf",
+      "https://www.mnit.ac.in/uploads/nirf/NIRF2026_Overall.pdf"
+    ]
+  },
+  "manit-bhopal": {
+    "domain": "www.manit.ac.in",
+    "pages_read": [
+      "http://www.manit.ac.in/content/nirf",
+      "https://www.manit.ac.in/",
+      "https://www.manit.ac.in/data-capturing-report",
+      "https://www.manit.ac.in/nirf",
+      "https://www.manit.ac.in/nirf-2025",
+      "https://www.manit.ac.in/nirf-2026"
+    ],
+    "pdfs": [
+      "https://www.manit.ac.in/sites/default/files/ENGINEERING%20%28IR-E-U-0284%29%20Submitted%20Report%20%28NIRF%202025%29.pdf",
+      "https://www.manit.ac.in/sites/default/files/OVERALL%20%28IR-O-U-0284%29%20Submitted%20Report%20%28NIRF%202025%29.pdf"
+    ]
+  },
+  "nit-agartala": {
+    "domain": "www.nita.ac.in",
+    "pages_read": [
+      "https://www.nita.ac.in/",
+      "https://www.nita.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-arunachal": {
+    "domain": "www.nitap.ac.in",
+    "pages_read": [
+      "https://www.nitap.ac.in/",
+      "https://www.nitap.ac.in/institute/nirf-report",
+      "https://www.nitap.ac.in/institute/nirf-report/",
+      "https://www.nitap.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-delhi": {
+    "domain": "www.nitdelhi.ac.in",
+    "pages_read": [
+      "https://nitdelhi.ac.in/_next/static/chunks/app/institute/disclosure/nirf/page-219ba46904df3fae.js",
+      "https://nitdelhi.ac.in/institute/disclosure/nirf",
+      "https://www.nitdelhi.ac.in/",
+      "https://www.nitdelhi.ac.in/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fnirf.aa9b17de.png&amp;w=384&amp;q=75",
+      "https://www.nitdelhi.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-durgapur": {
+    "domain": "www.nitdgp.ac.in",
+    "pages_read": [
+      "https://www.nitdgp.ac.in/",
+      "https://www.nitdgp.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-goa": {
+    "domain": "www.nitgoa.ac.in",
+    "pages_read": [
+      "https://www.nitgoa.ac.in/",
+      "https://www.nitgoa.ac.in/nirf",
+      "https://www.nitgoa.ac.in/nirf.html",
+      "https://www.nitgoa.ac.in/nirf/nirf2025.html",
+      "https://www.nitgoa.ac.in/nirf/nirf2026.html",
+      "https://www.nitgoa.ac.in/static/Slideshow4 NIRF Ranking.png"
+    ],
+    "pdfs": [
+      "https://www.nitgoa.ac.in/uploads/National Institute of Technology Goa2025_Engg.pdf",
+      "https://www.nitgoa.ac.in/uploads/National Institute of Technology Goa2025_Overall.pdf",
+      "https://www.nitgoa.ac.in/uploads/National Institute of Technology Goa2026 Engg.pdf",
+      "https://www.nitgoa.ac.in/uploads/National Institute of Technology Goa2026 Overall.pdf"
+    ]
+  },
+  "nit-hamirpur": {
+    "domain": "www.nith.ac.in",
+    "pages_read": [
+      "https://www.nith.ac.in/",
+      "https://www.nith.ac.in/nirf",
+      "https://www.nith.ac.in/nirf-at-nith"
+    ],
+    "pdfs": [
+      "https://nith.ac.in/uploads/files/nirf/NIRF%2025_Engg_NITH.pdf",
+      "https://nith.ac.in/uploads/files/nirf/nirf-engineering-2026.pdf",
+      "https://nith.ac.in/uploads/files/nirf/nirf-overall2026.pdf"
+    ]
+  },
+  "nit-meghalaya": {
+    "domain": "www.nitm.ac.in",
+    "pages_read": [
+      "https://www.nitm.ac.in/",
+      "https://www.nitm.ac.in/nirf",
+      "https://www.nitm.ac.in/page_details.php?page=nirf",
+      "https://www.nitm.ac.in/page_details.php?page=nirf-2025-ranking-data",
+      "https://www.nitm.ac.in/page_details.php?page=nirf-2026-ranking-data",
+      "https://www.nitm.ac.in/page_details.php?page=ranking-recognition-1"
+    ],
+    "pdfs": [
+      "https://www.nitm.ac.in/nitm_files/pdf/engineering-2025-69f03d493539c.pdf",
+      "https://www.nitm.ac.in/nitm_files/pdf/overall-2025-69f03f1f212d9.pdf"
+    ]
+  },
+  "nit-nagaland": {
+    "domain": "www.nitnagaland.ac.in",
+    "pages_read": [
+      "https://www.nitnagaland.ac.in/",
+      "https://www.nitnagaland.ac.in/nirf",
+      "https://www.nitnagaland.ac.in/templates/g5_helium/custom/images/dir/NIRF2025.png"
+    ],
+    "pdfs": []
+  },
+  "nit-patna": {
+    "domain": "www.nitp.ac.in",
+    "pages_read": [
+      "https://www.nitp.ac.in/",
+      "https://www.nitp.ac.in/Others/NIRF",
+      "https://www.nitp.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-puducherry": {
+    "domain": "www.nitpy.ac.in",
+    "pages_read": [
+      "https://www.nitpy.ac.in/",
+      "https://www.nitpy.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-raipur": {
+    "domain": "www.nitrr.ac.in",
+    "pages_read": [
+      "https://www.nitrr.ac.in/",
+      "https://www.nitrr.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-sikkim": {
+    "domain": "www.nitsikkim.ac.in",
+    "pages_read": [
+      "https://www.nitsikkim.ac.in/",
+      "https://www.nitsikkim.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-andhra": {
+    "domain": "www.nitandhra.ac.in",
+    "pages_read": [
+      "https://www.nitandhra.ac.in/",
+      "https://www.nitandhra.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-jamshedpur": {
+    "domain": "www.nitjsr.ac.in",
+    "pages_read": [
+      "https://www.nitjsr.ac.in/",
+      "https://www.nitjsr.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-kurukshetra": {
+    "domain": "www.nitkkr.ac.in",
+    "pages_read": [
+      "https://nitkkr.ac.in/nirf-national-institutional-ranking-framework/",
+      "https://nitkkr.ac.in/nirf-national-institutional-ranking-framework/registrar@nitkkr.ac.in",
+      "https://nitkkr.ac.in/nirf/",
+      "https://nitkkr.ac.in/wp-content/uploads/2023/01/NIRF-Certificate-IR-E-U-0172-12042022-scaled-3.jpeg",
+      "https://www.nitkkr.ac.in/",
+      "https://www.nitkkr.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://nitkkr.ac.in/wp-content/uploads/2025/01/National-Institute-of-Technology-Kurukshetra-20250113-ENGG.pdf",
+      "https://nitkkr.ac.in/wp-content/uploads/2025/01/National-Institute-of-Technology-Kurukshetra-20250113-Overall.pdf",
+      "https://nitkkr.ac.in/wp-content/uploads/2026/04/NIRF-DCS-Submission-Engg.pdf",
+      "https://nitkkr.ac.in/wp-content/uploads/2026/04/NIRF-DCS-Submission-Overall.pdf"
+    ]
+  },
+  "nit-manipur": {
+    "domain": "www.nitmanipur.ac.in",
+    "pages_read": [
+      "https://www.nitmanipur.ac.in/",
+      "https://www.nitmanipur.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-mizoram": {
+    "domain": "www.nitmz.ac.in",
+    "pages_read": [
+      "https://nitmz.ac.in/national-institutional-ranking-framework-nirf/",
+      "https://nitmz.ac.in/nirf-submitted-data-for-the-year-2026-overall-engineering-data/",
+      "https://nitmz.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fnitmz.ac.in%2Fnational-institutional-ranking-framework-nirf%2F",
+      "https://nitmz.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fnitmz.ac.in%2Fnirf-submitted-data-for-the-year-2026-overall-engineering-data%2F",
+      "https://www.nitmz.ac.in/",
+      "https://www.nitmz.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://nitmz.ac.in/wp-content/uploads/2025/05/Covid-E-Book.pdf",
+      "https://nitmz.ac.in/wp-content/uploads/2025/05/National_Institute_of_Technology_Mizoram_Overall_NIRF2024.pdf",
+      "https://nitmz.ac.in/wp-content/uploads/2025/05/UP_FILES_02-03-2025_NIRF-National-Institute-of-Technology-Mizoram_Engg_admin1.pdf",
+      "https://nitmz.ac.in/wp-content/uploads/2026/04/DCS_NIRF2026-Data_Engineering.pdf",
+      "https://nitmz.ac.in/wp-content/uploads/2026/04/DCS_NIRF2026-Data_Overall.pdf"
+    ]
+  },
+  "nit-silchar": {
+    "domain": "www.nits.ac.in",
+    "pages_read": [
+      "https://www.nits.ac.in/",
+      "https://www.nits.ac.in/nirf",
+      "https://www.nits.ac.in/ranking?rank=Mw==",
+      "https://www.nits.ac.in/ranking?rank=NA==",
+      "https://www.nits.ac.in/ranking?rank=Nw==",
+      "https://www.nits.ac.in/storage/files/nirf.png"
+    ],
+    "pdfs": [
+      "https://www.nits.ac.in/storage/files/nirf-overall-2026.pdf"
+    ]
+  },
+  "nit-srinagar": {
+    "domain": "www.nitsri.ac.in",
+    "pages_read": [
+      "https://www.nitsri.ac.in/",
+      "https://www.nitsri.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "nit-uttarakhand": {
+    "domain": "www.nituk.ac.in",
+    "pages_read": [
+      "https://www.nituk.ac.in/",
+      "https://www.nituk.ac.in/nirf",
+      "https://www.nituk.ac.in/nirf-ariia"
+    ],
+    "pdfs": [
+      "https://www.nituk.ac.in/uploads/topics/NIRF 2026 -Engineering.pdf",
+      "https://www.nituk.ac.in/uploads/topics/NIRF 2026 -Overall.pdf"
+    ]
+  },
+  "svnit-surat": {
+    "domain": "www.svnit.ac.in",
+    "pages_read": [
+      "https://www.svnit.ac.in/",
+      "https://www.svnit.ac.in/nirf",
+      "https://www.svnit.ac.in/web/nirf.php",
+      "https://www.svnit.ac.in/web/nirf_2017.php"
+    ],
+    "pdfs": [
+      "https://www.svnit.ac.in/Data/Notice/2026/July/3. Supplementary Time Table End Semester Examination July 2026 (NEP Batch) B.Tech -I (Chemical Engineering Department).DOC010726-01072026120925.pdf",
+      "https://www.svnit.ac.in/Data/Notice/2026/July/4. Supplementary Time Table End Semester Examination July 2026 (NEP) B. Tech -I Semester -II Civil Engineering.pdf",
+      "https://www.svnit.ac.in/Data/Notice/2026/July/5. Supplementary Time Table End Semester Examination July 2026 (Non- NEP Batch) B.Tech -I (Civil, Electrical & Mechinal Engineering Department).pdf"
+    ]
+  },
+  "vnit-nagpur": {
+    "domain": "www.vnit.ac.in",
+    "pages_read": [
+      "http://vnit.ac.in/nirf-ariia-nba/",
+      "https://vnit.ac.in/nirf-ariia-nba/",
+      "https://vnit.ac.in/nirf/",
+      "https://vnit.ac.in/wp-content/uploads/2024/05/the-world-university-ranking.png",
+      "https://www.vnit.ac.in/",
+      "https://www.vnit.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiitdm-kancheepuram": {
+    "domain": "www.iiitdm.ac.in",
+    "pages_read": [
+      "https://www.iiitdm.ac.in/",
+      "https://www.iiitdm.ac.in/nirf"
+    ],
+    "pdfs": [
+      "http://old.iiitdm.ac.in/img/NIRF/2025/NIRF2025_Engineering.pdf",
+      "http://old.iiitdm.ac.in/img/NIRF/2026/NIRF2026_Engineering.pdf",
+      "http://old.iiitdm.ac.in/img/NIRF/2026/NIRF2026_Overall.pdf"
+    ]
+  },
+  "iiitdm-kurnool": {
+    "domain": "www.iiitk.ac.in",
+    "pages_read": [
+      "https://iiitk.ac.in/NIRF/images/logo/logo_white.png",
+      "https://iiitk.ac.in/NIRF/page",
+      "https://iiitk.ac.in/NIRF/privacy-policy",
+      "https://www.iiitk.ac.in/",
+      "https://www.iiitk.ac.in/nirf",
+      "https://www.iiitk.ac.in/nirf-report"
+    ],
+    "pdfs": [
+      "https://files.iiitk.ac.in/uploads/nirf/IIITDMK_2025_Engineering.pdf",
+      "https://files.iiitk.ac.in/uploads/nirf/IIITDMK_2025_Overall.pdf",
+      "https://files.iiitk.ac.in/uploads/nirf/IIITDMK_2026_Engineering.pdf",
+      "https://files.iiitk.ac.in/uploads/nirf/IIITDMK_2026_Overall.pdf"
+    ]
+  },
+  "iiit-nagpur": {
+    "domain": "www.iiitn.ac.in",
+    "pages_read": [
+      "https://www.iiitn.ac.in/",
+      "https://www.iiitn.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-pune": {
+    "domain": "www.iiitp.ac.in",
+    "pages_read": [
+      "https://www.iiitp.ac.in/",
+      "https://www.iiitp.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-ranchi": {
+    "domain": "www.iiitranchi.ac.in",
+    "pages_read": [
+      "https://www.iiitranchi.ac.in/",
+      "https://www.iiitranchi.ac.in/NIRF.aspx",
+      "https://www.iiitranchi.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.iiitranchi.ac.in/docs/Engineering_Category_2025.pdf",
+      "https://www.iiitranchi.ac.in/docs/Engineering_Category_2026.pdf",
+      "https://www.iiitranchi.ac.in/docs/Overall_Category_2025.pdf",
+      "https://www.iiitranchi.ac.in/docs/Overall_Category_2026.pdf"
+    ]
+  },
+  "iiit-sri-city": {
+    "domain": "www.iiits.ac.in",
+    "pages_read": [
+      "https://www.iiits.ac.in/",
+      "https://www.iiits.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://iiits.ac.in/iiits-content/uploads/2026/05/Engg.IIITSRICITY-20260509.pdf",
+      "https://iiits.ac.in/iiits-content/uploads/2026/05/Overall-IIITSRICITY-20260509.pdf"
+    ]
+  },
+  "iiit-kota": {
+    "domain": "www.iiitkota.ac.in",
+    "pages_read": [
+      "https://www.iiitkota.ac.in/",
+      "https://www.iiitkota.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-bhagalpur": {
+    "domain": "www.iiitbh.ac.in",
+    "pages_read": [
+      "https://www.iiitbh.ac.in/",
+      "https://www.iiitbh.ac.in/nirf",
+      "https://www.iiitbh.ac.in/sites/default/files/NIRF"
+    ],
+    "pdfs": [
+      "https://www.iiitbh.ac.in/sites/default/files/2026/News/Indian%20Institute%20of%20Information%20Technology%20Bhagalpur20260309%20Overall.pdf"
+    ]
+  },
+  "iiit-bhopal": {
+    "domain": "www.iiitbhopal.ac.in",
+    "pages_read": [
+      "https://www.iiitbhopal.ac.in/",
+      "https://www.iiitbhopal.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-guwahati": {
+    "domain": "www.iiitg.ac.in",
+    "pages_read": [
+      "https://www.iiitg.ac.in/",
+      "https://www.iiitg.ac.in/iiitg-nirf-information-duplicate.html",
+      "https://www.iiitg.ac.in/nirf",
+      "https://www.iiitg.ac.in/nirf-ranking-duplicate.html",
+      "https://www.iiitg.ac.in/nirf-ranking.html"
+    ],
+    "pdfs": []
+  },
+  "iiit-lucknow": {
+    "domain": "www.iiitl.ac.in",
+    "pages_read": [
+      "https://www.iiitl.ac.in/",
+      "https://www.iiitl.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-surat": {
+    "domain": "www.iiitsurat.ac.in",
+    "pages_read": [
+      "https://www.iiitsurat.ac.in/",
+      "https://www.iiitsurat.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-tiruchirappalli": {
+    "domain": "www.iiitt.ac.in",
+    "pages_read": [
+      "https://www.iiitt.ac.in/",
+      "https://www.iiitt.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-dharwad": {
+    "domain": "www.iiitdwd.ac.in",
+    "pages_read": [
+      "https://www.iiitdwd.ac.in/",
+      "https://www.iiitdwd.ac.in/academics/nirf/",
+      "https://www.iiitdwd.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-kalyani": {
+    "domain": "www.iiitkalyani.ac.in",
+    "pages_read": [
+      "https://www.iiitkalyani.ac.in/",
+      "https://www.iiitkalyani.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-sonepat": {
+    "domain": "www.iiitsonepat.ac.in",
+    "pages_read": [
+      "https://www.iiitsonepat.ac.in/",
+      "https://www.iiitsonepat.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-kottayam": {
+    "domain": "www.iiitkottayam.ac.in",
+    "pages_read": [
+      "https://www.iiitkottayam.ac.in/",
+      "https://www.iiitkottayam.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-una": {
+    "domain": "www.iiitu.ac.in",
+    "pages_read": [
+      "https://www.iiitu.ac.in/",
+      "https://www.iiitu.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-vadodara": {
+    "domain": "www.iiitvadodara.ac.in",
+    "pages_read": [
+      "https://www.iiitvadodara.ac.in/",
+      "https://www.iiitvadodara.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-agartala": {
+    "domain": "www.iiitagartala.ac.in",
+    "pages_read": [
+      "https://www.iiitagartala.ac.in/",
+      "https://www.iiitagartala.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-raichur": {
+    "domain": "www.iiitr.ac.in",
+    "pages_read": [
+      "https://iiitr.ac.in/nirf",
+      "https://iiitr.ac.in/nirf.html",
+      "https://www.iiitr.ac.in/",
+      "https://www.iiitr.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://iiitr.ac.in/assets/files/2026/NIRF-Report-Engineering-2026.pdf",
+      "https://www.iiitr.ac.in/assets/files/2026/NIRF-Report-Engineering-2026.pdf"
+    ]
+  },
+  "iiit-manipur": {
+    "domain": "www.iiitmanipur.ac.in",
+    "pages_read": [
+      "https://www.iiitmanipur.ac.in/",
+      "https://www.iiitmanipur.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iiit-bhubaneswar": {
+    "domain": "www.iiit-bh.ac.in",
+    "pages_read": [
+      "https://www.iiit-bh.ac.in/",
+      "https://www.iiit-bh.ac.in/category/nirf/nirf-2026/",
+      "https://www.iiit-bh.ac.in/nirf",
+      "https://www.iiit-bh.ac.in/nirf/feed/",
+      "https://www.iiit-bh.ac.in/nirf/nirf-2026/",
+      "https://www.iiit-bh.ac.in/nirfs/"
+    ],
+    "pdfs": []
+  },
+  "iiit-naya-raipur": {
+    "domain": "www.iiitnr.ac.in",
+    "pages_read": [
+      "https://www.iiitnr.ac.in/",
+      "https://www.iiitnr.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "sliet-longowal": {
+    "domain": "www.sliet.ac.in",
+    "pages_read": [
+      "https://sliet.ac.in/2022/03/nirf-2016-documents/",
+      "https://sliet.ac.in/2022/03/nirf-2016-documents/feed/",
+      "https://sliet.ac.in/nirf-documents/",
+      "https://sliet.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fsliet.ac.in%2F2022%2F03%2Fnirf-2016-documents%2F",
+      "https://www.sliet.ac.in/",
+      "https://www.sliet.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "sgsits-indore": {
+    "domain": "www.sgsits.ac.in",
+    "pages_read": [
+      "https://www.sgsits.ac.in/",
+      "https://www.sgsits.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "smvdu-katra": {
+    "domain": "www.smvdu.ac.in",
+    "pages_read": [
+      "https://smvdu.ac.in/asia-university-rankings/",
+      "https://smvdu.ac.in/nirf/",
+      "https://smvdu.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fsmvdu.ac.in%2Fnirf%2F",
+      "https://smvdu.ac.in/young-university-rankings-2024/",
+      "https://www.smvdu.ac.in/",
+      "https://www.smvdu.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://smvdu.ac.in/wp-content/uploads/2025/02/National-Institutional-Ranking-Framework-2025-Engineering.pdf",
+      "https://smvdu.ac.in/wp-content/uploads/2025/02/National-Institutional-Ranking-Framework-2025-Overall.pdf"
+    ]
+  },
+  "nerist-nirjuli": {
+    "domain": "www.nerist.ac.in",
+    "pages_read": [
+      "https://nerist.ac.in/nirf/",
+      "https://www.nerist.ac.in/",
+      "https://www.nerist.ac.in/nirf",
+      "https://www.nerist.ac.in/nirf/"
+    ],
+    "pdfs": [
+      "https://nerist.ac.in/wp-content/uploads/2026/04/NIRF_Engineering_2026.pdf",
+      "https://nerist.ac.in/wp-content/uploads/2026/04/NIRF_Overall_2026.pdf"
+    ]
+  },
+  "tezpur-university": {
+    "domain": "www.tezu.ernet.in",
+    "pages_read": [
+      "http://www.tezu.ernet.in/images/QS-India-Ranking-2019.jpg",
+      "http://www.tezu.ernet.in/notice/nirf-2017.htm",
+      "https://www.tezu.ernet.in/",
+      "https://www.tezu.ernet.in/images/QS-India-Ranking-2019-thumb.jpg",
+      "https://www.tezu.ernet.in/nirf",
+      "https://www.tezu.ernet.in/notice/NIRF.html"
+    ],
+    "pdfs": [
+      "http://www.tezu.ernet.in/notice/2025/February/EngineeringNIRF2025.pdf",
+      "http://www.tezu.ernet.in/notice/2025/February/OverallNIRF2025.pdf",
+      "http://www.tezu.ernet.in/notice/2026/April/EngineeringNIRF2026.pdf",
+      "http://www.tezu.ernet.in/notice/2026/April/OverallNIRF2026.pdf"
+    ]
+  },
+  "csvtu-bhilai": {
+    "domain": "www.csvtu.ac.in",
+    "pages_read": [
+      "https://www.csvtu.ac.in/",
+      "https://www.csvtu.ac.in/nirf"
+    ],
+    "pdfs": []
+  },
+  "iitram-ahmedabad": {
+    "domain": "www.iitram.ac.in",
+    "pages_read": [
+      "https://www.iitram.ac.in/",
+      "https://www.iitram.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.iitram.ac.in/upload/NIRF/18022025_NIRF 2025_Engineering Category_IITRAM.pdf",
+      "https://www.iitram.ac.in/upload/NIRF/18022025_NIRF 2025_Overall category_IITRAM.pdf",
+      "https://www.iitram.ac.in/upload/NIRF/20260406_NIRF_Engineering_2026.pdf",
+      "https://www.iitram.ac.in/upload/NIRF/20260406_NIRF_Overall_Data_2026.pdf"
+    ]
+  },
+  "gkv-haridwar": {
+    "domain": "www.gkv.ac.in",
+    "pages_read": [
+      "https://www.gkv.ac.in/",
+      "https://www.gkv.ac.in/iqac/nirf",
+      "https://www.gkv.ac.in/iqac/nirf/",
+      "https://www.gkv.ac.in/iqac/nirf/captcha.css",
+      "https://www.gkv.ac.in/nirf",
+      "https://www.gkv.ac.in/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gkv.ac.in%2Fiqac%2Fnirf%2F"
+    ],
+    "pdfs": [
+      "https://www.gkv.ac.in/wp-content/uploads/2025/02/Engineering-descipline.pdf",
+      "https://www.gkv.ac.in/wp-content/uploads/2025/02/Overall-category.pdf",
+      "https://www.gkv.ac.in/wp-content/uploads/2026/03/Overall-category.pdf",
+      "https://www.gkv.ac.in/wp-content/uploads/2026/09/Result-Bridge-Course-for-Diploma-in-Mech.-Engineering-May-26-Exams.pdf"
+    ]
+  },
+  "university-of-hyderabad": {
+    "domain": "www.uohyd.ac.in",
+    "pages_read": [
+      "https://www.uohyd.ac.in/",
+      "https://www.uohyd.ac.in/about/awards-rankings",
+      "https://www.uohyd.ac.in/accreditation/nirf",
+      "https://www.uohyd.ac.in/images/about/awards-rankings/ariia-2020-ranking.png",
+      "https://www.uohyd.ac.in/nirf"
+    ],
+    "pdfs": [
+      "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20250128-engg.pdf",
+      "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20250128-overall.pdf",
+      "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20260402-engineering.pdf",
+      "https://www.uohyd.ac.in/documents/accreditation/nirf/university-of-hyderabad20260402-overall.pdf"
+    ]
+  },
+  "ict-bhubaneswar": {
+    "domain": "www.iocb.ictmumbai.edu.in",
+    "pages_read": [
+      "https://www.iocb.ictmumbai.edu.in/",
+      "https://www.iocb.ictmumbai.edu.in/nirf"
+    ],
+    "pdfs": []
+  }
+}

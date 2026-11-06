@@ -82,12 +82,12 @@ const CAPABILITIES: { title: string; text: string; ready: boolean }[] = [
   { title: "Admission bands", text: "Ambitious, competitive and safer ranges from official JoSAA cutoffs since 2021.", ready: true },
   { title: "College and branch comparison", text: "Up to four options side by side, with trade-offs written out and gaps shown.", ready: true },
   { title: "Personal shortlist", text: "Rule-based and repeatable, with a reason for every result.", ready: true },
-  { title: "Placement intelligence", text: "Self-reported, institute-wide outcomes from official NIRF submissions for 59 institutes, with sources. Branch-level data is still being collected.", ready: true },
+  { title: "Placement intelligence", text: "Self-reported, institute-wide outcomes from official NIRF submissions for 67 institutes, with sources. Branch-level data is still being collected.", ready: true },
   { title: "Preference list and parent report", text: "Build a JoSAA list in your own order, with warnings but no automatic changes, and save a report for your family.", ready: true },
-  { title: "Faculty and academic quality", text: "Research strength and teaching information will be kept separate. Not collected yet.", ready: false },
+  { title: "Faculty and academic information", text: "Faculty numbers, doctorates, funded research and resources for 67 institutes, each kept separate. Whole institutes only, and never a rating of teaching.", ready: true },
   { title: "Alumni and career outcomes", text: "Recruiters, sectors and a labelled sample of documented alumni, where sources exist. It isn’t the full alumni network.", ready: true },
   { title: "Financial ROI", text: "Low, base and high scenarios using median salaries, never the highest package.", ready: true },
-  { title: "AI counselling", text: "Will explain stored records with sources, and will not decide rankings. Not built yet.", ready: false },
+  { title: "Counselling assistant", text: "Ask about colleges, branches and JoSAA rules, and get stored records with sources. It uses fixed lookups, not an AI model, and it never decides for you.", ready: true },
 ];
 
 const FAQ = [

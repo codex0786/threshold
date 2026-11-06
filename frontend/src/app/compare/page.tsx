@@ -2,6 +2,7 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
+import { AcademicBlock } from "@/components/academics";
 import { CareerSummary } from "@/components/careers";
 import { BandBadge, FeeBlock, NotAvailable, Notice, PageHeader, PlacementBlock, QualityScore, RankingLine, ScoreBar, Skeleton } from "@/components/ui";
 import { type Comparison, type ComparisonItem, num, post } from "@/lib/api";
@@ -17,7 +18,7 @@ const ROWS: { label: string; render: (i: ComparisonItem) => ReactNode; onlyWithP
   { label: "Programme quality", render: (i) => <QualityScore quality={i.quality} /> },
   { label: "Placement outcomes", render: (i) => <PlacementBlock records={i.placements} /> },
   { label: "Fees", render: (i) => <FeeBlock fee={i.fee} /> },
-  { label: "Faculty and research", render: () => <NotAvailable /> },
+  { label: "Faculty and academics (whole institute)", render: (i) => <AcademicBlock academics={i.academics} compact /> },
   { label: "Curriculum", render: () => <NotAvailable /> },
   { label: "Where graduates go", render: (i) => <CareerSummary careers={i.careers} /> },
   { label: "Documented alumni sample", render: (i) => i.careers.alumni?.status === "available" ? <div><p className="tnum font-medium">{num(i.careers.alumni.sample_size)} people on Wikidata</p><p className="text-xs text-ink-3">Top occupations: {i.careers.alumni.occupations?.slice(0, 3).map((o) => o.label).join(", ")}. A sample of notable people, not the alumni network.</p></div> : <NotAvailable /> },

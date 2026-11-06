@@ -8,9 +8,9 @@ from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.db import get_db
-from app.models import CsabCutoff, CutoffRecord, DataSource, FeeRecord, Institution, InstitutionAlias, InstitutionRanking, PlacementRecord, Programme, SeatMatrixRecord, SourceDocument
-from app.schemas import STATES, ComparisonRequest, ParentReportRequest, PreferenceListRequest, RecommendationRequest, RoiRequest
-from app.services import careers, finance, preferences, report
+from app.models import AcademicSnapshot, CsabCutoff, CutoffRecord, DataSource, FeeRecord, Institution, InstitutionAlias, InstitutionRanking, PlacementRecord, Programme, ResearchOutput, SeatMatrixRecord, SourceDocument
+from app.schemas import STATES, ComparisonRequest, CounsellingRequest, ParentReportRequest, PreferenceListRequest, RecommendationRequest, RoiRequest
+from app.services import academics, assistant, careers, finance, preferences, report
 from app.services import recommend as rec
 from app.services.branches import CAREER_BRANCH_AFFINITY, FAMILY_LABELS
 from app.services.comparison import compare
@@ -42,9 +42,9 @@ def meta(db: Session = Depends(get_db)) -> dict:
     }
 
 
-def _institution_completeness(inst: Institution, has_cutoffs: bool, has_placements: bool, has_fees: bool) -> dict:
+def _institution_completeness(inst: Institution, has_cutoffs: bool, has_placements: bool, has_fees: bool, has_faculty: bool = False) -> dict:
     fields = {
-        "cutoffs": has_cutoffs, "nirf_rank": bool(inst.rankings), "placements": has_placements, "fees": has_fees,
+        "cutoffs": has_cutoffs, "nirf_rank": bool(inst.rankings), "placements": has_placements, "fees": has_fees, "faculty": has_faculty,
         "website": bool(inst.website), "location_confirmed": inst.location_verification in ("verified", "state_official"),
     }
     return {"fields": fields, "percent": round(100 * sum(fields.values()) / len(fields))}
@@ -131,8 +131,8 @@ def get_institution(slug: str, db: Session = Depends(get_db)) -> dict:
                 "currently_offered": p.id in offered, "renamed_to": names.get(p.successor_id), "campus_city": p.campus_city, "campus_country": p.campus_country,
             } for p in programmes
         ],
-        "completeness": _institution_completeness(inst, bool(programmes), bool(placements), bool(fees)),
-        "careers": careers.career_profile(db, inst.id),
+        "completeness": _institution_completeness(inst, bool(programmes), bool(placements), bool(fees), bool(db.scalar(select(AcademicSnapshot.id).where(AcademicSnapshot.institution_id == inst.id).limit(1)))),
+        "careers": careers.career_profile(db, inst.id), "academics": academics.load(db).get(inst.id),
     }
 
 
@@ -159,7 +159,7 @@ def get_programme(programme_id: int, db: Session = Depends(get_db)) -> dict:
         "seat_matrix": {"year": latest, "seats": [{"quota": q, "seat_type": t, "gender_pool": g, "seats": n} for q, t, g, n in sorted(seat_counts)]} if seat_counts else None,
         "placements": rec.placement_json(records), "ranking": rec.ranking_json(rec.ranking_for(programme, evidence)),
         "fee": rec.fee_json(rec.fee_for(programme, evidence)),
-        "curriculum": None, "faculty": None,
+        "curriculum": None, "academics": rec.academics_for(programme, evidence),
     }
 
 
@@ -187,6 +187,19 @@ def programme_cutoffs(
                 "fetched_at": r.source_document.fetched_at.isoformat(),
             } for r in records
         ],
+    }
+
+
+@router.get("/programmes/{programme_id}/faculty")
+def programme_faculty(programme_id: int, db: Session = Depends(get_db)) -> dict:
+    programme = db.scalar(select(Programme).where(Programme.id == programme_id).options(joinedload(Programme.institution)))
+    if programme is None:
+        raise HTTPException(404, "Programme not found")
+    profile = None if programme.campus_city else academics.load(db).get(programme.institution_id)
+    return {
+        "programme_id": programme_id, "department_level": None, "institute_wide": profile,
+        "note": "Department-level faculty data isn't collected. These figures cover the whole institute, and none of them rates teaching.",
+        "status": "institute_wide" if profile else "Data not available",
     }
 
 
@@ -242,6 +255,12 @@ def financial_defaults(programme_id: int, db: Session = Depends(get_db)) -> dict
     }
 
 
+@router.post("/ai/counselling")
+def counselling(body: CounsellingRequest, db: Session = Depends(get_db)) -> dict:
+    """Answers from stored records through fixed tools. The question isn't stored."""
+    return assistant.answer(db, body.question, body.profile)
+
+
 @router.post("/financial/roi")
 def financial_roi(body: RoiRequest) -> dict:
     costs = finance.total_cost(finance.CostInputs(
@@ -290,7 +309,7 @@ def data_completeness(db: Session = Depends(get_db)) -> dict:
         within = lambda col: db.scalar(select(func.count(distinct(Institution.id))).join(col.class_, col == Institution.id).where(Institution.institute_type == institute_type))  # noqa: E731
         type_rows[institute_type] = {
             "institutions": total, "nirf_rank": within(InstitutionRanking.institution_id), "placements": within(PlacementRecord.institution_id),
-            "fees": within(FeeRecord.institution_id),
+            "fees": within(FeeRecord.institution_id), "faculty": within(AcademicSnapshot.institution_id),
         }
     return {
         "institutions": institutions, "programmes": count(Programme), "cutoff_records": count(CutoffRecord),
@@ -308,8 +327,9 @@ def data_completeness(db: Session = Depends(get_db)) -> dict:
             "complete_yearly_fees": db.scalar(select(func.count(distinct(FeeRecord.institution_id))).where(*complete_fees)),
             "branch_placements": with_col(PlacementRecord.programme_id),
             "renamed_programmes": db.scalar(select(func.count()).select_from(Programme).where(Programme.successor_id.is_not(None))),
+            "faculty_institutes": with_col(AcademicSnapshot.institution_id), "publication_institutes": with_col(ResearchOutput.institution_id),
             "official_rankings": db.scalar(select(func.count()).select_from(InstitutionRanking).where(InstitutionRanking.verification_status.in_(("official", "verified")))),
         },
         "by_type": type_rows,
-        "not_yet_collected": ["Faculty", "Curriculum", "State counselling", "Verified alumni outcomes", "Official NIRF ranks"],
+        "not_yet_collected": ["Department-level faculty", "Curriculum", "State counselling", "Verified alumni outcomes", "Official NIRF ranks"],
     }

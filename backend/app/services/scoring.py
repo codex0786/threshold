@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.3.0"
+ENGINE_VERSION = "0.4.0"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -32,11 +32,14 @@ QUALITY_LABELS = {
 DEFAULT_PRIORITIES: dict[str, float] = {
     "branch_fit": 30, "career_fit": 20, "reputation": 20, "location": 10, "institution_type": 5,
     "placements": 10, "affordability": 5, "demand": 20,
+    # Off unless a student turns them on. Figures exist for about half of institutes, so a default weight would favour those that publish.
+    "faculty": 0, "research": 0,
 }
 SUITABILITY_LABELS = {
     "branch_fit": "Branch preference", "career_fit": "Career goal", "reputation": "Institutional reputation",
     "location": "Location", "institution_type": "Institution type", "placements": "Placement outcomes",
     "affordability": "Affordability", "demand": "How contested the seat is",
+    "faculty": "Faculty numbers and qualifications", "research": "Funded research and doctoral output",
 }
 
 
@@ -137,12 +140,14 @@ def career_score(
     return round(sum(parts) / len(parts), 1), f"Self-reported median salary at or above about {round(average)}% of {size}+ comparable institutes, graduating {span} ({scope_text})", factor
 
 
-def quality_score(nirf_rank: int | None, nirf_note: str, career: tuple[float | None, str, float]) -> ScoreResult:
+def quality_score(nirf_rank: int | None, nirf_note: str, career: tuple[float | None, str, float], academic: tuple[float | None, str, float] | None = None) -> ScoreResult:
     """Combine available evidence using the published weights. Below minimum coverage, no score is given."""
     values: dict[str, tuple[float | None, str, float]] = {
         key: (None, "Data not available", 0.0) for key in QUALITY_WEIGHTS
     }
     values["career_outcomes"] = career
+    if academic is not None:
+        values["academic_faculty"] = academic
     rep = reputation_score(nirf_rank)
     values["institutional_reputation"] = (rep, nirf_note if rep is not None else "Not in the recorded NIRF list", 1.0 if rep is not None else 0.0)
     total_weight = sum(QUALITY_WEIGHTS.values())
@@ -177,6 +182,10 @@ class FitInputs:
     # Charges on record when the yearly cost is incomplete. It can show a budget is exceeded, never that it is met.
     annual_known_inr: int | None = None
     cost_note: str | None = None
+    faculty_score: float | None = None
+    research_score: float | None = None
+    faculty_note: str = "No faculty figures on record"
+    research_note: str = "No research figures on record"
     priorities: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_PRIORITIES))
 
 
@@ -224,6 +233,8 @@ def suitability_score(f: FitInputs) -> ScoreResult:
     else:
         dims["affordability"] = (None, f.cost_note or "No yearly cost on record")
     dims["demand"] = (f.demand_score, f.demand_note)
+    dims["faculty"] = (f.faculty_score, f.faculty_note)
+    dims["research"] = (f.research_score, f.research_note)
 
     total = sum(max(0.0, f.priorities.get(k, 0.0)) for k in dims)
     if total <= 0:

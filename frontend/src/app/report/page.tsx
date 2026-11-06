@@ -101,6 +101,19 @@ export default function ReportPage() {
               </div>
             </div>
 
+            {o.academics?.teaching && (
+              <div className="mt-4 border-t border-line pt-3">
+                <h4 className="text-sm font-medium">Faculty and research, whole institute</h4>
+                <p className="tnum mt-1 text-sm text-ink-2">
+                  {o.academics.teaching.students_per_regular_faculty != null && `${o.academics.teaching.students_per_regular_faculty} students per regular faculty member. `}
+                  {o.academics.experience?.phd_share != null && `${Math.round(o.academics.experience.phd_share * 100)}% of regular faculty hold a doctorate. `}
+                  {o.academics.research?.years?.[0]?.phd_graduated != null && `${num(o.academics.research.years[0].phd_graduated)} doctorates awarded in ${o.academics.research.years[0].academic_year}.`}
+                </p>
+                <p className="text-xs text-ink-3">{o.academics.teaching.note} {o.academics.scope_note}</p>
+                {o.academics.source && <SourceLink href={o.academics.source.url} label={o.academics.source.title} />}
+              </div>
+            )}
+
             {o.loan && (
               <div className="mt-4 border-t border-line pt-3">
                 <h4 className="text-sm font-medium">If the published charges were fully funded by a loan</h4>

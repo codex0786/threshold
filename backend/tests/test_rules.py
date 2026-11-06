@@ -7,7 +7,11 @@ from app.services.eligibility import Student, StudentRanks, class12_threshold, g
 from app.services.branches import campus_of
 from ingest.josaa_parse import SourceFormatError
 from ingest.seat_matrix import parse as parse_seat_matrix
-from app.services.scoring import NEUTRAL, FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
+from dataclasses import asdict
+from app.models import AcademicSnapshot, AcademicYearRecord, ResearchOutput
+from app.services import academics
+from ingest.nirf_academics import FIELDS as ACADEMIC_FIELDS, summarise_faculty
+from app.services.scoring import DEFAULT_PRIORITIES, NEUTRAL, FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
 from ingest.josaa_parse import SourceFormatError, parse_programme, parse_rank, parse_table
 
 
@@ -377,3 +381,64 @@ def test_seat_matrix_reads_home_states_and_pools():
 def test_seat_matrix_stops_when_rows_do_not_match_the_published_totals():
     with pytest.raises(SourceFormatError):
         parse_seat_matrix(SEAT_PAGE.format(label="All India", state="", total=99))
+
+
+FACULTY_ROWS = [
+    ["1", "Person A", "46", "Professor", "Male", "Ph.D", "240", "Yes", "01-01-2010", "--", "Regular"],
+    ["2", "Person B", None, "Assistant Professor", "Female", "Ph.D (Pursuing)", "60", "Yes", "01-01-2020", "--", "Regular"],
+    ["3", "Person C", "70", "Professor", "Male", "Ph.D", "500", "Yes", "01-01-2024", "--", "Visiting"],
+    ["4", "Person D", "60", "Associate Professor", "Male", "Ph.D", "300", "No", "01-01-2001", "01-01-2024", "Regular"],
+]
+
+
+def test_faculty_totals_count_current_regular_staff_and_only_stated_doctorates():
+    result = summarise_faculty(FACULTY_ROWS)
+    assert (result.listed, result.current, result.regular, result.with_phd) == (4, 3, 2, 1)
+    assert (result.professors, result.associate, result.assistant) == (1, 0, 1)
+    assert result.median_experience_months == 150 and result.problems == []
+
+
+def test_gaps_in_faculty_numbering_are_reported():
+    assert summarise_faculty(FACULTY_ROWS[:1] + FACULTY_ROWS[2:]).problems
+
+
+def test_faculty_records_hold_no_personal_details():
+    for table in (AcademicSnapshot.__table__, AcademicYearRecord.__table__, ResearchOutput.__table__):
+        assert not {"name", "age", "gender", "date_of_birth", "joining_date"} & set(table.columns.keys())
+    assert not {"name", "age", "gender"} & set(ACADEMIC_FIELDS)
+    assert "name" not in asdict(summarise_faculty(FACULTY_ROWS))
+
+
+def _cohort(count):
+    profiles = {}
+    for i in range(count):
+        profiles[i] = {"scores": {"faculty": None, "research": None}, "_compare": {"eligible": True, "ratio": 10.0 + i, "phd_share": 0.5 + i / (2 * count), "funding": 1000.0 * (i + 1), "doctorates": 0.1 * (i + 1)}}
+    profiles["excluded"] = {"scores": {"faculty": None, "research": None}, "_compare": {"eligible": False, "ratio": 1.0, "phd_share": 1.0, "funding": 10.0 ** 9, "doctorates": 99.0}}
+    return profiles
+
+
+def test_academic_scores_need_a_broad_comparable_group():
+    few = _cohort(10)
+    academics._add_scores(few)
+    assert few[0]["scores"]["faculty"] is None and few[0]["scores"]["research"] is None
+    many = _cohort(60)
+    academics._add_scores(many)
+    assert many["excluded"]["scores"]["faculty"] is None and "_compare" not in many["excluded"]
+    assert many[0]["scores"]["research"] < many[59]["scores"]["research"]
+    # Fewer students per teacher reads better, but research and faculty scores stay separate numbers.
+    assert many[0]["scores"]["faculty"] != many[0]["scores"]["research"]
+
+
+def test_faculty_and_research_count_only_if_a_student_turns_them_on():
+    base = dict(branch_family="CS", institute_type="NIT", state="Goa", nirf_rank=None, career_dimension_score=None, annual_cost_inr=None)
+    off = suitability_score(FitInputs(**base, faculty_score=100.0, research_score=100.0))
+    none = suitability_score(FitInputs(**base))
+    assert off.score == none.score
+    on = suitability_score(FitInputs(**base, faculty_score=100.0, priorities={**DEFAULT_PRIORITIES, "faculty": 50}))
+    assert on.score > none.score
+
+
+def test_academic_evidence_alone_never_unlocks_a_quality_score():
+    result = quality_score(1, "rank", (100.0, "placements", 0.5), (100.0, "academics", 0.5))
+    assert result.score is None and result.status == "insufficient_evidence" and result.coverage == 0.315
+

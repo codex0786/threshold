@@ -1,6 +1,6 @@
 # Scoring methodology
 
-Code: `backend/app/services/scoring.py`. Version `0.3.0`.
+Code: `backend/app/services/scoring.py`. Version `0.4.0`.
 
 There are three separate outputs, and they are never combined: quality, suitability and admission band.
 
@@ -9,7 +9,7 @@ There are three separate outputs, and they are never combined: quality, suitabil
 | Dimension | Weight | Evidence today |
 |---|---:|---|
 | Career and placement outcomes | 25 | Institute-wide medians for about 52 institutes, half weight |
-| Academic and faculty quality | 18 | None |
+| Academic and faculty quality | 18 | Faculty numbers, doctorates and funded research from NIRF submissions, 67 institutes. Whole institute, so it counts for half coverage. Not a measure of teaching |
 | Branch strength and curriculum | 15 | None |
 | Alumni and industry network | 12 | None |
 | Institutional reputation | 10 | NIRF rank, secondary sources, 49 institutes |
@@ -52,6 +52,11 @@ A weighted average from 0 to 100, using the student's priorities.
 3. **Medians cover placed students only.** They say nothing about those who weren't placed. The table shows both counts.
 4. **The figures are self-reported** and not audited.
 5. **The cohort margin is thin.** At 52 institutes, a few changes could bring a year back under 50.
+
+### Faculty and research sliders
+`faculty` is the average percentile of students per regular faculty member (fewer is higher) and the share of regular faculty with a doctorate. `research` is the average percentile of sponsored funding and doctorates awarded, each per regular faculty member over the latest 3 years. Their default weight is 0, because figures exist for about half of institutes, and a default weight would favour those that publish. A student can turn them on, and they reorder options without changing a band. Publication counts from OpenAlex are shown but never scored, because they currently cover 26 institutes.
+
+No option reaches 50% quality coverage even with this evidence: a NIRF rank, institute-wide placements and these figures reach 31.5%. Quality stays unscored until there's curriculum and department-level evidence.
 
 ### Known limit of affordability
 With a budget set, an institute that publishes its charges can lose points, while one that publishes nothing stays neutral. The default weight is small, but this can favour institutes with no published fees.

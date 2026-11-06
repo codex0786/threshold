@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/preferences", label: "Preference list" },
   { href: "/finance", label: "Costs" },
   { href: "/report", label: "Parent report" },
+  { href: "/assistant", label: "Ask" },
   { href: "/methodology", label: "Methodology" },
 ];
 
@@ -51,15 +52,15 @@ export function Nav() {
     <header className="no-print sticky top-0 z-20 border-b border-line bg-surface/85 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" aria-label="Threshold home"><Logo /></Link>
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">{items}
+        <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Main">{items}
           <Link href="/onboarding" className="btn btn-primary ml-2 !py-1.5 text-sm">Find my best fit</Link>
         </nav>
-        <button className="btn btn-secondary !p-2 lg:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <button className="btn btn-secondary !p-2 xl:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>
       </div>
       {open && (
-        <nav className="rise flex flex-col gap-1 border-t border-line px-4 py-3 lg:hidden" aria-label="Mobile">{items}
+        <nav className="rise flex flex-col gap-1 border-t border-line px-4 py-3 xl:hidden" aria-label="Mobile">{items}
           <Link href="/onboarding" className="btn btn-primary mt-1">Find my best fit</Link>
         </nav>
       )}

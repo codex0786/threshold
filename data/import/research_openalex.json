@@ -1,0 +1,516 @@
+{
+ "retrieved_at": "2026-11-06T14:16:44.439311+00:00",
+ "url": "https://api.openalex.org/institutions",
+ "sha256": "6856de8df88dc4b4cb7ab32d56e9d1ff77d801288e6ed5b36e637be2a1f6cc61",
+ "raw_path": "data/raw/openalex/institutions_in.json",
+ "matched": {
+  "iit-bombay": {
+   "openalex_id": "https://openalex.org/I162827531",
+   "display_name": "Indian Institute of Technology Bombay",
+   "works_count": 66884,
+   "cited_by_count": 3257412,
+   "h_index": 413,
+   "works_by_year": {
+    "2021": 3752,
+    "2022": 3980,
+    "2023": 4055,
+    "2024": 4298,
+    "2025": 4673,
+    "2026": 3871
+   }
+  },
+  "iit-delhi": {
+   "openalex_id": "https://openalex.org/I68891433",
+   "display_name": "Indian Institute of Technology Delhi",
+   "works_count": 71386,
+   "cited_by_count": 3215970,
+   "h_index": 399,
+   "works_by_year": {
+    "2021": 4074,
+    "2022": 4510,
+    "2023": 4884,
+    "2024": 4987,
+    "2025": 4974,
+    "2026": 3784
+   }
+  },
+  "iit-madras": {
+   "openalex_id": "https://openalex.org/I24676775",
+   "display_name": "Indian Institute of Technology Madras",
+   "works_count": 69096,
+   "cited_by_count": 2846919,
+   "h_index": 379,
+   "works_by_year": {
+    "2021": 3885,
+    "2022": 4343,
+    "2023": 4178,
+    "2024": 4514,
+    "2025": 4728,
+    "2026": 3930
+   }
+  },
+  "iit-kanpur": {
+   "openalex_id": "https://openalex.org/I94234084",
+   "display_name": "Indian Institute of Technology Kanpur",
+   "works_count": 51116,
+   "cited_by_count": 2437491,
+   "h_index": 328,
+   "works_by_year": {
+    "2021": 2573,
+    "2022": 2678,
+    "2023": 2810,
+    "2024": 3041,
+    "2025": 3196,
+    "2026": 2968
+   }
+  },
+  "iit-kharagpur": {
+   "openalex_id": "https://openalex.org/I145894827",
+   "display_name": "Indian Institute of Technology Kharagpur",
+   "works_count": 71717,
+   "cited_by_count": 3642292,
+   "h_index": 413,
+   "works_by_year": {
+    "2021": 3866,
+    "2022": 4367,
+    "2023": 4318,
+    "2024": 4684,
+    "2025": 4808,
+    "2026": 4148
+   }
+  },
+  "iit-roorkee": {
+   "openalex_id": "https://openalex.org/I154851008",
+   "display_name": "Indian Institute of Technology Roorkee",
+   "works_count": 50390,
+   "cited_by_count": 2370659,
+   "h_index": 388,
+   "works_by_year": {
+    "2021": 2815,
+    "2022": 3370,
+    "2023": 3739,
+    "2024": 3981,
+    "2025": 4050,
+    "2026": 3495
+   }
+  },
+  "iit-hyderabad": {
+   "openalex_id": "https://openalex.org/I65181880",
+   "display_name": "Indian Institute of Technology Hyderabad",
+   "works_count": 15969,
+   "cited_by_count": 595208,
+   "h_index": 198,
+   "works_by_year": {
+    "2021": 1331,
+    "2022": 1490,
+    "2023": 1637,
+    "2024": 1861,
+    "2025": 1954,
+    "2026": 1719
+   }
+  },
+  "iit-bhu": {
+   "openalex_id": "https://openalex.org/I56404289",
+   "display_name": "Indian Institute of Technology BHU",
+   "works_count": 22857,
+   "cited_by_count": 1057286,
+   "h_index": 256,
+   "works_by_year": {
+    "2021": 1628,
+    "2022": 1882,
+    "2023": 2114,
+    "2024": 2235,
+    "2025": 2187,
+    "2026": 1902
+   }
+  },
+  "iit-bhilai": {
+   "openalex_id": "https://openalex.org/I4210121466",
+   "display_name": "Indian Institute of Technology Bhilai",
+   "works_count": 2108,
+   "cited_by_count": 32983,
+   "h_index": 63,
+   "works_by_year": {
+    "2021": 170,
+    "2022": 226,
+    "2023": 252,
+    "2024": 326,
+    "2025": 412,
+    "2026": 379
+   }
+  },
+  "iit-bhubaneswar": {
+   "openalex_id": "https://openalex.org/I99729588",
+   "display_name": "Indian Institute of Technology Bhubaneswar",
+   "works_count": 7996,
+   "cited_by_count": 262563,
+   "h_index": 173,
+   "works_by_year": {
+    "2021": 619,
+    "2022": 665,
+    "2023": 757,
+    "2024": 896,
+    "2025": 975,
+    "2026": 901
+   }
+  },
+  "iit-dharwad": {
+   "openalex_id": "https://openalex.org/I4210152718",
+   "display_name": "Indian Institute of Technology Dharwad",
+   "works_count": 1719,
+   "cited_by_count": 21162,
+   "h_index": 48,
+   "works_by_year": {
+    "2021": 114,
+    "2022": 167,
+    "2023": 234,
+    "2024": 332,
+    "2025": 380,
+    "2026": 300
+   }
+  },
+  "iit-gandhinagar": {
+   "openalex_id": "https://openalex.org/I27674431",
+   "display_name": "Indian Institute of Technology Gandhinagar",
+   "works_count": 8943,
+   "cited_by_count": 352343,
+   "h_index": 188,
+   "works_by_year": {
+    "2021": 743,
+    "2022": 792,
+    "2023": 1333,
+    "2024": 946,
+    "2025": 1124,
+    "2026": 1011
+   }
+  },
+  "iit-goa": {
+   "openalex_id": "https://openalex.org/I4210112052",
+   "display_name": "Indian Institute of Technology Goa",
+   "works_count": 1222,
+   "cited_by_count": 12445,
+   "h_index": 43,
+   "works_by_year": {
+    "2021": 136,
+    "2022": 120,
+    "2023": 143,
+    "2024": 189,
+    "2025": 219,
+    "2026": 191
+   }
+  },
+  "iit-guwahati": {
+   "openalex_id": "https://openalex.org/I1317621060",
+   "display_name": "Indian Institute of Technology Guwahati",
+   "works_count": 34333,
+   "cited_by_count": 1580666,
+   "h_index": 291,
+   "works_by_year": {
+    "2021": 2480,
+    "2022": 2585,
+    "2023": 2656,
+    "2024": 2825,
+    "2025": 3265,
+    "2026": 2477
+   }
+  },
+  "iit-indore": {
+   "openalex_id": "https://openalex.org/I64295750",
+   "display_name": "Indian Institute of Technology Indore",
+   "works_count": 13098,
+   "cited_by_count": 692535,
+   "h_index": 222,
+   "works_by_year": {
+    "2021": 1111,
+    "2022": 1082,
+    "2023": 1281,
+    "2024": 1462,
+    "2025": 1620,
+    "2026": 1351
+   }
+  },
+  "iit-jammu": {
+   "openalex_id": "https://openalex.org/I4210127441",
+   "display_name": "Indian Institute of Technology Jammu",
+   "works_count": 3100,
+   "cited_by_count": 54957,
+   "h_index": 81,
+   "works_by_year": {
+    "2021": 276,
+    "2022": 316,
+    "2023": 425,
+    "2024": 581,
+    "2025": 612,
+    "2026": 548
+   }
+  },
+  "iit-jodhpur": {
+   "openalex_id": "https://openalex.org/I154549908",
+   "display_name": "Indian Institute of Technology Jodhpur",
+   "works_count": 8393,
+   "cited_by_count": 218210,
+   "h_index": 151,
+   "works_by_year": {
+    "2021": 594,
+    "2022": 807,
+    "2023": 947,
+    "2024": 1258,
+    "2025": 1445,
+    "2026": 1368
+   }
+  },
+  "iit-mandi": {
+   "openalex_id": "https://openalex.org/I9579091",
+   "display_name": "Indian Institute of Technology Mandi",
+   "works_count": 8318,
+   "cited_by_count": 291651,
+   "h_index": 158,
+   "works_by_year": {
+    "2021": 610,
+    "2022": 698,
+    "2023": 836,
+    "2024": 911,
+    "2025": 1094,
+    "2026": 1250
+   }
+  },
+  "iit-palakkad": {
+   "openalex_id": "https://openalex.org/I4210113248",
+   "display_name": "Indian Institute of Technology Palakkad",
+   "works_count": 2640,
+   "cited_by_count": 40350,
+   "h_index": 68,
+   "works_by_year": {
+    "2021": 200,
+    "2022": 322,
+    "2023": 391,
+    "2024": 452,
+    "2025": 498,
+    "2026": 367
+   }
+  },
+  "iit-patna": {
+   "openalex_id": "https://openalex.org/I132153292",
+   "display_name": "Indian Institute of Technology Patna",
+   "works_count": 10333,
+   "cited_by_count": 323908,
+   "h_index": 143,
+   "works_by_year": {
+    "2021": 838,
+    "2022": 935,
+    "2023": 1107,
+    "2024": 1260,
+    "2025": 1295,
+    "2026": 1107
+   }
+  },
+  "iit-ropar": {
+   "openalex_id": "https://openalex.org/I119241673",
+   "display_name": "Indian Institute of Technology Ropar",
+   "works_count": 8799,
+   "cited_by_count": 266854,
+   "h_index": 138,
+   "works_by_year": {
+    "2021": 747,
+    "2022": 956,
+    "2023": 983,
+    "2024": 1131,
+    "2025": 1129,
+    "2026": 1007
+   }
+  },
+  "iit-tirupati": {
+   "openalex_id": "https://openalex.org/I4210109292",
+   "display_name": "Indian Institute of Technology Tirupati",
+   "works_count": 2474,
+   "cited_by_count": 47027,
+   "h_index": 85,
+   "works_by_year": {
+    "2021": 220,
+    "2022": 268,
+    "2023": 319,
+    "2024": 376,
+    "2025": 424,
+    "2026": 386
+   }
+  },
+  "iisc-bangalore": {
+   "openalex_id": "https://openalex.org/I59270414",
+   "display_name": "Indian Institute of Science Bangalore",
+   "works_count": 90541,
+   "cited_by_count": 4529619,
+   "h_index": 472,
+   "works_by_year": {
+    "2021": 3915,
+    "2022": 4154,
+    "2023": 4018,
+    "2024": 4343,
+    "2025": 4666,
+    "2026": 4089
+   }
+  },
+  "nit-tiruchirappalli": {
+   "openalex_id": "https://openalex.org/I122964287",
+   "display_name": "National Institute of Technology Tiruchirappalli",
+   "works_count": 17813,
+   "cited_by_count": 718089,
+   "h_index": 221,
+   "works_by_year": {
+    "2021": 1411,
+    "2022": 1517,
+    "2023": 1488,
+    "2024": 1356,
+    "2025": 1408,
+    "2026": 991
+   }
+  },
+  "nit-warangal": {
+   "openalex_id": "https://openalex.org/I121750182",
+   "display_name": "National Institute of Technology Warangal",
+   "works_count": 13985,
+   "cited_by_count": 415180,
+   "h_index": 178,
+   "works_by_year": {
+    "2021": 1200,
+    "2022": 1355,
+    "2023": 1355,
+    "2024": 1547,
+    "2025": 1548,
+    "2026": 1207
+   }
+  },
+  "nit-rourkela": {
+   "openalex_id": "https://openalex.org/I16292982",
+   "display_name": "National Institute of Technology Rourkela",
+   "works_count": 22974,
+   "cited_by_count": 1041913,
+   "h_index": 253,
+   "works_by_year": {
+    "2021": 1661,
+    "2022": 1820,
+    "2023": 1943,
+    "2024": 2002,
+    "2025": 1983,
+    "2026": 1422
+   }
+  }
+ },
+ "ambiguous": [],
+ "unmatched": [
+  "iit-ism-dhanbad",
+  "nit-surathkal"
+ ],
+ "not_tried": [
+  "nit-calicut",
+  "mnnit-allahabad",
+  "nit-jalandhar",
+  "mnit-jaipur",
+  "manit-bhopal",
+  "nit-agartala",
+  "nit-arunachal",
+  "nit-delhi",
+  "nit-durgapur",
+  "nit-goa",
+  "nit-hamirpur",
+  "nit-meghalaya",
+  "nit-nagaland",
+  "nit-patna",
+  "nit-puducherry",
+  "nit-raipur",
+  "nit-sikkim",
+  "nit-andhra",
+  "nit-jamshedpur",
+  "nit-kurukshetra",
+  "nit-manipur",
+  "nit-mizoram",
+  "nit-silchar",
+  "nit-srinagar",
+  "nit-uttarakhand",
+  "svnit-surat",
+  "vnit-nagpur",
+  "iiit-allahabad",
+  "abv-iiitm-gwalior",
+  "iiitdm-jabalpur",
+  "iiitdm-kancheepuram",
+  "iiitdm-kurnool",
+  "iiit-nagpur",
+  "iiit-pune",
+  "iiit-ranchi",
+  "iiit-sri-city",
+  "iiit-kota",
+  "iiit-bhagalpur",
+  "iiit-bhopal",
+  "iiit-guwahati",
+  "iiit-lucknow",
+  "iiit-surat",
+  "iiit-tiruchirappalli",
+  "iiit-dharwad",
+  "iiit-kalyani",
+  "iiit-sonepat",
+  "iiit-kottayam",
+  "iiit-una",
+  "iiit-vadodara",
+  "iiit-agartala",
+  "iiit-vadodara-diu",
+  "iiit-raichur",
+  "iiit-manipur",
+  "bit-mesra",
+  "pec-chandigarh",
+  "iiest-shibpur",
+  "bit-deoghar",
+  "bit-patna",
+  "assam-university",
+  "cu-jharkhand",
+  "cu-haryana",
+  "cu-jammu",
+  "cu-karnataka",
+  "cu-punjab",
+  "cu-rajasthan",
+  "cit-kokrajhar",
+  "csvtu-bhilai",
+  "gati-shakti-vadodara",
+  "gkciet-malda",
+  "gkv-haridwar",
+  "iict-bhadohi",
+  "iiht-varanasi",
+  "iiht-salem",
+  "ict-bhubaneswar",
+  "iet-sagar",
+  "iitram-ahmedabad",
+  "iiit-bhubaneswar",
+  "iiit-naya-raipur",
+  "iust-kashmir",
+  "jk-iapt-allahabad",
+  "jnu-delhi",
+  "mizoram-university",
+  "niamt-ranchi",
+  "nielit-agartala",
+  "nielit-aizawl",
+  "nielit-ajmer",
+  "nielit-aurangabad",
+  "nielit-calicut",
+  "nielit-gorakhpur",
+  "nielit-imphal",
+  "nielit-kohima",
+  "nielit-patna",
+  "nielit-ropar",
+  "nielit-srinagar",
+  "niftem-kundli",
+  "niftem-thanjavur",
+  "nittr-bhopal",
+  "nerist-nirjuli",
+  "nehu-shillong",
+  "puducherry-tech-university",
+  "rgnau-amethi",
+  "sliet-longowal",
+  "tezpur-university",
+  "spa-bhopal",
+  "spa-delhi",
+  "spa-vijayawada",
+  "ggv-bilaspur",
+  "sgsits-indore",
+  "smvdu-katra",
+  "university-of-hyderabad",
+  "hnb-garhwal"
+ ]
+}

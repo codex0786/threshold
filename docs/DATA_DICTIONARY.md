@@ -15,6 +15,9 @@ Source of truth for built tables: `backend/app/models.py` and `backend/alembic/v
 | `cutoff_records` | Published opening and closing ranks | Unique per programme, authority, year, round, quota, seat type and pool. Past years are never overwritten |
 | `seat_matrix_records` | Seats published by JoSAA | One row per programme, year, quota, seat type and gender pool. Never used to calculate a chance of admission |
 | `csab_cutoffs` | CSAB special round ranks | Kept apart from `cutoff_records` so they can't enter a band. All ranks are on the common rank list |
+| `academic_snapshots` | Faculty totals per NIRF submission | Whole institute. Deliberately holds no names, ages or genders |
+| `academic_year_records` | Doctoral, research and academic spending per year | Self-reported, from NIRF submissions |
+| `research_outputs` | Publication counts from OpenAlex | Research output only. Matched on exact institute name and never scored |
 | `institution_rankings` | NIRF ranks | Verification status required |
 | `placement_records` | Placement outcomes | 248 rows: 201 from NIRF plus 1 report row institute-wide, and 46 for individual branches. `base_students` and `base_label` name the group each rate is measured against, and `salary_basis` marks CTC. Keeps total, eligible, graduating, placed, offers and higher studies apart. Has `cohort_label` and `reporting_definition`. A constraint enforces scope consistency |
 | `placement_sectors` | Students placed by sector | Per report and cohort |

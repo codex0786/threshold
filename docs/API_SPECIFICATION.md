@@ -54,3 +54,12 @@ Responses contain no probability fields, and a test enforces that.
 
 ## Planned
 `POST /students/profile`, `POST /admissions/predict`, `GET /programmes/{id}/faculty`, `POST /preference-lists` (saving on the server), `POST /ai/counselling`, `GET /admin/ingestion-jobs`.
+
+## Counselling assistant
+`POST /api/v1/ai/counselling` with `{"question": "...", "profile": {...}}`. `profile` is optional, and the question isn't stored.
+
+Returns `tool`, `summary`, `facts` (each with `text`, `source_title`, `source_url`, `year`, `verification_status`), `reasoning` (general reasoning, not data), `gaps`, `needs_profile` and `uses_ai_model`, which is always `false`. A question matches one fixed tool, and there is no free-form database access.
+
+## Faculty
+`GET /api/v1/programmes/{id}/faculty` returns `institute_wide` figures and a `department_level` that is always `null`, because none is collected.
+

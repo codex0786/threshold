@@ -67,7 +67,7 @@ class StudentProfile(BaseModel):
         if any(v < 0 for v in self.priorities.values()):
             raise ValueError("Priorities cannot be negative")
         # Profiles saved in a browser before this factor existed hold every other priority. Partial API requests stay as sent.
-        if "demand" not in self.priorities and set(DEFAULT_PRIORITIES) - {"demand"} <= set(self.priorities):
+        if "demand" not in self.priorities and set(DEFAULT_PRIORITIES) - {"demand", "faculty", "research"} <= set(self.priorities):
             self.priorities["demand"] = DEFAULT_PRIORITIES["demand"]
         return self
 
@@ -81,6 +81,11 @@ class StudentProfile(BaseModel):
 class RecommendationRequest(BaseModel):
     profile: StudentProfile
     per_band_limit: int = Field(default=25, ge=1, le=100)
+
+
+class CounsellingRequest(BaseModel):
+    question: str = Field(min_length=2, max_length=500)
+    profile: StudentProfile | None = None
 
 
 class ComparisonRequest(BaseModel):

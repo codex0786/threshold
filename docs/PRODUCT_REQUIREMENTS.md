@@ -32,7 +32,7 @@ Help JEE aspirants and parents decide which college and branch to choose, why, a
 | 11 | Parent report | **Done**. PDF uses the browser's print function |
 | 12 | Admin can update and verify data | **Not built** |
 
-**The MVP is not complete.** The main gaps are admin, accounts, faculty, curriculum, and wider coverage of branch-level data and fees.
+**The MVP is not complete.** The main gaps are admin, accounts, curriculum, department-level faculty, a language model for the assistant, and wider coverage of branch-level data and fees.
 
 ## Onboarding fields
 Collected now: Class XII state, category, seat pool, PwD status, Class XII criterion, JEE Main and Advanced ranks by list, branch preferences, institution types, states, career goals, annual budget, priorities.

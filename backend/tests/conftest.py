@@ -12,7 +12,7 @@ from sqlalchemy import select, text
 from app.db import SessionLocal, engine, get_db
 from app.main import app
 from app.models import (
-    Base, CsabCutoff, CutoffRecord, DataSource, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, SeatMatrixRecord, SourceDocument,
+    AcademicSnapshot, AcademicYearRecord, Base, CsabCutoff, CutoffRecord, DataSource, FeeRecord, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, SeatMatrixRecord, SourceDocument,
 )
 from app.services.eligibility import exam_for, rank_list_name
 
@@ -114,6 +114,12 @@ def seeded(schema):
         db.flush()
         for programme, quota, seat, closing in [(civil, "OS", "OPEN", 400000), (cse_two, "HS", "OPEN", 500000), (civil, "OS", "SC", 600000)]:
             db.add(CsabCutoff(programme_id=programme.id, year=2026, round=2, quota=quota, seat_type=seat, gender_pool="neutral", opening_rank=closing - 10, closing_rank=closing, source_document_id=doc.id))
+        # Faculty totals exist for one institute only, so others must show nothing.
+        db.add(AcademicSnapshot(institution_id=nit.id, submission_year=2026, category="Engineering", faculty_listed=120, faculty_current=110, faculty_regular=100, faculty_with_phd=90, professors=20, associate_professors=30, assistant_professors=50, median_experience_months=120, students_total=1500, phd_students=200, verification_status="test_fixture", source_document_id=doc.id))
+        db.add(AcademicYearRecord(institution_id=nit.id, submission_year=2026, category="Engineering", academic_year="2024-25", phd_graduated=30, sponsored_projects=40, sponsored_amount_inr=50_000_000, patents_granted=3, library_spend_inr=1_000_000, equipment_spend_inr=9_000_000, verification_status="test_fixture", source_document_id=doc.id))
+        # One branch's median and a partial fee, so an institute-level answer can't borrow the branch figure.
+        db.add(PlacementRecord(institution_id=goa.id, programme_id=goa_cse.id, scope="programme", cohort_label="TEST branch cohort", reporting_definition="institute_placement_report", graduation_year=2025, students_placed=50, median_salary_inr=1_234_000, verification_status="test_fixture", source_document_id=doc.id))
+        db.add(FeeRecord(institution_id=goa.id, academic_year="2026-27", seat_type_group="General/OBC-NCL/EWS, TEST", annual_tuition_inr=100_000, verification_status="test_fixture", source_document_id=doc.id))
         # A preparatory rank must never be treated as a normal numeric cutoff.
         db.add(CutoffRecord(
             programme_id=iit_cse.id, authority="JOSAA", year=2026, round=6, is_final_round=True, quota="AI", seat_type="SC-PwD", gender_pool="neutral",

@@ -83,9 +83,9 @@
   name: OpenAlex scholarly metadata
   publisher: OurResearch
   url: https://api.openalex.org/
-  tier: official
-  access_method: Open JSON API, confirmed reachable. Not yet ingested.
-  access_status: planned
+  tier: secondary
+  access_method: Public API, one first-page search per institute with no key. Matched only on an exact institute name.
+  access_status: available
   terms_note: Research output only. Must not be presented as a measure of teaching quality.
 - key: manual_location
   name: Institution locations entered by hand

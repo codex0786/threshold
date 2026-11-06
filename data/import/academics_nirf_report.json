@@ -1,0 +1,339 @@
+{
+ "abv-iiitm-gwalior": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "bit-mesra": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "gkv-haridwar": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iiit-bhagalpur": {
+  "category": "Overall",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-dharwad": {
+  "category": "Overall",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-guwahati": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": [
+   "Faculty row numbers aren't continuous, so rows may be missing"
+  ]
+ },
+ "iiit-kalyani": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-kota": {
+  "category": "Overall",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-kottayam": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-nagpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-naya-raipur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-raichur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-ranchi": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-sri-city": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiit-vadodara": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiitdm-jabalpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiitdm-kancheepuram": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iiitdm-kurnool": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-bhilai": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-bhu": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-bhubaneswar": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-bombay": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-delhi": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-dharwad": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-goa": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-guwahati": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-hyderabad": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-indore": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-ism-dhanbad": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-jodhpur": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-kanpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-kharagpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-madras": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-mandi": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-palakkad": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-roorkee": {
+  "category": "Overall",
+  "year": 2025,
+  "problems": []
+ },
+ "iit-ropar": {
+  "category": "Overall",
+  "year": 2026,
+  "problems": []
+ },
+ "iit-tirupati": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "iitram-ahmedabad": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "manit-bhopal": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "mnit-jaipur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "mnnit-allahabad": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nerist-nirjuli": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-andhra": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-calicut": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-durgapur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-goa": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-hamirpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-jalandhar": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-jamshedpur": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-kurukshetra": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "nit-meghalaya": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "nit-mizoram": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-nagaland": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-puducherry": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "nit-raipur": {
+  "category": "Overall",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-rourkela": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-silchar": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-srinagar": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-surathkal": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-tiruchirappalli": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-uttarakhand": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "nit-warangal": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "pec-chandigarh": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "smvdu-katra": {
+  "category": "Engineering",
+  "year": 2025,
+  "problems": []
+ },
+ "svnit-surat": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ },
+ "tezpur-university": {
+  "category": "Engineering",
+  "year": 2026,
+  "problems": []
+ }
+}

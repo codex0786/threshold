@@ -15,6 +15,7 @@ from app.models import (
     SeatMatrixRecord,
 )
 from app.schemas import StudentProfile
+from app.services import academics
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
 from app.services.branches import CAREER_BRANCH_AFFINITY, FAMILY_LABELS
 from app.services.eligibility import exam_for, gender_pools, quota_applies, seat_claims
@@ -94,6 +95,10 @@ def fee_for(programme: Programme, evidence: dict) -> FeeRecord | None:
     return None if programme.campus_city else evidence["fees"].get(programme.institution_id)
 
 
+def academics_for(programme: Programme, evidence: dict) -> dict | None:
+    return None if programme.campus_city else evidence["academics"].get(programme.institution_id)
+
+
 def cost_inputs(fee: FeeRecord | None, profile: StudentProfile) -> dict:
     """What can be compared with a budget. Fee records state who they cover, and aren't applied to anyone else."""
     if fee is None:
@@ -155,7 +160,7 @@ def institution_evidence(db: Session) -> dict:
             too_small = record.graduating_students is not None and record.graduating_students < MIN_GRADUATING_CLASS
             if record.median_salary_inr and not too_small:
                 cohorts[(record.scope, record.reporting_definition)][record.graduation_year].append(float(record.median_salary_inr))
-    return {"rankings": rankings, "placements": placements, "fees": fees, "cohorts": cohorts}
+    return {"rankings": rankings, "placements": placements, "fees": fees, "cohorts": cohorts, "academics": academics.load(db)}
 
 
 def latest_per_year(records: list[PlacementRecord]) -> list[PlacementRecord]:
@@ -286,14 +291,17 @@ def data_gaps(placements: list, ranking, fee, quality_components) -> list[str]:
     elif ranking.verification_status == "secondary_unverified":
         gaps.append("NIRF rank comes from a secondary source and is awaiting official verification")
     if any(c.key == "academic_faculty" and c.score is None for c in quality_components):
-        gaps.append("Faculty and curriculum data not yet collected")
+        gaps.append("No comparable faculty or research figures on record")
+    else:
+        gaps.append("Faculty and research figures cover the whole institute, not this department")
+    gaps.append("Curriculum data not yet collected")
     return gaps
 
 
 def _strengths_and_weaknesses(band, suitability, ranking) -> tuple[list[str], list[str]]:
     strengths, weaknesses = [], []
     for c in suitability.components:
-        if c.score is None:
+        if c.score is None or c.weight == 0:
             continue
         if c.score >= 75 and c.key != "reputation":
             strengths.append(c.note)
@@ -471,7 +479,8 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
         note = (
             f"NIRF {ranking.year} rank {ranking.rank} ({ranking.verification_status.replace('_', ' ')})" if ranking else ""
         )
-        quality = quality_score(ranking.rank if ranking else None, note, career)
+        academic_profile = academics_for(programme, evidence)
+        quality = quality_score(ranking.rank if ranking else None, note, career, academics.quality_evidence(academic_profile))
         suitability = suitability_score(FitInputs(
             branch_family=programme.branch_family, institute_type=inst.institute_type, state=location_of(programme)[1],
             nirf_rank=ranking.rank if ranking else None, career_dimension_score=career[0], **cost_inputs(fee, profile),
@@ -479,7 +488,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             career_goal_families=goals, preferred_states=frozenset(profile.preferred_states),
             preferred_types=frozenset(profile.preferred_types), annual_budget_inr=profile.annual_budget_inr,
             career_note=career[1], priorities=profile.priorities,
-            **fit_contest(contest, programme_id),
+            **fit_contest(contest, programme_id), **academics.fit_inputs(academic_profile),
         ))
         strengths, weaknesses = _strengths_and_weaknesses(best["band"], suitability, ranking)
         if best["seats"] is not None and 0 < best["seats"] <= 2:
@@ -494,10 +503,10 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             "other_routes": sorted([r for r in seat_routes if r is not best], key=lambda r: (BAND_RANK.get(r["band"], 9), r["quota"], r["seat_type"], r["gender_pool"])),
             "quality": describe_quality(quality),
             "suitability": {"score": suitability.score, "coverage": suitability.coverage, "components": [asdict(c) for c in suitability.components]},
-            "ranking": ranking_json(ranking), "placements": placement_json(placement_records), "fee": fee_json(fee),
+            "ranking": ranking_json(ranking), "placements": placement_json(placement_records), "fee": fee_json(fee), "academics": academics.summary(academic_profile),
             "strengths": strengths, "weaknesses": weaknesses,
             "data_gaps": data_gaps(placement_records, ranking, fee, quality.components),
-            "why": [best["explanation"], best["quota_reason"]] + [c.note for c in suitability.components if c.score is not None and c.score >= 75],
+            "why": [best["explanation"], best["quota_reason"]] + [c.note for c in suitability.components if c.score is not None and c.score >= 75 and c.weight > 0],
         })
 
     # Seats without a band come last, since their one closing rank says little about next year.

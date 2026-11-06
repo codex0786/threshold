@@ -33,6 +33,20 @@ export type Fee = {
   payable_at_admission_inr: number | null; verification_status: string; notes: string | null; source_title: string; source_url: string; source_page: number | null;
 };
 export type Quality = { score: number | null; coverage: number; status: string; components: Component[] };
+export type AcademicYear = { academic_year: string; phd_graduated?: number | null; sponsored_projects?: number | null; sponsored_amount_inr?: number | null; consultancy_amount_inr?: number | null; patents_published?: number | null; patents_granted?: number | null; library_spend_inr?: number | null; equipment_spend_inr?: number | null };
+export type Academics = {
+  scope_note: string;
+  teaching: { students_total: number | null; faculty_regular: number | null; students_per_regular_faculty: number | null; note: string } | null;
+  experience: { faculty_with_phd: number | null; phd_share: number | null; median_experience_years: number | null; professors: number | null; associate_professors: number | null; assistant_professors: number | null } | null;
+  availability: { faculty_listed: number | null; faculty_current: number | null; faculty_regular: number | null; faculty_other_current: number | null; note: string } | null;
+  research: { phd_students: number | null; note: string; years: AcademicYear[] } | null;
+  resources: { note: string; years: AcademicYear[] } | null;
+  publications: { works_count: number | null; cited_by_count: number | null; h_index: number | null; note: string; verification_status: string; source_url: string; source_title: string; retrieved: string } | null;
+  scores: { faculty: number | null; research: number | null; cohort_size?: number; note?: string };
+  source: { title: string; url: string; submission_year: number; category: string; verification_status: string; issues: string | null } | null;
+};
+export type AssistantFact = { text: string; source_title: string | null; source_url: string | null; year: number | string | null; verification_status: string | null };
+export type AssistantAnswer = { tool: string; summary: string; facts: AssistantFact[]; reasoning: string[]; gaps: string[]; needs_profile: boolean; uses_ai_model: boolean; examples: string[] };
 export type InstitutionRef = { slug: string; short_name: string; official_name?: string; type: string; city: string | null; state: string; campus_note?: string };
 
 export type Option = {
@@ -42,6 +56,7 @@ export type Option = {
   ranking: Ranking | null; placements: Placement[]; fee: Fee | null;
   strengths: string[]; weaknesses: string[]; data_gaps: string[]; why: string[];
   earlier_names?: { name: string; until: number }[]; total_seats?: number | null;
+  academics?: { students_per_regular_faculty: number | null; phd_share: number | null; faculty_regular: number | null } | null;
 };
 export type Recommendations = {
   engine_version: string; data_year?: number; history_window?: [number, number]; counts: Record<string, number>;
@@ -66,12 +81,12 @@ export type ProgrammeSummary = { id: number; name: string; degree: string | null
 export type InstitutionDetail = {
   slug: string; short_name: string; official_name: string; type: string; city: string | null; state: string; website: string | null;
   is_pilot: boolean; location_verification: string; aliases: string[]; rankings: Ranking[]; quota_states: Record<string, string[]>;
-  institution_placements: Placement[]; fee: Fee | null; programmes: ProgrammeSummary[]; completeness: { percent: number; fields: Record<string, boolean> }; careers: Careers;
+  institution_placements: Placement[]; fee: Fee | null; programmes: ProgrammeSummary[]; completeness: { percent: number; fields: Record<string, boolean> }; careers: Careers; academics: Academics | null;
 };
 export type ProgrammeDetail = {
   id: number; name: string; degree: string | null; duration_years: number | null; branch_family: string; branch_label: string; required_paper: string;
   institution: InstitutionRef; available_seats: { seat_type: string; quota: string; gender_pool: string }[];
-  placements: Placement[]; ranking: Ranking | null; fee: Fee | null;
+  placements: Placement[]; ranking: Ranking | null; fee: Fee | null; academics: Academics | null;
 };
 export type CutoffPoint = {
   year: number; round: number; is_final_round: boolean; quota: string; rank_list: string; opening_rank: number | null; closing_rank: number | null;
@@ -81,13 +96,13 @@ export type ComparisonItem = {
   programme_id: number; programme: string; degree: string | null; duration_years: number | null; branch_label: string; branch_family: string;
   institution: InstitutionRef; reference_cutoff: { year: number; quota: string; closing_rank: number; rank_list: string; source_url: string; source_title: string } | null;
   ranking: Ranking | null; placements: Placement[]; fee: Fee | null; quality: Quality; data_gaps: string[];
-  student_route: Route | null; suitability: { score: number | null; coverage: number; components: Component[] } | null; careers: Careers;
+  student_route: Route | null; suitability: { score: number | null; coverage: number; components: Component[] } | null; careers: Careers; academics: Academics | null;
 };
 export type Comparison = { items: ComparisonItem[]; trade_offs: string[]; note: string };
 export type DataSource = { key: string; name: string; publisher: string; url: string; tier: string; access_method: string; access_status: string; terms_note: string | null; documents: number; last_checked_at: string | null };
 export type Completeness = {
   institutions: number; programmes: number; cutoff_records: number; cutoff_years: number[]; coverage: Record<string, number>; not_yet_collected: string[];
-  detail?: Record<string, number>; by_type?: Record<string, { institutions: number; nirf_rank: number; placements: number; fees: number }>;
+  detail?: Record<string, number>; by_type?: Record<string, { institutions: number; nirf_rank: number; placements: number; fees: number; faculty: number }>;
 };
 export type CsabLead = {
   programme_id: number; programme: string; degree: string | null; branch_label: string; institution: InstitutionRef; year: number; round: number; quota: string;
@@ -152,7 +167,7 @@ export type ReportOption = {
   position: number; programme_id: number; programme: string; degree: string | null; duration_years: number | null; branch_plain: string;
   institution: { short_name: string; official_name: string; type: string; city: string | null; state: string };
   admission: { title: string; text: string; band: Band; routes: { seat_type: string; quota: string; rank_used: number; rank_list: string; explanation: string }[]; issues: string[] };
-  ranking: Ranking | null; placement_highlight: Placement | null; placements: Placement[]; fee: Fee | null; known_annual: number | null;
+  ranking: Ranking | null; placement_highlight: Placement | null; placements: Placement[]; fee: Fee | null; known_annual: number | null; academics: Academics | null;
   loan: { known_total: number; complete: boolean; terms: RoiResult["loan"]; scenarios: RoiResult["scenarios"] } | null; careers: Careers; risks: string[];
 };
 export type ParentReport = {

@@ -345,3 +345,92 @@ def test_preference_list_points_an_old_name_to_the_new_one(client, seeded):
     assert not any("cutoff" in issue for issue in items[1]["issues"])
     assert items[1]["band"] is not None
 
+
+def test_institute_shows_faculty_indicators_separately_with_a_source(client):
+    body = client.get("/api/v1/institutions/fixture-nit").json()["academics"]
+    assert body["teaching"]["students_per_regular_faculty"] == 15.0 and body["experience"]["phd_share"] == 0.9
+    assert body["availability"]["faculty_other_current"] == 10 and body["research"]["years"][0]["sponsored_amount_inr"] == 50_000_000
+    assert body["source"]["title"] and "teach" in body["teaching"]["note"] and "not this department" in body["scope_note"]
+
+
+def test_missing_faculty_data_stays_missing(client, seeded):
+    assert client.get("/api/v1/institutions/fixture-goa").json()["academics"] is None
+    body = client.get(f"/api/v1/programmes/{seeded['goa_cse']}/faculty").json()
+    assert body["status"] == "Data not available" and body["institute_wide"] is None
+
+
+def test_programme_faculty_is_never_presented_as_department_data(client, seeded):
+    body = client.get(f"/api/v1/programmes/{seeded['cse']}/faculty").json()
+    assert body["department_level"] is None and body["status"] == "institute_wide" and body["institute_wide"]["teaching"]
+
+
+def test_faculty_sliders_change_order_not_bands(client):
+    before = {o["programme_id"]: o["band"] for o in generate(client)["options"]}
+    after = {o["programme_id"]: o["band"] for o in generate(client, priorities={"branch_fit": 10, "faculty": 90, "research": 90})["options"]}
+    assert before == after
+
+
+def ask(client, question, **kw):
+    response = client.post("/api/v1/ai/counselling", json={"question": question, **kw})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def test_assistant_states_it_uses_no_model_and_never_stores_the_question(client):
+    with SessionLocal() as db:
+        runs = db.scalar(select(func.count()).select_from(RecommendationRun))
+    assert ask(client, "What is the difference between float and slide?")["uses_ai_model"] is False
+    ask(client, "Fees at Fixture NIT", profile=profile())
+    with SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(RecommendationRun)) == runs
+
+
+def test_assistant_rules_answers_cite_the_official_rules(client):
+    answer = ask(client, "What is the difference between float and slide?")
+    assert answer["tool"] == "joint_seat_rules" and len(answer["facts"]) >= 3
+    assert all("Business Rules" in f["source_title"] and f["source_url"] for f in answer["facts"])
+
+
+def test_assistant_compares_without_picking_and_labels_reasoning(client):
+    answer = ask(client, "Should I choose Fixture NIT CSE or Fixture NIT Two ECE?")
+    assert answer["tool"] == "compare_programmes" and "won't pick" in answer["summary"]
+    assert any("Fixture NIT Two" in f["text"] for f in answer["facts"])
+    assert all(f["source_url"] for f in answer["facts"])
+
+
+def test_assistant_uses_a_rank_only_as_a_band_never_a_percentage(client):
+    text = str(ask(client, "What is my chance at Fixture NIT CSE?", profile=profile()))
+    assert "band" in text and "%" not in text.replace("20%", "").replace("10%", "")
+    assert "chance of admission" in text
+
+
+def test_assistant_says_when_it_recognised_only_one_option(client):
+    answer = ask(client, "Fixture NIT CSE or Some Unknown College CSE")
+    assert "only recognised Fixture NIT" in answer["summary"] and answer["tool"] == "institute_records"
+
+
+def test_assistant_gives_no_verdicts_or_teacher_ratings(client):
+    assert "can't tell you" in ask(client, "Is Fixture NIT good?")["summary"]
+    assert "don't rate" in ask(client, "Who is the best professor at Fixture NIT?")["summary"]
+
+
+def test_assistant_reports_missing_data_instead_of_inventing_it(client):
+    answer = ask(client, "Faculty at Fixture NIT Goa")
+    assert answer["facts"] == [] and any("No NIRF faculty" in g for g in answer["gaps"])
+    assert ask(client, "What's the weather?")["tool"] == "not_understood"
+
+
+def test_assistant_asks_for_a_rank_it_doesnt_have(client):
+    answer = ask(client, "Which college can I get?")
+    assert answer["needs_profile"] is True and answer["facts"] == []
+    assert ask(client, "Which college can I get?", profile=profile())["facts"]
+
+
+def test_assistant_value_answer_never_uses_a_branch_median_for_an_institute(client):
+    text = str(ask(client, "Best value under 100 lakh")["facts"])
+    assert "Fixture NIT Goa" in text and "No institute-wide median" in text and "12.34 lakh" not in text
+
+
+def test_assistant_rejects_an_oversized_question(client):
+    assert client.post("/api/v1/ai/counselling", json={"question": "x" * 501}).status_code == 422
+

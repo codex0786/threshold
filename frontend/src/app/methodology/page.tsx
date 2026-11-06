@@ -7,10 +7,12 @@ export const revalidate = 3600;
 const STATUS: Record<string, string> = { available: "In use", planned: "Planned", manual_only: "Manual import only", blocked: "Blocked" };
 
 const TYPE_LABEL: Record<string, string> = { IIT: "IITs", IISC: "IISc", NIT: "NITs", IIIT: "IIITs", GFTI: "Other government-funded" };
+const TYPE_ORDER = ["IIT", "IISC", "NIT", "IIIT", "GFTI"];
 const DETAIL: [string, string][] = [
   ["seat_matrix_programmes", "Programmes in the 2026 seat matrix"], ["csab_programmes", "Programmes with CSAB special round ranks"],
   ["renamed_programmes", "Renamed programmes joined to their history"], ["branch_placements", "Programmes with their own placement figures"],
   ["complete_yearly_fees", "Institutes with a complete yearly cost"], ["state_confirmed", "Institutes with their state confirmed by JoSAA"],
+  ["faculty_institutes", "Institutes with faculty and research figures"], ["publication_institutes", "Institutes with publication counts"],
   ["official_rankings", "NIRF ranks entered from the official site"],
 ];
 
@@ -48,6 +50,7 @@ export default async function Methodology() {
             <li>Bands cover JoSAA only. CSAB special round ranks are shown separately for 2026, with no bands, because the form offers one year. State counselling is not included.</li>
             <li>The latest year’s final round is the last one published when we collected the data.</li>
             <li>Programme-specific medical and other restrictions are not checked. See the JoSAA annexures.</li>
+            <li>Faculty, doctoral, research and spending figures come from institutes’ own NIRF submissions and cover the whole institute. We keep only totals, not names, ages or genders. They don’t measure teaching, and they count towards your fit only if you turn on their sliders.</li>
             <li>Seat counts come from the 2026 JoSAA seat matrix. They add a warning when a category has one or two seats, and remove a route with no seat and no 2026 cutoff. They don’t change a band.</li>
             <li>When JoSAA renames a programme, its history is joined only for pairs reviewed by hand, and the card shows the earlier name. Institutes haven’t confirmed these.</li>
           </ul>
@@ -58,10 +61,10 @@ export default async function Methodology() {
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <caption className="mb-1 text-left text-xs text-ink-3">How much is on record, by type of institute. Most gaps are at newer institutes and GFTIs, so a blank there says nothing about quality.</caption>
-                <thead><tr className="text-left text-xs text-ink-3"><th scope="col" className="py-1 font-medium">Type</th><th scope="col" className="py-1 text-right font-medium">Institutes</th><th scope="col" className="py-1 text-right font-medium">NIRF rank</th><th scope="col" className="py-1 text-right font-medium">Placements</th><th scope="col" className="py-1 text-right font-medium">Fees</th></tr></thead>
+                <thead><tr className="text-left text-xs text-ink-3"><th scope="col" className="py-1 font-medium">Type</th><th scope="col" className="py-1 text-right font-medium">Institutes</th><th scope="col" className="py-1 text-right font-medium">NIRF rank</th><th scope="col" className="py-1 text-right font-medium">Placements</th><th scope="col" className="py-1 text-right font-medium">Fees</th><th scope="col" className="py-1 text-right font-medium">Faculty</th></tr></thead>
                 <tbody className="divide-y divide-line">
-                  {Object.entries(completeness.by_type).map(([type, row]) => (
-                    <tr key={type} className="tnum"><th scope="row" className="py-1 text-left font-normal">{TYPE_LABEL[type] ?? type}</th><td className="py-1 text-right">{num(row.institutions)}</td><td className="py-1 text-right">{num(row.nirf_rank)}</td><td className="py-1 text-right">{num(row.placements)}</td><td className="py-1 text-right">{num(row.fees)}</td></tr>
+                  {Object.entries(completeness.by_type).sort(([a], [b]) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b)).map(([type, row]) => (
+                    <tr key={type} className="tnum"><th scope="row" className="py-1 text-left font-normal">{TYPE_LABEL[type] ?? type}</th><td className="py-1 text-right">{num(row.institutions)}</td><td className="py-1 text-right">{num(row.nirf_rank)}</td><td className="py-1 text-right">{num(row.placements)}</td><td className="py-1 text-right">{num(row.fees)}</td><td className="py-1 text-right">{num(row.faculty)}</td></tr>
                   ))}
                 </tbody>
               </table>

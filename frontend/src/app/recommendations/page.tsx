@@ -76,6 +76,7 @@ function OptionCard({ option, index }: { option: Option; index: number }) {
             <div><h3 className="text-base font-medium">How your fit was worked out</h3><div className="mt-2"><ComponentList components={option.suitability.components} /></div></div>
             <div><h3 className="text-base font-medium">Quality</h3><div className="mt-1"><QualityScore quality={option.quality} /></div></div>
             <div><h3 className="text-base font-medium">Ranking</h3><div className="mt-1 text-sm"><RankingLine ranking={option.ranking} /></div></div>
+            {option.academics && <div><h3 className="text-base font-medium">Faculty and research (whole institute)</h3><p className="mt-1 text-sm text-ink-2">{option.academics.students_per_regular_faculty != null ? `${option.academics.students_per_regular_faculty} students per regular faculty member. ` : ""}{option.academics.phd_share != null ? `${Math.round(option.academics.phd_share * 100)}% of regular faculty hold a doctorate. ` : ""}<Link className="underline" href={`/colleges/${option.institution.slug}`}>See the institute’s figures</Link></p></div>}
             <div><h3 className="text-base font-medium">Placements</h3><div className="mt-1"><PlacementBlock records={option.placements} /></div></div>
             <div><h3 className="text-base font-medium">Fees</h3><div className="mt-1"><FeeBlock fee={option.fee} /></div></div>
           </div>

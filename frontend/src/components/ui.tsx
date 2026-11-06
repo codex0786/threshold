@@ -180,7 +180,7 @@ export function QualityScore({ quality }: { quality: Quality }) {
 export function ComponentList({ components }: { components: Component[] }) {
   return (
     <ul className="space-y-2.5">
-      {components.map((c) => (
+      {components.filter((c) => c.weight > 0).map((c) => (
         <li key={c.key}>
           <div className="flex justify-between gap-3 text-sm">
             <span>{c.label}</span>

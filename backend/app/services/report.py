@@ -90,7 +90,7 @@ def build(db: Session, profile: StudentProfile, programme_ids: list[int]) -> dic
         options.append({
             "position": item["position"], "programme_id": programme.id, "programme": programme.name, "degree": programme.degree, "duration_years": programme.duration_years,
             "branch_plain": BRANCH_PLAIN.get(programme.branch_family, "See the institute's website for what this programme covers."),
-            "institution": rec.institution_json(programme),
+            "institution": rec.institution_json(programme), "academics": rec.academics_for(programme, evidence),
             "admission": {
                 "title": band_title, "text": band_text, "band": item.get("band"), "issues": item["issues"],
                 "routes": [{**route, "explanation": route["explanation"].replace("Your rank", "The student's rank")} for route in item.get("routes", [])[:1]],

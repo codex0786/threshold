@@ -1,12 +1,13 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AcademicBlock } from "@/components/academics";
 import { CareerSections } from "@/components/careers";
 import { FeeBlock, NotAvailable, PlacementBlock, RankingLine, Section, VerificationTag } from "@/components/ui";
 import { api, ApiError, type InstitutionDetail, num } from "@/lib/api";
 
 const FIELD_LABELS: Record<string, string> = {
-  cutoffs: "Official cutoffs", nirf_rank: "NIRF rank", placements: "Placement records", fees: "Fee records",
+  cutoffs: "Official cutoffs", nirf_rank: "NIRF rank", placements: "Placement records", fees: "Fee records", faculty: "Faculty records",
   website: "Official website", location_confirmed: "State confirmed",
 };
 
@@ -52,7 +53,8 @@ export default async function CollegePage({ params }: { params: Promise<{ slug: 
             <PlacementBlock records={inst.institution_placements} />
           </Section>
           <CareerSections careers={inst.careers} />
-          <Section title="History, facilities and research"><NotAvailable /></Section>
+          <Section title="Faculty and academic information" hint="Indicators are kept separate, because none of them measures teaching quality."><AcademicBlock academics={inst.academics} /></Section>
+          <Section title="History and facilities"><NotAvailable /></Section>
         </div>
         <div className="space-y-5">
           <Section title="Ranking">

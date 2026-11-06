@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models import CutoffRecord, Programme, QuotaEligibleState
 from app.schemas import StudentProfile
-from app.services import careers
+from app.services import academics, careers
 from app.services import recommend as rec
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
 from app.services.branches import FAMILY_LABELS
@@ -144,7 +144,8 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
         fee = rec.fee_for(programme, evidence)
         placement_records, career = rec.career_for(programme, evidence)
         note = f"NIRF {ranking.year} rank {ranking.rank} ({ranking.verification_status.replace('_', ' ')})" if ranking else ""
-        quality = quality_score(ranking.rank if ranking else None, note, career)
+        academic_profile = rec.academics_for(programme, evidence)
+        quality = quality_score(ranking.rank if ranking else None, note, career, academics.quality_evidence(academic_profile))
         item = {
             "programme_id": programme.id, "programme": programme.name, "degree": programme.degree, "duration_years": programme.duration_years,
             "branch_family": programme.branch_family, "branch_label": FAMILY_LABELS.get(programme.branch_family, "Other"),
@@ -152,7 +153,7 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
             "reference_cutoff": _reference_cutoff(list(records)), "ranking": rec.ranking_json(ranking),
             "placements": rec.placement_json(placement_records), "fee": rec.fee_json(fee), "quality": rec.describe_quality(quality),
             "data_gaps": rec.data_gaps(placement_records, ranking, fee, quality.components),
-            "faculty": None, "curriculum": None, "careers": careers.career_profile(db, inst.id), "student_experience": None,
+            "academics": academic_profile, "curriculum": None, "careers": careers.career_profile(db, inst.id), "student_experience": None,
             "student_route": None, "suitability": None,
         }
         if profile:
@@ -163,7 +164,7 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
                 preferred_branches=frozenset(profile.preferred_branches), acceptable_branches=frozenset(profile.acceptable_branches),
                 career_goal_families=goals, preferred_states=frozenset(profile.preferred_states), preferred_types=frozenset(profile.preferred_types),
                 annual_budget_inr=profile.annual_budget_inr, career_note=career[1], priorities=profile.priorities,
-                **rec.fit_contest(contest, programme_id),
+                **rec.fit_contest(contest, programme_id), **academics.fit_inputs(academic_profile),
             ))
             item["suitability"] = {"score": fit.score, "coverage": fit.coverage, "components": [c.__dict__ for c in fit.components]}
         items.append(item)

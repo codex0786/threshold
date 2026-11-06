@@ -188,6 +188,83 @@ class CsabCutoff(Base):
     source_document: Mapped[SourceDocument] = relationship()
 
 
+class AcademicSnapshot(Base):
+    """Totals from the faculty table in one NIRF submission. Whole institute, never a department. Holds no names, ages or genders, by design."""
+
+    __tablename__ = "academic_snapshots"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "submission_year", "category", name="uq_academic_snapshot"),
+        CheckConstraint(VERIFICATION_CHECK, name="academic_snapshot_verification_valid"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    institution_id: Mapped[int] = mapped_column(ForeignKey("institutions.id"))
+    submission_year: Mapped[int] = mapped_column(Integer)
+    category: Mapped[str] = mapped_column(String(32))
+    faculty_listed: Mapped[int | None] = mapped_column(Integer)
+    faculty_current: Mapped[int | None] = mapped_column(Integer)
+    faculty_regular: Mapped[int | None] = mapped_column(Integer)
+    faculty_with_phd: Mapped[int | None] = mapped_column(Integer)
+    professors: Mapped[int | None] = mapped_column(Integer)
+    associate_professors: Mapped[int | None] = mapped_column(Integer)
+    assistant_professors: Mapped[int | None] = mapped_column(Integer)
+    median_experience_months: Mapped[int | None] = mapped_column(Integer)
+    students_total: Mapped[int | None] = mapped_column(Integer)
+    phd_students: Mapped[int | None] = mapped_column(Integer)
+    # Why a row can't be trusted for comparison, for example gaps in the faculty table's numbering.
+    problems: Mapped[str | None] = mapped_column(Text)
+    verification_status: Mapped[str] = mapped_column(String(32))
+    source_document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    source_document: Mapped[SourceDocument] = relationship()
+
+
+class AcademicYearRecord(Base):
+    """Doctoral, research and academic spending figures for one year, from one NIRF submission."""
+
+    __tablename__ = "academic_year_records"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "submission_year", "category", "academic_year", name="uq_academic_year"),
+        CheckConstraint(VERIFICATION_CHECK, name="academic_year_verification_valid"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    institution_id: Mapped[int] = mapped_column(ForeignKey("institutions.id"))
+    submission_year: Mapped[int] = mapped_column(Integer)
+    category: Mapped[str] = mapped_column(String(32))
+    academic_year: Mapped[str] = mapped_column(String(8))
+    phd_graduated: Mapped[int | None] = mapped_column(Integer)
+    sponsored_projects: Mapped[int | None] = mapped_column(Integer)
+    sponsored_amount_inr: Mapped[int | None] = mapped_column(BigInteger)
+    consultancy_amount_inr: Mapped[int | None] = mapped_column(BigInteger)
+    patents_published: Mapped[int | None] = mapped_column(Integer)
+    patents_granted: Mapped[int | None] = mapped_column(Integer)
+    library_spend_inr: Mapped[int | None] = mapped_column(BigInteger)
+    equipment_spend_inr: Mapped[int | None] = mapped_column(BigInteger)
+    verification_status: Mapped[str] = mapped_column(String(32))
+    source_document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    source_document: Mapped[SourceDocument] = relationship()
+
+
+class ResearchOutput(Base):
+    """Publication counts from an open bibliographic index. Research output only, and never a measure of teaching."""
+
+    __tablename__ = "research_outputs"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "source_id", name="uq_research_output"),
+        CheckConstraint(VERIFICATION_CHECK, name="research_output_verification_valid"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    institution_id: Mapped[int] = mapped_column(ForeignKey("institutions.id"))
+    source_id: Mapped[int] = mapped_column(ForeignKey("data_sources.id"))
+    external_id: Mapped[str] = mapped_column(Text)
+    matched_name: Mapped[str] = mapped_column(Text)
+    works_count: Mapped[int | None] = mapped_column(Integer)
+    cited_by_count: Mapped[int | None] = mapped_column(Integer)
+    h_index: Mapped[int | None] = mapped_column(Integer)
+    works_by_year: Mapped[dict | None] = mapped_column(JSON)
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    verification_status: Mapped[str] = mapped_column(String(32))
+    source: Mapped[DataSource] = relationship()
+
+
 class InstitutionRanking(Base):
     __tablename__ = "institution_rankings"
     __table_args__ = (

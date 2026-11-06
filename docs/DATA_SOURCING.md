@@ -15,8 +15,9 @@ The live registry is `data/registry/sources.yaml`, and it is shown on the Method
 | Institute fee circulars | **In use** | 12 institutes for 2026-27, 4 with a complete yearly cost |
 | Institute placement reports | **In use** | Branch-level: NIT Warangal (2 years), NIT Kurukshetra, IIT Guwahati, IIT (ISM). Definitions differ, so they aren't compared or scored |
 | Wikidata | **In use, secondary** | Aggregate counts of documented people. No names stored. Not the alumni network |
+| Faculty and academic tables in NIRF submissions | **In use** | 67 institutes. Totals only: names, ages and genders are read to count and are never stored. Whole submission, never a department |
+| OpenAlex | **In use, partial** | 26 institutes, display only and never scored. The free daily budget ran out after 28 searches. `ingest.openalex_fetch` resumes where it stopped |
 | LinkedIn and similar | **Rejected** | Scraping is prohibited and it holds restricted personal data |
-| OpenAlex | Planned | Open API confirmed reachable. Research output only |
 | NIRF official | **Blocked for scripts** | Returned HTTP 403 to scripted requests. Not bypassed |
 | JoSAA fee PDF | Rejected | The latest found is a *tentative* CSAB 2022 document, too old and uncertain to present as fees |
 | IIT (BHU) 2026-27 fee notice | Rejected | It explicitly excludes first-semester students |
@@ -106,6 +107,24 @@ Only IIT Roorkee publishes tuition, hostel and mess in one document, so it is th
 - **State counselling and alumni outcomes.** Not collected.
 
 **Known bias:** with a budget set, an institute that publishes its charges can lose points, while one that publishes nothing stays neutral. The default weight is small, but it can favour institutes with no published fees.
+
+## Faculty and academic data (2026-11-06)
+`ingest.nirf_academics` reads the tables in each accepted NIRF submission, then `ingest.load_academics` loads the totals.
+
+**Checks**
+- Faculty rows must be numbered without gaps. IIIT Guwahati's aren't, so it's shown with a note and left out of comparisons.
+- A second count of current regular staff, taken directly from the document's text rather than its tables, matched all 67 documents.
+- Funding amounts in digits must match the amount in words, or the amount is dropped. None disagreed.
+- Where a table splits across pages, the amount is read from the document's text instead, and has no words check.
+
+**Limits**
+- Self-reported and unaudited, and not read line by line by a person.
+- Whole institute only. No submission gives faculty by department, so `/programmes/{id}/faculty` always returns `department_level: null`.
+- A student-faculty ratio uses regular staff only. IIIT Kota reports 10 regular staff out of 59 listed, so its 99 students per regular faculty member is what the document says, and it's shown beside the fuller count.
+- Scores compare per-person figures across Engineering submissions with at least 20 regular faculty, and submissions may be a year apart.
+- Nothing here measures teaching. The brief's named profiles, qualifications by person, Google Scholar and faculty-level publications aren't collected. They add personal data and aren't needed for anything shown.
+
+**Counselling rules:** the assistant's answers on freeze, float, slide, withdrawal and fees summarise JoSAA's Business Rules of 1 June 2026, read by hand, with clause references. They need updating each year.
 
 ## What was fetched
 Round 1 and the last round for each of 2021-2026, which is 12 tables and 132,982 rows. Each table takes one `ALL` query, with 2 seconds between requests and an identifying user agent.

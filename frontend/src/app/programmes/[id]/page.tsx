@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { AcademicBlock } from "@/components/academics";
 import { CareerSections } from "@/components/careers";
 import { CompareToggle } from "@/components/compare-toggle";
 import { FeeBlock, NotAvailable, Notice, PlacementBlock, RankingLine, Section, Skeleton, SourceLink } from "@/components/ui";
@@ -110,8 +111,9 @@ export default function ProgrammePage({ params }: { params: Promise<{ id: string
           <Section title="Placements" hint="Programme-level data where available, and clearly labelled if institute-wide."><PlacementBlock records={programme.placements} /></Section>
           <Section title="Institute ranking" hint="NIRF ranks whole institutes, not branches."><RankingLine ranking={programme.ranking} /></Section>
           <Section title="Fees"><FeeBlock fee={programme.fee} /></Section>
-          <Section title="Curriculum and faculty"><NotAvailable /></Section>
+          <Section title="Curriculum"><NotAvailable /></Section>
         </div>
+        <Section title="Faculty and academic information" hint="For the whole institute. We hold no figures for this department."><AcademicBlock academics={programme.academics} /></Section>
         {careers && <CareerSections careers={careers} highlight={programme.id} />}
       </div>
     </div>

@@ -214,7 +214,7 @@ def programme_placements(programme_id: int, db: Session = Depends(get_db)) -> di
 
 @router.post("/recommendations/generate")
 def generate_recommendations(body: RecommendationRequest, db: Session = Depends(get_db)) -> dict:
-    return rec.generate(db, body.profile, body.per_band_limit)
+    return rec.generate(db, body.profile, body.per_band_limit, order=body.order)
 
 
 @router.post("/comparisons")

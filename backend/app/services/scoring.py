@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.4.0"
+ENGINE_VERSION = "0.5.0"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -80,6 +80,18 @@ def reputation_score(nirf_rank: int | None) -> float | None:
     if nirf_rank is None:
         return None
     return max(50.5, 100.0 - (nirf_rank - 1) * 0.5)
+
+
+def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool = False, acceptable: bool = False) -> float:
+    """Default list position: two parts institute rank to one part how contested the programme is.
+
+    Only orders the list. It isn't a quality score and never affects a band. A missing rank or closing
+    rank counts as neutral, as elsewhere. A branch the student asked for moves up without hiding the rest.
+    """
+    institute = reputation_score(nirf_rank)
+    institute = NEUTRAL if institute is None else institute
+    contested = NEUTRAL if demand is None else demand
+    return round((2 * institute + contested) / 3 + (10 if preferred else 5 if acceptable else 0), 1)
 
 
 def contest_scores(closing_ranks: Mapping[int, float]) -> dict[int, float]:

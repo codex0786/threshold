@@ -81,6 +81,7 @@ class StudentProfile(BaseModel):
 class RecommendationRequest(BaseModel):
     profile: StudentProfile
     per_band_limit: int = Field(default=25, ge=1, le=100)
+    order: Literal["top", "fit"] = "top"
 
 
 class CounsellingRequest(BaseModel):

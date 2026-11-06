@@ -11,7 +11,7 @@ from dataclasses import asdict
 from app.models import AcademicSnapshot, AcademicYearRecord, ResearchOutput
 from app.services import academics
 from ingest.nirf_academics import FIELDS as ACADEMIC_FIELDS, summarise_faculty
-from app.services.scoring import DEFAULT_PRIORITIES, NEUTRAL, FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
+from app.services.scoring import DEFAULT_PRIORITIES, NEUTRAL, FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, standing_score, suitability_score
 from ingest.josaa_parse import SourceFormatError, parse_programme, parse_rank, parse_table
 
 
@@ -442,3 +442,15 @@ def test_academic_evidence_alone_never_unlocks_a_quality_score():
     result = quality_score(1, "rank", (100.0, "placements", 0.5), (100.0, "academics", 0.5))
     assert result.score is None and result.status == "insufficient_evidence" and result.coverage == 0.315
 
+
+
+def test_standing_favours_top_institutes_then_contested_branches():
+    assert standing_score(1, 70) > standing_score(30, 75)
+    assert standing_score(3, 90) > standing_score(3, 40)
+    assert standing_score(3, 40) < standing_score(14, 90)
+
+
+def test_standing_treats_missing_evidence_as_neutral_and_lifts_preferred_branches():
+    assert standing_score(None, None) == 50.0
+    assert standing_score(20, 60, preferred=True) == pytest.approx(standing_score(20, 60) + 10)
+    assert standing_score(20, 60, acceptable=True) == pytest.approx(standing_score(20, 60) + 5)

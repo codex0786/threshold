@@ -1,6 +1,6 @@
 # Scoring methodology
 
-Code: `backend/app/services/scoring.py`. Version `0.4.0`.
+Code: `backend/app/services/scoring.py`. Version `0.5.0`.
 
 There are three separate outputs, and they are never combined: quality, suitability and admission band.
 
@@ -72,7 +72,7 @@ The branch-to-career table (`CAREER_BRANCH_AFFINITY`) is a product assumption an
 See `ADMISSION_ENGINE.md`. Priorities never change bands.
 
 ## Ordering
-Options with a band come first, followed by those with limited history. Within each group, sort by suitability, then band, institute name, programme name and ID. The same input gives the same output, and each run stores input and result hashes. No LLM is involved, and commercial relationships aren't an input.
+Options with a band come first, followed by those with limited history. Within each group, the default order (`order: "top"`) sorts by standing, which puts top institutes and their most contested branches first: (2 × institute score + how contested the programme is) / 3. The institute score uses the same scale as reputation (NIRF rank 1 is 100, rank 100 is 50.5), and a missing NIRF rank or closing rank counts as a neutral 50. A preferred branch adds 10 and an acceptable branch adds 5. Most NIRF ranks here are from a secondary source, and closing ranks reflect past candidates' choices, so standing only orders the list. It is not a quality score, and it never changes a band. Students can switch to `order: "fit"`, which sorts by suitability, and moving a priority slider does this automatically. Ties break by band, institute name, programme name and ID. The same input gives the same output, and each run stores input and result hashes. No LLM is involved, and commercial relationships aren't an input.
 
 ## Not yet implemented from the brief
 Year adjustment of placement data, like-for-like peer groups beyond scope, correlation checks between indicators, and evidence-confidence scores beyond coverage. All of these need real data to design properly.

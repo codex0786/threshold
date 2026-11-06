@@ -129,6 +129,12 @@ function BandMix({ counts }: { counts: Record<string, number> }) {
   );
 }
 
+type ListOrder = "top" | "fit";
+const ORDERS: Record<ListOrder, { label: string; note: string }> = {
+  top: { label: "Top institutes first", note: "Top institutes and their most contested branches come first, based on NIRF rank (mostly from a secondary source) and past closing ranks. Branches you prefer move up. This isn’t a quality score." },
+  fit: { label: "Best fit for me", note: "Sorted by the priorities you set under “What matters to you”." },
+};
+
 export default function RecommendationsPage() {
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const [meta, setMeta] = useState<Meta | null>(null);
@@ -136,17 +142,18 @@ export default function RecommendationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
+  const [order, setOrder] = useState<ListOrder>("top");
   const [showPriorities, setShowPriorities] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(0);
 
-  const run = useCallback(async (p: Profile) => {
+  const run = useCallback(async (p: Profile, listOrder: ListOrder) => {
     // A slower earlier request must not replace the results for newer answers.
     const request = ++latest.current;
     setLoading(true);
     setError(null);
     try {
-      const next = await post<Recommendations>("/recommendations/generate", { profile: p });
+      const next = await post<Recommendations>("/recommendations/generate", { profile: p, order: listOrder });
       if (request === latest.current) setResult(next);
     } catch (e) {
       if (request === latest.current) setError((e as Error).message);
@@ -159,7 +166,7 @@ export default function RecommendationsPage() {
     const stored = loadProfile();
     setProfile(stored);
     api<Meta>("/meta").then(setMeta).catch((e) => setError(e.message));
-    if (stored) run(stored);
+    if (stored) run(stored, "top");
   }, [run]);
 
   const changePriority = (key: string, value: number) => {
@@ -168,7 +175,9 @@ export default function RecommendationsPage() {
     setProfile(next);
     saveProfile(next);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => run(next), 300);
+    // Priorities only affect the fit order, so moving one switches to it.
+    setOrder("fit");
+    timer.current = setTimeout(() => run(next, "fit"), 300);
   };
 
   const changeRanks = (next: Profile) => {
@@ -178,7 +187,13 @@ export default function RecommendationsPage() {
     // Results for the old rank must not stay on screen, even if this request fails.
     setResult(null);
     setFilter("all");
-    run(next);
+    run(next, order);
+  };
+
+  const changeOrder = (next: ListOrder) => {
+    if (timer.current) clearTimeout(timer.current);
+    setOrder(next);
+    if (profile) run(profile, next);
   };
 
   const shown = useMemo(() => (result?.options ?? []).filter((o) => filter === "all" || (o.band ?? "limited_history") === filter), [result, filter]);
@@ -212,7 +227,7 @@ export default function RecommendationsPage() {
           </button>
           <section className={`card p-4 ${showPriorities ? "" : "hidden lg:block"}`}>
             <h2 className="text-lg">What matters to you</h2>
-            <p className="mt-0.5 text-xs text-ink-3">Drag to change your priorities. Your admission bands stay the same, because they depend only on past cutoffs.</p>
+            <p className="mt-0.5 text-xs text-ink-3">Drag to change your priorities, which sorts the list by fit. Your admission bands stay the same, because they depend only on past cutoffs.</p>
             <div className="mt-3 space-y-3">
               {meta && Object.entries(meta.suitability_labels).map(([key, label]) => (
                 <label key={key} className="block text-sm">
@@ -230,6 +245,17 @@ export default function RecommendationsPage() {
 
         <div aria-live="polite">
           {result && <p className="mb-3 text-xs text-ink-3 lg:hidden">{result.warnings[0]}</p>}
+          <div className="mb-4">
+            <div className="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1" role="group" aria-label="Sort the list">
+              {(Object.keys(ORDERS) as ListOrder[]).map((key) => (
+                <button key={key} type="button" aria-pressed={order === key} onClick={() => changeOrder(key)}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === key ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>
+                  {ORDERS[key].label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-ink-3">{ORDERS[order].note}</p>
+          </div>
           {result && (
             <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by admission band">
               {BANDS.map((b) => {
@@ -245,7 +271,7 @@ export default function RecommendationsPage() {
           )}
           {result && <BandMix counts={result.counts} />}
           {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0 || result.excluded.no_latest_cutoff > 0) && (
-            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} missing from the {result.data_year} seat matrix, so not offered this year{(result.excluded.no_seat_in_category ?? 0) > 0 ? `, and ${num(result.excluded.no_seat_in_category)} with no ${result.data_year} seat in your category` : ""}. Each band shows its 25 best matches for you, and options with limited history come last.</p>
+            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} missing from the {result.data_year} seat matrix, so not offered this year{(result.excluded.no_seat_in_category ?? 0) > 0 ? `, and ${num(result.excluded.no_seat_in_category)} with no ${result.data_year} seat in your category` : ""}. Each band shows its first 25 in this order, and options with limited history come last.</p>
           )}
           {loading && !result && <Skeleton lines={4} />}
           <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}>

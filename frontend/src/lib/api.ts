@@ -51,7 +51,7 @@ export type InstitutionRef = { slug: string; short_name: string; official_name?:
 
 export type Option = {
   programme_id: number; programme: string; degree: string | null; duration_years: number | null; branch_family: string; branch_label: string;
-  institution: InstitutionRef; band: Band; best_route: Route; other_routes: Route[]; quality: Quality;
+  institution: InstitutionRef; band: Band; standing: number; best_route: Route; other_routes: Route[]; quality: Quality;
   suitability: { score: number | null; coverage: number; components: Component[] };
   ranking: Ranking | null; placements: Placement[]; fee: Fee | null;
   strengths: string[]; weaknesses: string[]; data_gaps: string[]; why: string[];

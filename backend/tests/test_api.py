@@ -12,8 +12,8 @@ def profile(**kw):
     return {"category": "GEN", "gender": "male", "eligibility_state": "Karnataka", "class12_status": "meets", "main": {"crl": 12000}, **kw}
 
 
-def generate(client, **kw):
-    response = client.post("/api/v1/recommendations/generate", json={"profile": profile(**kw)})
+def generate(client, order="fit", **kw):
+    response = client.post("/api/v1/recommendations/generate", json={"profile": profile(**kw), "order": order})
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -147,6 +147,26 @@ def test_how_contested_a_seat_is_orders_otherwise_equal_options(client, seeded):
     assert programme_ids.index(seeded["cse"]) < programme_ids.index(seeded["civil"])
     component = next(c for c in by_name(result, "Fixture NIT")["suitability"]["components"] if c["key"] == "demand")
     assert "past candidates' choices, not quality" in component["note"]
+
+
+def test_default_order_puts_top_institutes_and_contested_branches_first(client, seeded):
+    response = client.post("/api/v1/recommendations/generate", json={"profile": profile(main={"crl": 500}, eligibility_state="Goa")})
+    result = response.json()
+    assert result["order"] == "top"
+    standings = [o["standing"] for o in result["options"] if o["band"]]
+    assert standings == sorted(standings, reverse=True)
+    programme_ids = [o["programme_id"] for o in result["options"]]
+    assert programme_ids.index(seeded["cse"]) < programme_ids.index(seeded["civil"])
+
+
+def test_changing_the_order_never_changes_a_band(client):
+    top = {o["programme_id"]: o["band"] for o in generate(client, order="top")["options"]}
+    fit = {o["programme_id"]: o["band"] for o in generate(client, order="fit")["options"]}
+    assert top == fit
+
+
+def test_unknown_order_is_refused(client):
+    assert client.post("/api/v1/recommendations/generate", json={"profile": profile(), "order": "paid"}).status_code == 422
 
 
 def test_browser_profile_saved_before_the_contested_factor_gets_its_default(client):

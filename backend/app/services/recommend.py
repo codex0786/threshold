@@ -19,7 +19,7 @@ from app.services import academics
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
 from app.services.branches import CAREER_BRANCH_AFFINITY, FAMILY_LABELS
 from app.services.eligibility import exam_for, gender_pools, quota_applies, seat_claims
-from app.services.scoring import ENGINE_VERSION, MIN_GRADUATING_CLASS, FitInputs, PlacementEvidence, career_score, contest_scores, quality_score, suitability_score
+from app.services.scoring import ENGINE_VERSION, MIN_GRADUATING_CLASS, FitInputs, PlacementEvidence, career_score, contest_scores, quality_score, standing_score, suitability_score
 
 PAPER_FOR_EXAM = {"JEE_MAIN": "main_paper1", "JEE_ADVANCED": "advanced"}
 POOL_LABEL = {"neutral": "Gender-neutral", "female": "Female-only"}
@@ -369,7 +369,7 @@ def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -
     }
 
 
-def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True) -> dict:
+def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True, order: str = "top") -> dict:
     student = profile.to_student()
     warnings: list[str] = [
         "Bands describe past cutoffs. They are not guarantees or probabilities, and future cutoffs can differ.",
@@ -503,6 +503,10 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             "other_routes": sorted([r for r in seat_routes if r is not best], key=lambda r: (BAND_RANK.get(r["band"], 9), r["quota"], r["seat_type"], r["gender_pool"])),
             "quality": describe_quality(quality),
             "suitability": {"score": suitability.score, "coverage": suitability.coverage, "components": [asdict(c) for c in suitability.components]},
+            "standing": standing_score(
+                ranking.rank if ranking else None, contest.get(programme_id, (None,))[0],
+                programme.branch_family in profile.preferred_branches, programme.branch_family in profile.acceptable_branches,
+            ),
             "ranking": ranking_json(ranking), "placements": placement_json(placement_records), "fee": fee_json(fee), "academics": academics.summary(academic_profile),
             "strengths": strengths, "weaknesses": weaknesses,
             "data_gaps": data_gaps(placement_records, ranking, fee, quality.components),
@@ -510,7 +514,8 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
         })
 
     # Seats without a band come last, since their one closing rank says little about next year.
-    options.sort(key=lambda o: (o["band"] is None, -(o["suitability"]["score"] or 0), BAND_RANK.get(o["band"], 9), o["institution"]["short_name"], o["programme"], o["programme_id"]))
+    position = (lambda o: -o["standing"]) if order == "top" else (lambda o: -(o["suitability"]["score"] or 0))
+    options.sort(key=lambda o: (o["band"] is None, position(o), BAND_RANK.get(o["band"], 9), o["institution"]["short_name"], o["programme"], o["programme_id"]))
     counts: dict[str, int] = defaultdict(int)
     limited = []
     for option in options:
@@ -520,12 +525,12 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             limited.append(option)
 
     payload = {
-        "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year],
+        "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year], "order": order,
         "counts": dict(counts), "excluded": excluded, "warnings": warnings, "options": limited,
         "csab": csab_leads(db, profile, student, quota_map),
     }
     if record_run:
-        snapshot = profile.model_dump()
+        snapshot = {**profile.model_dump(), "order": order}
         input_hash = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
         identity = [(o["programme_id"], o["band"], o["suitability"]["score"]) for o in limited]
         result_hash = hashlib.sha256(json.dumps(identity).encode()).hexdigest()

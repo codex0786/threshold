@@ -7,7 +7,7 @@ import { api, ApiError, type InstitutionDetail, num } from "@/lib/api";
 
 const FIELD_LABELS: Record<string, string> = {
   cutoffs: "Official cutoffs", nirf_rank: "NIRF rank", placements: "Placement records", fees: "Fee records",
-  website: "Official website", location_verified: "Location verified",
+  website: "Official website", location_confirmed: "State confirmed",
 };
 
 export default async function CollegePage({ params }: { params: Promise<{ slug: string }> }) {

@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.config import settings
 from app.models import (
-    CutoffRecord, FeeRecord, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, RecommendationRun,
+    CsabCutoff, CutoffRecord, FeeRecord, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, RecommendationRun,
+    SeatMatrixRecord,
 )
 from app.schemas import StudentProfile
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
@@ -29,8 +30,77 @@ def latest_year(db: Session) -> int:
 
 
 def offered_programmes(db: Session, data_year: int) -> set[int]:
-    """Programmes with a final-round cutoff in the latest year. A single seat type can go unfilled, so this is judged per programme."""
-    return set(db.scalars(select(CutoffRecord.programme_id).where(CutoffRecord.is_final_round, CutoffRecord.year == data_year).distinct()))
+    """Programmes in the latest seat matrix, or with a final-round cutoff that year if no matrix is loaded."""
+    listed = set(db.scalars(select(SeatMatrixRecord.programme_id).where(SeatMatrixRecord.year == data_year).distinct()))
+    return listed or set(db.scalars(select(CutoffRecord.programme_id).where(CutoffRecord.is_final_round, CutoffRecord.year == data_year).distinct()))
+
+
+def lineage_map(db: Session) -> dict[int, int]:
+    """Earlier programme id to its latest name's id, from the reviewed list of renames."""
+    successors = dict(db.execute(select(Programme.id, Programme.successor_id).where(Programme.successor_id.is_not(None))).all())
+    resolved = {}
+    for earlier in successors:
+        latest = successors[earlier]
+        while latest in successors:
+            latest = successors[latest]
+        resolved[earlier] = latest
+    return resolved
+
+
+def history_ids(lineage: dict[int, int], programme_id: int) -> list[int]:
+    """This programme's id with the ids of its earlier names."""
+    return [programme_id] + [earlier for earlier, latest in lineage.items() if latest == programme_id]
+
+
+def earlier_names(db: Session, lineage: dict[int, int], programme_id: int) -> list[dict]:
+    ids = [i for i in history_ids(lineage, programme_id) if i != programme_id]
+    if not ids:
+        return []
+    rows = db.execute(
+        select(Programme.name, func.max(CutoffRecord.year)).join(CutoffRecord, CutoffRecord.programme_id == Programme.id)
+        .where(Programme.id.in_(ids)).group_by(Programme.id, Programme.name)
+    ).all()
+    return [{"name": name, "until": year} for name, year in sorted(rows, key=lambda r: r[1])]
+
+
+def seat_view(db: Session, year: int) -> dict[tuple, int]:
+    rows = db.execute(select(SeatMatrixRecord.programme_id, SeatMatrixRecord.quota, SeatMatrixRecord.seat_type, SeatMatrixRecord.gender_pool, SeatMatrixRecord.seats).where(SeatMatrixRecord.year == year))
+    return {(p, q, t, g): seats for p, q, t, g, seats in rows}
+
+
+def location_of(programme: Programme) -> tuple[str | None, str]:
+    """Where the programme runs. A campus abroad reports its own city and country, not the parent institute's."""
+    if programme.campus_city:
+        return programme.campus_city, programme.campus_country or programme.institution.state
+    return programme.institution.city, programme.institution.state
+
+
+def institution_json(programme: Programme, full: bool = True) -> dict:
+    inst = programme.institution
+    city, state = location_of(programme)
+    out = {"slug": inst.slug, "short_name": inst.short_name, "type": inst.institute_type, "city": city, "state": state}
+    if full:
+        out["official_name"] = inst.official_name
+    if programme.campus_city:
+        out["campus_note"] = f"Runs on {inst.short_name}'s campus in {programme.campus_city}, {programme.campus_country}. {inst.short_name}'s rank, fees and institute-wide placements describe its main campus, so they aren't applied here."
+    return out
+
+
+def ranking_for(programme: Programme, evidence: dict) -> InstitutionRanking | None:
+    return None if programme.campus_city else evidence["rankings"].get(programme.institution_id)
+
+
+def fee_for(programme: Programme, evidence: dict) -> FeeRecord | None:
+    return None if programme.campus_city else evidence["fees"].get(programme.institution_id)
+
+
+def cost_inputs(fee: FeeRecord | None, profile: StudentProfile) -> dict:
+    """What can be compared with a budget. Fee records state who they cover, and aren't applied to anyone else."""
+    if fee is None:
+        return {"annual_cost_inr": None}
+    if "General/OBC-NCL/EWS" in (fee.seat_type_group or "") and (profile.category in ("SC", "ST") or profile.is_pwd):
+        return {"annual_cost_inr": None, "cost_note": "The fee on record is for General, OBC-NCL and EWS students. SC, ST and PwD students usually pay no tuition, so check with the institute"}
+    return {"annual_cost_inr": annual_cost(fee), "annual_known_inr": known_annual_charges(fee)}
 
 
 def contest_view(db: Session, data_year: int) -> dict[int, tuple[float, str]]:
@@ -45,8 +115,10 @@ def contest_view(db: Session, data_year: int) -> dict[int, tuple[float, str]]:
         )
     )
     offered = offered_programmes(db, data_year)
+    lineage = lineage_map(db)
     closings: dict[str, dict[int, list[int]]] = {exam: defaultdict(list) for exam in PAPER_FOR_EXAM}
     for programme_id, closing, institute_type in rows:
+        programme_id = lineage.get(programme_id, programme_id)
         if programme_id in offered:
             closings[exam_for(institute_type)][programme_id].append(closing)
     view = {}
@@ -112,6 +184,8 @@ def placement_view(programme_id: int, inst_id: int, evidence: dict) -> tuple[lis
 def career_for(programme: Programme, evidence: dict) -> tuple[list[PlacementRecord], tuple[float | None, str, float]]:
     """All records to display, and the score. Institute reports aren't comparable, so branch figures alone aren't ranked yet."""
     own, institute = placement_view(programme.id, programme.institution_id, evidence)
+    if programme.campus_city:
+        institute = []
     display = own + institute
     if own:
         scored = career_score(_evidence(own), evidence["cohorts"].get(("programme", own[0].reporting_definition), {}))
@@ -138,6 +212,14 @@ def annual_cost(fee: FeeRecord | None) -> int | None:
     if fee is None or None in (fee.annual_tuition_inr, fee.annual_hostel_inr, fee.annual_mess_inr):
         return None
     return fee.annual_tuition_inr + fee.annual_hostel_inr + fee.annual_mess_inr + (fee.annual_other_inr or 0)
+
+
+def known_annual_charges(fee: FeeRecord | None) -> int | None:
+    """Yearly charges the record does state. A minimum, so it can only show that a budget is exceeded."""
+    if fee is None:
+        return None
+    parts = [fee.annual_tuition_inr, fee.annual_hostel_inr, fee.annual_mess_inr, fee.annual_other_inr]
+    return sum(p for p in parts if p is not None) if fee.annual_tuition_inr is not None else None
 
 
 def describe_quality(result) -> dict:
@@ -178,6 +260,7 @@ def fee_json(fee: FeeRecord | None) -> dict | None:
         return None
     return {
         "academic_year": fee.academic_year, "seat_type_group": fee.seat_type_group, "annual_complete_inr": annual_cost(fee),
+        "annual_known_inr": known_annual_charges(fee),
         "annual_tuition_inr": fee.annual_tuition_inr, "annual_hostel_inr": fee.annual_hostel_inr,
         "annual_mess_inr": fee.annual_mess_inr, "annual_other_inr": fee.annual_other_inr, "one_time_inr": fee.one_time_inr,
         "refundable_deposit_inr": fee.refundable_deposit_inr, "payable_at_admission_inr": fee.payable_at_admission_inr,
@@ -230,11 +313,59 @@ def fit_contest(contest: dict[int, tuple[float, str]], programme_id: int) -> dic
     return {"demand_score": score, "demand_note": note} if note else {}
 
 
+CSAB_NOTE = (
+    "CSAB special rounds offer seats left vacant after JoSAA, at NITs, IIITs and GFTIs only. These are the 2026 closing ranks, "
+    "on the common rank list, for one year only, so they have no bands and vacancies change every year. "
+    "Registration and eligibility rules differ from JoSAA, so check csab.nic.in before relying on this."
+)
+CSAB_LIMIT = 30
+
+
+def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -> dict | None:
+    """Programmes whose special round closed at or beyond this student's rank. A lead to check, kept apart from the shortlist."""
+    rank = student.main.crl
+    claims = seat_claims(student, "JEE_MAIN")
+    if rank is None or not claims:
+        return None
+    avoided = set(profile.avoid_branches)
+    preferred, acceptable = set(profile.preferred_branches), set(profile.acceptable_branches)
+    best: dict[int, CsabCutoff] = {}
+    query = (
+        select(CsabCutoff).join(CsabCutoff.programme)
+        .options(joinedload(CsabCutoff.programme).joinedload(Programme.institution), joinedload(CsabCutoff.source_document))
+        .where(
+            CsabCutoff.closing_rank >= rank, CsabCutoff.seat_type.in_([c.seat_type for c in claims]),
+            CsabCutoff.gender_pool.in_(gender_pools(student)), Programme.required_paper == PAPER_FOR_EXAM["JEE_MAIN"],
+        )
+    )
+    for row in db.scalars(query):
+        inst = row.programme.institution
+        if row.programme.branch_family in avoided or not quota_applies(row.quota, student.eligibility_state, inst.institute_type, quota_map[inst.id])[0]:
+            continue
+        current = best.get(row.programme_id)
+        if current is None or (row.round, row.closing_rank) > (current.round, current.closing_rank):
+            best[row.programme_id] = row
+    def order(row: CsabCutoff) -> tuple:
+        family = row.programme.branch_family
+        return (0 if family in preferred else 1 if family in acceptable else 2, row.closing_rank, row.programme_id)
+    rows = sorted(best.values(), key=order)
+    return {
+        "count": len(rows), "rank_used": rank, "note": CSAB_NOTE,
+        "options": [
+            {
+                "programme_id": r.programme_id, "programme": r.programme.name, "degree": r.programme.degree, "branch_label": FAMILY_LABELS.get(r.programme.branch_family, "Other"),
+                "institution": institution_json(r.programme, full=False), "year": r.year, "round": r.round, "quota": r.quota, "seat_type": r.seat_type,
+                "gender_pool_label": POOL_LABEL[r.gender_pool], "closing_rank": r.closing_rank, "source_title": r.source_document.title, "source_url": r.source_document.url,
+            } for r in rows[:CSAB_LIMIT]
+        ],
+    }
+
+
 def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True) -> dict:
     student = profile.to_student()
     warnings: list[str] = [
         "Bands describe past cutoffs. They are not guarantees or probabilities, and future cutoffs can differ.",
-        "This covers JoSAA only. CSAB special rounds and state counselling are not yet included.",
+        "Bands cover JoSAA only. CSAB special round ranks are listed separately, without bands. State counselling is not included.",
     ]
     if profile.class12_status == "does_not_meet":
         return {
@@ -258,7 +389,8 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
         quota_map[row.institution_id][row.quota].add(row.state)
 
     grouped: dict[tuple, list[CutoffRecord]] = defaultdict(list)
-    programmes: dict[int, Programme] = {}
+    lineage = lineage_map(db)
+    programmes = {p.id: p for p in db.scalars(select(Programme).options(joinedload(Programme.institution)))}
     for exam, claims in claims_by_exam.items():
         if not claims:
             continue
@@ -273,9 +405,16 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             )
         )
         for record in db.scalars(query):
-            programmes[record.programme_id] = record.programme
-            grouped[(record.programme_id, record.quota, record.seat_type, record.gender_pool)].append(record)
+            grouped[(lineage.get(record.programme_id, record.programme_id), record.quota, record.seat_type, record.gender_pool)].append(record)
 
+    seats = seat_view(db, data_year)
+    total_seats: dict[int, int] = defaultdict(int)
+    for key, count in seats.items():
+        total_seats[key[0]] += count
+    renamed = defaultdict(list)
+    for earlier, latest in lineage.items():
+        renamed[latest].append(earlier)
+    no_seat_now: set[int] = set()
     routes: dict[int, list[dict]] = defaultdict(list)
     for (programme_id, quota, seat_type, pool), records in grouped.items():
         programme = programmes[programme_id]
@@ -288,8 +427,13 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
         if not applies:
             continue
         result = classify(claim.rank, [CutoffPoint(r.year, r.closing_rank) for r in records], data_year)
+        seat_count = seats.get((programme_id, quota, seat_type, pool))
+        # Past cutoffs can't help if this year's matrix has no such seat. A filled seat with a cutoff always stays.
+        if seat_count == 0 and result.latest_year != data_year:
+            no_seat_now.add(programme_id)
+            continue
         routes[programme_id].append({
-            "quota": quota, "seat_type": seat_type, "gender_pool": pool, "gender_pool_label": POOL_LABEL[pool],
+            "quota": quota, "seat_type": seat_type, "gender_pool": pool, "gender_pool_label": POOL_LABEL[pool], "seats": seat_count,
             "rank_used": claim.rank, "rank_list": claim.rank_list, "band": result.band,
             "low_closing": result.low_closing, "high_closing": result.high_closing,
             "latest_year": result.latest_year, "latest_closing": result.latest_closing,
@@ -300,7 +444,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     goals = career_goal_families(profile.career_goals)
     avoided = set(profile.avoid_branches)
     options = []
-    excluded = {"avoided_branch": 0, "beyond_range": 0, "no_latest_cutoff": 0}
+    excluded = {"avoided_branch": 0, "beyond_range": 0, "no_latest_cutoff": 0, "no_seat_in_category": len(no_seat_now - routes.keys())}
     offered = offered_programmes(db, data_year)
     contest = contest_view(db, data_year)
     for programme_id, seat_routes in routes.items():
@@ -321,16 +465,16 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             banded or within_reach,
             key=lambda r: (BAND_RANK.get(r["band"], 9), r["rank_used"] / (r["high_closing"] or r["latest_closing"] or 1), r["quota"], r["seat_type"], r["gender_pool"]),
         )
-        ranking = evidence["rankings"].get(inst.id)
-        fee = evidence["fees"].get(inst.id)
+        ranking = ranking_for(programme, evidence)
+        fee = fee_for(programme, evidence)
         placement_records, career = career_for(programme, evidence)
         note = (
             f"NIRF {ranking.year} rank {ranking.rank} ({ranking.verification_status.replace('_', ' ')})" if ranking else ""
         )
         quality = quality_score(ranking.rank if ranking else None, note, career)
         suitability = suitability_score(FitInputs(
-            branch_family=programme.branch_family, institute_type=inst.institute_type, state=inst.state,
-            nirf_rank=ranking.rank if ranking else None, career_dimension_score=career[0], annual_cost_inr=annual_cost(fee),
+            branch_family=programme.branch_family, institute_type=inst.institute_type, state=location_of(programme)[1],
+            nirf_rank=ranking.rank if ranking else None, career_dimension_score=career[0], **cost_inputs(fee, profile),
             preferred_branches=frozenset(profile.preferred_branches), acceptable_branches=frozenset(profile.acceptable_branches),
             career_goal_families=goals, preferred_states=frozenset(profile.preferred_states),
             preferred_types=frozenset(profile.preferred_types), annual_budget_inr=profile.annual_budget_inr,
@@ -338,11 +482,14 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             **fit_contest(contest, programme_id),
         ))
         strengths, weaknesses = _strengths_and_weaknesses(best["band"], suitability, ranking)
+        if best["seats"] is not None and 0 < best["seats"] <= 2:
+            weaknesses.append(f"Only {best['seats']} seat{'s' if best['seats'] > 1 else ''} in this category in {data_year}, so one candidate's choice can move the closing rank a long way")
         options.append({
             "programme_id": programme.id, "programme": programme.name, "degree": programme.degree,
             "duration_years": programme.duration_years, "branch_family": programme.branch_family,
             "branch_label": FAMILY_LABELS.get(programme.branch_family, "Other"),
-            "institution": {"slug": inst.slug, "short_name": inst.short_name, "official_name": inst.official_name, "type": inst.institute_type, "city": inst.city, "state": inst.state},
+            "institution": institution_json(programme), "earlier_names": earlier_names(db, lineage, programme.id) if programme.id in renamed else [],
+            "total_seats": total_seats.get(programme.id),
             "band": best["band"], "best_route": best,
             "other_routes": sorted([r for r in seat_routes if r is not best], key=lambda r: (BAND_RANK.get(r["band"], 9), r["quota"], r["seat_type"], r["gender_pool"])),
             "quality": describe_quality(quality),
@@ -366,6 +513,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     payload = {
         "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year],
         "counts": dict(counts), "excluded": excluded, "warnings": warnings, "options": limited,
+        "csab": csab_leads(db, profile, student, quota_map),
     }
     if record_run:
         snapshot = profile.model_dump()

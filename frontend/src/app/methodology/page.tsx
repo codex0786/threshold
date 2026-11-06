@@ -6,6 +6,14 @@ export const revalidate = 3600;
 
 const STATUS: Record<string, string> = { available: "In use", planned: "Planned", manual_only: "Manual import only", blocked: "Blocked" };
 
+const TYPE_LABEL: Record<string, string> = { IIT: "IITs", IISC: "IISc", NIT: "NITs", IIIT: "IIITs", GFTI: "Other government-funded" };
+const DETAIL: [string, string][] = [
+  ["seat_matrix_programmes", "Programmes in the 2026 seat matrix"], ["csab_programmes", "Programmes with CSAB special round ranks"],
+  ["renamed_programmes", "Renamed programmes joined to their history"], ["branch_placements", "Programmes with their own placement figures"],
+  ["complete_yearly_fees", "Institutes with a complete yearly cost"], ["state_confirmed", "Institutes with their state confirmed by JoSAA"],
+  ["official_rankings", "NIRF ranks entered from the official site"],
+];
+
 export default async function Methodology() {
   const [meta, completeness, sources] = await Promise.all([
     api<Meta>("/meta"), api<Completeness>("/data/completeness"), api<{ sources: DataSource[] }>("/data/sources"),
@@ -37,14 +45,33 @@ export default async function Methodology() {
           <Notice tone="warn">A band is not a chance of admission. We show no percentages, because results for individual applicants are not public and a percentage could not be properly tested.</Notice>
           <p className="mt-3 text-ink-2">We did test how stable the bands were. Using three earlier years to set the band edges, a rank at the outer edge of Safer would still have been within the next year’s closing rank for 91% to 94% of seats in 2024, 2025 and 2026. At the outer edge of Ambitious, the figure was 6% to 10%. This measures how seats behaved overall, not your own odds, and future years may differ.</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-ink-2">
-            <li>This covers JoSAA only. CSAB special rounds and state counselling are not included.</li>
+            <li>Bands cover JoSAA only. CSAB special round ranks are shown separately for 2026, with no bands, because the form offers one year. State counselling is not included.</li>
             <li>The latest year’s final round is the last one published when we collected the data.</li>
             <li>Programme-specific medical and other restrictions are not checked. See the JoSAA annexures.</li>
-            <li>Seat counts are not yet considered.</li>
+            <li>Seat counts come from the 2026 JoSAA seat matrix. They add a warning when a category has one or two seats, and remove a route with no seat and no 2026 cutoff. They don’t change a band.</li>
+            <li>When JoSAA renames a programme, its history is joined only for pairs reviewed by hand, and the card shows the earlier name. Institutes haven’t confirmed these.</li>
           </ul>
         </Section>
         <Section title="Current coverage" hint={`Out of ${num(completeness.institutions)} institutes, ${num(completeness.programmes)} programme names and ${num(completeness.cutoff_records)} cutoff records.`}>
           <ul className="space-y-1">{coverage.map(([label, n]) => <li key={label} className="flex justify-between text-sm"><span>{label}</span><span className="tnum text-ink-2">{num(n)} institutes</span></li>)}</ul>
+          {completeness.by_type && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[420px] text-sm">
+                <caption className="mb-1 text-left text-xs text-ink-3">How much is on record, by type of institute. Most gaps are at newer institutes and GFTIs, so a blank there says nothing about quality.</caption>
+                <thead><tr className="text-left text-xs text-ink-3"><th scope="col" className="py-1 font-medium">Type</th><th scope="col" className="py-1 text-right font-medium">Institutes</th><th scope="col" className="py-1 text-right font-medium">NIRF rank</th><th scope="col" className="py-1 text-right font-medium">Placements</th><th scope="col" className="py-1 text-right font-medium">Fees</th></tr></thead>
+                <tbody className="divide-y divide-line">
+                  {Object.entries(completeness.by_type).map(([type, row]) => (
+                    <tr key={type} className="tnum"><th scope="row" className="py-1 text-left font-normal">{TYPE_LABEL[type] ?? type}</th><td className="py-1 text-right">{num(row.institutions)}</td><td className="py-1 text-right">{num(row.nirf_rank)}</td><td className="py-1 text-right">{num(row.placements)}</td><td className="py-1 text-right">{num(row.fees)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {completeness.detail && (
+            <ul className="mt-4 space-y-1 text-sm">
+              {DETAIL.map(([key, label]) => <li key={key} className="flex justify-between gap-4"><span>{label}</span><span className="tnum text-ink-2">{num(completeness.detail?.[key] ?? 0)}</span></li>)}
+            </ul>
+          )}
           <p className="mt-3 text-sm text-ink-3">Not yet collected: {completeness.not_yet_collected.join(", ")}.</p>
         </Section>
         <Section title="Sources">

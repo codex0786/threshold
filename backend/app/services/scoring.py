@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.2.0"
+ENGINE_VERSION = "0.3.0"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -69,10 +69,14 @@ class PlacementEvidence:
 
 
 def reputation_score(nirf_rank: int | None) -> float | None:
-    """Rank 1 maps to 100 and rank 100 to 1. No rank means no evidence, not a low score."""
+    """Rank 1 maps to 100 and rank 100 to 50.5. No rank means no evidence, and counts as a neutral 50.
+
+    Being on the list never scores below being absent from it. NIRF ranks only institutes that take
+    part, so absence doesn't show that an institute would rank lower.
+    """
     if nirf_rank is None:
         return None
-    return float(max(1, 101 - nirf_rank))
+    return max(50.5, 100.0 - (nirf_rank - 1) * 0.5)
 
 
 def contest_scores(closing_ranks: Mapping[int, float]) -> dict[int, float]:
@@ -170,6 +174,9 @@ class FitInputs:
     career_note: str = "Data not available"
     demand_score: float | None = None
     demand_note: str = "No all-comers cutoff to compare"
+    # Charges on record when the yearly cost is incomplete. It can show a budget is exceeded, never that it is met.
+    annual_known_inr: int | None = None
+    cost_note: str | None = None
     priorities: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_PRIORITIES))
 
 
@@ -207,8 +214,15 @@ def suitability_score(f: FitInputs) -> ScoreResult:
     if f.annual_cost_inr is not None and f.annual_budget_inr:
         ratio = f.annual_cost_inr / f.annual_budget_inr
         dims["affordability"] = (max(0.0, min(100.0, 100.0 * (2 - ratio))), "Compared with your annual budget")
+    elif not f.annual_budget_inr:
+        dims["affordability"] = (None, "No budget given")
+    elif f.annual_known_inr is not None and f.annual_known_inr > f.annual_budget_inr:
+        ratio = f.annual_known_inr / f.annual_budget_inr
+        dims["affordability"] = (max(0.0, 100.0 * (2 - ratio)), "Recorded charges alone are above your annual budget, before any hostel or mess costs missing from the record")
+    elif f.annual_known_inr is not None:
+        dims["affordability"] = (None, "Recorded charges are within your budget, but hostel or mess costs are missing, so this isn't scored")
     else:
-        dims["affordability"] = (None, "No complete yearly cost on record" if f.annual_cost_inr is None else "No budget given")
+        dims["affordability"] = (None, f.cost_note or "No yearly cost on record")
     dims["demand"] = (f.demand_score, f.demand_note)
 
     total = sum(max(0.0, f.priorities.get(k, 0.0)) for k in dims)

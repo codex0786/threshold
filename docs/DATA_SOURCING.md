@@ -6,20 +6,22 @@ The live registry is `data/registry/sources.yaml`, and it is shown on the Method
 |---|---|---|
 | JoSAA opening and closing ranks | **In use** | Public forms with no login or CAPTCHA. Archive offers 2016-2025, and a separate page has the current year |
 | JoSAA Business Rules 2026 | **In use** | Read by hand to write the eligibility rules |
-| NIRF 2025 Engineering via Careers360 | **In use, secondary** | Top 50 only, 26 JoSAA institutes. Marked `secondary_unverified`. Press sources disagree on some scores |
-| Manually entered locations | **In use, unverified** | City and state for all 139 institutes. `manual_unverified` until checked |
-| NIRF submissions on institute websites | **In use** | 59 institutes, 3 graduating years each. Self-reported and unaudited. Whole programme level, never a branch |
-| Institute fee circulars | **In use** | 6 of 20 pilots, for 2026-27 |
+| JoSAA seat matrix 2026 | **In use** | All 1,038 programmes and 67,323 seats. The load stops unless rows add up to the page's own totals. Also the official home-state list |
+| CSAB special rounds 2026 | **In use, apart** | Rounds 1 and 2, 715 programmes. The form offers the current year only, so there's no history and no bands. Foreign-candidate rows are left out |
+| NIRF 2025 Engineering via Careers360 | **In use, secondary** | Ranks 1-50, 26 JoSAA institutes. Marked `secondary_unverified`. Press sources disagree on some scores |
+| NIRF 2025 Engineering ranks 51-100, secondary copies | **In use, secondary** | 23 more JoSAA institutes, 49 in all. CorpReady agrees with all 26 ranks already held, and CollegeDekho gives the same order. Marked `secondary_unverified` |
+| Manually entered locations | **In use, partly confirmed** | City and state for all 139 institutes. The seat matrix confirms the state for 40 (`state_official`). Cities and the other 99 stay `manual_unverified` |
+| NIRF submissions on institute websites | **In use** | 67 institutes, 3 graduating years each. Self-reported and unaudited. Whole programme level, never a branch |
+| Institute fee circulars | **In use** | 12 institutes for 2026-27, 4 with a complete yearly cost |
 | Institute placement reports | **In use** | Branch-level: NIT Warangal (2 years), NIT Kurukshetra, IIT Guwahati, IIT (ISM). Definitions differ, so they aren't compared or scored |
 | Wikidata | **In use, secondary** | Aggregate counts of documented people. No names stored. Not the alumni network |
 | LinkedIn and similar | **Rejected** | Scraping is prohibited and it holds restricted personal data |
-| JoSAA seat matrix | Planned | Reachable, not ingested |
-| CSAB | Planned | Reachable. Needs its own adapter |
 | OpenAlex | Planned | Open API confirmed reachable. Research output only |
 | NIRF official | **Blocked for scripts** | Returned HTTP 403 to scripted requests. Not bypassed |
 | JoSAA fee PDF | Rejected | The latest found is a *tentative* CSAB 2022 document, too old and uncertain to present as fees |
 | IIT (BHU) 2026-27 fee notice | Rejected | It explicitly excludes first-semester students |
 | Aggregator placement and fee figures | Rejected | Institute documents exist, and aggregators disagree with each other |
+| NIRF 2026 rank lists on third-party sites | Rejected | Mostly SEO pages that disagree with each other and may repeat 2025. No trustworthy list was found |
 
 ## Pilot data collected (2026-11-05)
 
@@ -33,7 +35,7 @@ Each row is `All 4-year UG programmes`, stored with `scope=institution`. Each in
 | Used in salary comparison after removing classes under 100 | 52 per year for 2023 and 2024 |
 | Pilots covered | 18 of 20. **Missing:** IIIT Allahabad (links return 404), IIEST Shibpur (no recent document found) |
 
-**Other gaps:** 80 of 139 JoSAA institutes have no data here. Sites that failed or showed no document include NIT Patna, Agartala, Raipur (TLS error), Puducherry, Manipur and Sikkim; IIT Patna, Indore, Gandhinagar, Jodhpur, Ropar, Jammu and Bhilai; and many newer IIITs and GFTIs. Their documents may exist. **Absence here doesn't mean an institute doesn't publish one.**
+The table above is from the first collection. Eight more institutes were added on 2026-11-06 (see the gap review). **Other gaps:** 72 of 139 JoSAA institutes now have no data here. Sites that failed or showed no document include NIT Patna, Agartala, Raipur (TLS error), Puducherry, Manipur and Sikkim; IIT Patna, Indore, Gandhinagar, Jodhpur, Ropar, Jammu and Bhilai; and many newer IIITs and GFTIs. Their documents may exist. **Absence here doesn't mean an institute doesn't publish one.**
 
 **Automatic checks, each of which keeps a document out if it fails:**
 - The institute name printed in the document must match exactly, or match a reviewed exception in `nirf_name_overrides.yaml`. Fuzzy matching isn't used, because NIT names differ only by place.
@@ -78,11 +80,40 @@ Only IIT Roorkee publishes tuition, hostel and mess in one document, so it is th
 
 **Missing:** IIT Kanpur (the linked file returns 404), Kharagpur, Hyderabad, BHU; NIT Tiruchirappalli (no 2026 B.Tech schedule found), Surathkal, Rourkela; MNNIT; all IIITs and GFTIs.
 
+## Gap review (2026-11-06)
+**Closed from official data**
+- **Is a programme still offered?** The seat matrix lists exactly the 1,038 programmes with a 2026 cutoff, so a missing programme is now known to be off this year's list, not only suspected.
+- **Home states.** The seat matrix prints them. They matched the earlier assumptions exactly for all 41 institutes with state quotas, including the ones flagged below, and they are now loaded from it.
+- **Round count.** The current-year form offers 5 rounds for 2026 in November, so round 5 is the final one.
+
+**Corrected by review**
+- **Branch labels.** 20 programme names were in the wrong family, because a specialisation or second degree was matched first. Examples: E&ECE at IIT Kharagpur was Electrical, Industrial Chemistry was Mechanical, and ECE (Internet of Things) was CS.
+- **Abu Dhabi.** IIT Delhi's four Abu Dhabi programmes now show their own location and don't inherit IIT Delhi's rank, fees or institute-wide placements.
+- **Renames.** 22 renames in `programme_lineage.yaml` now share one history. Each pair runs in consecutive years with the same duration, and closing ranks moved by under about 30%. Seven doubtful pairs were left apart and are named in that file. Institutes haven't confirmed any of this.
+
+**Reduced, still open**
+| Gap | Before | Now | What would close it |
+|---|---|---|---|
+| NIRF rank on record | 26 institutes | 49 of 139 | Enter official ranks by hand. All 49 remain secondary. A rank says nothing about the 90 others, many of which may not take part |
+| Placements | 59 institutes | 67 of 139 | Keep looking for submissions. 8 of the 67 were added on this date, and 3 of those are Overall submissions, which are shown but not scored |
+| Fees | 6 institutes, 2 complete | 12, of which 4 complete | Institute circulars, mostly for hostel and mess. No IIIT or GFTI is covered |
+| State confirmed | 0 | 40 of 139 | IITs and IIITs have no state quota, so they need a check against institute pages |
+
+**Still not closed**
+- **Quality score.** No option can reach the 50% evidence needed. Institute-wide placements and a NIRF rank reach 22.5%. Six of the eight dimensions have no data, and adding research counts from OpenAlex would still only reach about 40%. It should stay unscored until faculty and curriculum data exist. Filling it with proxies would look like knowledge we don't have.
+- **Branch placements.** 38 of 1,143 programmes. Institutes rarely publish them, and the reports that do use different definitions.
+- **Official NIRF ranks.** nirfindia.org still blocks scripts. This isn't bypassed, so a person needs to enter them.
+- **State counselling and alumni outcomes.** Not collected.
+
+**Known bias:** with a budget set, an institute that publishes its charges can lose points, while one that publishes nothing stays neutral. The default weight is small, but it can favour institutes with no published fees.
+
 ## What was fetched
 Round 1 and the last round for each of 2021-2026, which is 12 tables and 132,982 rows. Each table takes one `ALL` query, with 2 seconds between requests and an identifying user agent.
 
 ```
 python -m ingest.josaa_fetch --years 2021-2025 --current
+python -m ingest.seat_matrix
+python -m ingest.csab_fetch
 python -m ingest.load
 ```
 
@@ -98,10 +129,9 @@ Built so far: JoSAA fetch and load, NIRF PDF extraction, and the CSV importer fo
 1. **JoSAA reuse rights.** The terms page neither allows nor forbids reuse. Ask JoSAA before commercial launch.
 2. **Official NIRF rankings.** nirfindia.org still blocks scripts. Institute submissions now supply outcomes, but ranks still come from a secondary source. Someone needs to enter ranks from the official site. Also, look for the missing pilot submissions (IIIT Allahabad, IIEST Shibpur).
 7. **Sample review of placement rows.** Have a person check a sample against the source PDFs, then mark checked rows `verified`.
-3. **Home State seats outside clause 11.** `ICT Mumbai (Odisha campus)` and `IUST Kashmir` publish HS rows, but clause 11 doesn't name them. They currently use their own state as home state. Check against seat matrix notes.
-4. **BIT Mesra, BIT Patna, BIT Deoghar and Assam University.** Clause 11 confirms HS and AI seats but the state mapping is assumed to be each campus's own state. Check against the Business Rules annexures.
-5. **2026 final round.** The source offered 5 rounds when fetched. Confirm no later round exists.
-6. **Location check.** Review all 139 institute locations, starting with the 20 pilots.
+6. **Location check.** Review all 139 cities, and the state of the 99 institutes the seat matrix doesn't confirm, starting with the 20 pilots.
+8. **Programme renames.** Ask a person who knows JoSAA to review `programme_lineage.yaml`, and the pairs left out of it.
+9. **CSAB reuse rights and rules.** As with JoSAA, reuse isn't addressed. Check CSAB eligibility rules before giving these leads more prominence.
 
 ## First 20 pilot institutions
 Chosen to cover institution types, regions and a range of cutoffs. They get deeper data collection first. Cutoffs already cover all institutes.

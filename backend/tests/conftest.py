@@ -7,12 +7,12 @@ os.environ["DATABASE_URL"] = "postgresql+psycopg://localhost/threshold_test"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from app.db import SessionLocal, engine, get_db
 from app.main import app
 from app.models import (
-    Base, CutoffRecord, DataSource, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, SourceDocument,
+    Base, CsabCutoff, CutoffRecord, DataSource, Institution, InstitutionRanking, PlacementRecord, Programme, QuotaEligibleState, SeatMatrixRecord, SourceDocument,
 )
 from app.services.eligibility import exam_for, rank_list_name
 
@@ -87,6 +87,33 @@ def seeded(schema):
             _cutoffs(db, programme, inst, doc, quota, seat, pool, {y: value for y in years})
         _cutoffs(db, new_seat, other_nit, doc, "OS", "OPEN", "neutral", {2026: 20000})
         _cutoffs(db, old_seat, other_nit, doc, "OS", "OPEN", "neutral", {2024: 90000, 2025: 90000})
+        # A programme JoSAA renamed: the earlier name's history belongs to the later one.
+        renamed_old = _programme(db, other_nit, "Computer Engineering")
+        renamed_new = _programme(db, other_nit, "Computer Engineering and Systems")
+        renamed_old.successor_id = renamed_new.id
+        _cutoffs(db, renamed_old, other_nit, doc, "OS", "OPEN", "neutral", {2024: 16000, 2025: 16000})
+        _cutoffs(db, renamed_new, other_nit, doc, "OS", "OPEN", "neutral", {2026: 16000})
+        # A campus abroad doesn't inherit the parent institute's rank.
+        abroad = _programme(db, iit, "Abu Dhabi Campus - Computer Science and Engineering")
+        abroad.campus_city, abroad.campus_country = "Abu Dhabi", "United Arab Emirates"
+        _cutoffs(db, abroad, iit, doc, "AI", "OPEN", "neutral", {y: 9000 for y in years})
+        # Seats: a thin category, and one with cutoffs in the past but no seat this year.
+        thin = _programme(db, goa, "Ceramic Engineering", "CHEM_E")
+        gone = _programme(db, goa, "Textile Technology", "OTHER")
+        _cutoffs(db, thin, goa, doc, "OS", "OPEN", "neutral", {y: 80000 for y in years})
+        _cutoffs(db, gone, goa, doc, "OS", "OPEN", "neutral", {2024: 80000, 2025: 80000})
+        _cutoffs(db, gone, goa, doc, "OS", "SC", "neutral", {y: 80000 for y in years})
+        for programme, seat, count in [(thin, "OPEN", 2), (gone, "OPEN", 0), (gone, "SC", 3)]:
+            db.add(SeatMatrixRecord(programme_id=programme.id, year=2026, quota="OS", seat_type=seat, gender_pool="neutral", seats=count, source_document_id=doc.id))
+        # The matrix lists every programme with a 2026 cutoff, as the real one does, so old_seat alone is missing.
+        db.flush()
+        current = db.scalars(select(CutoffRecord.programme_id).where(CutoffRecord.year == 2026).distinct()).all()
+        for programme_id in current:
+            db.add(SeatMatrixRecord(programme_id=programme_id, year=2026, quota="OS", seat_type="ST-PwD", gender_pool="neutral", seats=1, source_document_id=doc.id))
+        # CSAB rows sit apart, including a rank far beyond anything JoSAA closed at.
+        db.flush()
+        for programme, quota, seat, closing in [(civil, "OS", "OPEN", 400000), (cse_two, "HS", "OPEN", 500000), (civil, "OS", "SC", 600000)]:
+            db.add(CsabCutoff(programme_id=programme.id, year=2026, round=2, quota=quota, seat_type=seat, gender_pool="neutral", opening_rank=closing - 10, closing_rank=closing, source_document_id=doc.id))
         # A preparatory rank must never be treated as a normal numeric cutoff.
         db.add(CutoffRecord(
             programme_id=iit_cse.id, authority="JOSAA", year=2026, round=6, is_final_round=True, quota="AI", seat_type="SC-PwD", gender_pool="neutral",
@@ -98,7 +125,7 @@ def seeded(schema):
             median_salary_inr=1_000_000, verification_status="test_fixture", source_document_id=doc.id,
         ))
         db.commit()
-        ids = {"cse": cse.id, "civil": civil.id, "cse_two": cse_two.id, "ece_two": ece_two.id, "iit_cse": iit_cse.id, "arch": arch.id, "goa_cse": goa_cse.id, "new_seat": new_seat.id, "old_seat": old_seat.id}
+        ids = {"renamed_old": renamed_old.id, "renamed_new": renamed_new.id, "abroad": abroad.id, "thin": thin.id, "gone": gone.id, "cse": cse.id, "civil": civil.id, "cse_two": cse_two.id, "ece_two": ece_two.id, "iit_cse": iit_cse.id, "arch": arch.id, "goa_cse": goa_cse.id, "new_seat": new_seat.id, "old_seat": old_seat.id}
     yield ids
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE recommendation_runs"))

@@ -1,6 +1,6 @@
 # Scoring methodology
 
-Code: `backend/app/services/scoring.py`. Version `0.2.0`.
+Code: `backend/app/services/scoring.py`. Version `0.3.0`.
 
 There are three separate outputs, and they are never combined: quality, suitability and admission band.
 
@@ -12,7 +12,7 @@ There are three separate outputs, and they are never combined: quality, suitabil
 | Academic and faculty quality | 18 | None |
 | Branch strength and curriculum | 15 | None |
 | Alumni and industry network | 12 | None |
-| Institutional reputation | 10 | NIRF rank, secondary source, 26 institutes |
+| Institutional reputation | 10 | NIRF rank, secondary sources, 49 institutes |
 | Financial return | 10 | None |
 | Student experience | 5 | None |
 | Location and opportunities | 5 | None |
@@ -21,7 +21,7 @@ These weights are initial product assumptions, not validated findings.
 
 - Coverage is the share of weight with evidence. **Below 50%, no score is shown.** At most 10% is available today, so no option has a quality score yet. That is the intended behaviour.
 - The score is a weighted mean over covered dimensions only.
-- Reputation is `101 - NIRF rank`. No rank means no evidence, not a low score.
+- Reputation runs from 100 at rank 1 to 50.5 at rank 100. No rank means no evidence and counts as a neutral 50, so being ranked never scores below being absent. NIRF ranks only institutes that take part, so absence doesn't show an institute would rank lower. A programme on a campus abroad gets no rank, because the parent's rank describes its main campus.
 - Career uses the self-reported median salary as a percentile among institutes, plus the placement rate among eligible students where that is reported. **The highest package is never used.**
 - Salaries are compared only **within one graduating year and one reporting definition**. A NIRF 2025 file covers 2022-24 and a NIRF 2026 file covers 2023-25, so averaging across whole files would be unfair. Years with fewer than 50 institutes aren't used, which today leaves 2023 and 2024.
 - Not scored, though figures are still shown: **classes of fewer than 100 graduates**, whose medians are too noisy; **programmes other than 4-year ones**, which that NIRF table doesn't cover; and **Overall submissions**, which aren't comparable with Engineering ones.
@@ -41,7 +41,7 @@ A weighted average from 0 to 100, using the student's priorities.
 | Location | Preferred state 100, otherwise 30 |
 | Institution type | Preferred 100, otherwise 30 |
 | Placements | Career score where evidence exists |
-| Affordability | Annual cost compared with budget, only where tuition, hostel and mess are all published. A partial cost would look cheaper |
+| Affordability | Annual cost compared with budget where tuition, hostel and mess are all published. If the record is partial, it counts only when the recorded charges alone exceed the budget, because a partial sum can't show that a budget is met. Fees aren't applied to students a record doesn't cover, such as SC, ST and PwD students. |
 | How contested the seat is | Share of programmes on the same exam that close at a weaker rank, using the mean of the latest three years' OPEN, gender-neutral, All India or Other State closing ranks |
 
 **Unknown dimensions count as a neutral 50**, and the share based on known information is displayed. Otherwise an option with little data could beat one with more evidence just by skipping weak dimensions. This is a scoring convention, not an invented data point.
@@ -52,6 +52,9 @@ A weighted average from 0 to 100, using the student's priorities.
 3. **Medians cover placed students only.** They say nothing about those who weren't placed. The table shows both counts.
 4. **The figures are self-reported** and not audited.
 5. **The cohort margin is thin.** At 52 institutes, a few changes could bring a year back under 50.
+
+### Known limit of affordability
+With a budget set, an institute that publishes its charges can lose points, while one that publishes nothing stays neutral. The default weight is small, but this can favour institutes with no published fees.
 
 ### Why seat contest is in suitability but not quality
 Validation in November 2026 showed that the order below about rank 6,000 mostly reflected which institutes publish data, because NIRF ranks cover 26 institutes and scored placements fewer than half. Closing ranks exist for nearly every seat, so they now count for 20 of the default 120 priority points. Students can change that weight, and it is labelled as past candidates' choices.

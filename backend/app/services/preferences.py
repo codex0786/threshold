@@ -9,7 +9,7 @@ from app.schemas import StudentProfile
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
 from app.services.branches import FAMILY_LABELS
 from app.services.eligibility import exam_for, gender_pools, quota_applies, seat_claims
-from app.services.recommend import PAPER_FOR_EXAM, latest_year
+from app.services.recommend import PAPER_FOR_EXAM, history_ids, latest_year, lineage_map
 
 JOSAA_RULES = [
     "JoSAA allots you the highest choice on your list for which your rank qualifies in that round. Lower choices are then not considered.",
@@ -24,8 +24,10 @@ def analyse(db: Session, profile: StudentProfile, programme_ids: list[int]) -> d
     data_year = latest_year(db)
     programmes = {p.id: p for p in db.scalars(select(Programme).where(Programme.id.in_(programme_ids)).options(joinedload(Programme.institution)))}
     records_by_programme: dict[int, list[CutoffRecord]] = {pid: [] for pid in programme_ids}
-    for record in db.scalars(select(CutoffRecord).where(CutoffRecord.programme_id.in_(programme_ids), CutoffRecord.is_final_round, CutoffRecord.is_preparatory.is_(False), CutoffRecord.closing_rank.is_not(None), CutoffRecord.year > data_year - LOOKBACK_YEARS)):
-        records_by_programme[record.programme_id].append(record)
+    lineage = lineage_map(db)
+    wanted = {earlier: pid for pid in programme_ids for earlier in history_ids(lineage, pid)}
+    for record in db.scalars(select(CutoffRecord).where(CutoffRecord.programme_id.in_(wanted), CutoffRecord.is_final_round, CutoffRecord.is_preparatory.is_(False), CutoffRecord.closing_rank.is_not(None), CutoffRecord.year > data_year - LOOKBACK_YEARS)):
+        records_by_programme[wanted[record.programme_id]].append(record)
     quota_map: dict[int, dict[str, set[str]]] = {}
     for row in db.scalars(select(QuotaEligibleState)):
         quota_map.setdefault(row.institution_id, {}).setdefault(row.quota, set()).add(row.state)
@@ -45,7 +47,10 @@ def analyse(db: Session, profile: StudentProfile, programme_ids: list[int]) -> d
         if programme.required_paper != PAPER_FOR_EXAM[exam]:
             issues.append("This programme needs a different exam paper (B.Arch or B.Plan), which isn't checked here.")
         records = records_by_programme[programme_id]
-        if records and max(r.year for r in records) < data_year or not records:
+        if programme.successor_id:
+            latest = programmes.get(programme.successor_id) or db.get(Programme, programme.successor_id)
+            issues.append(f"JoSAA now lists this as {latest.name}. Add that name to your list instead.")
+        elif records and max(r.year for r in records) < data_year or not records:
             issues.append(f"No {data_year} cutoff is on record, so check it is still offered.")
         routes = []
         for claim in claims:

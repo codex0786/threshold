@@ -5,7 +5,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { AddToList } from "@/components/add-to-list";
 import { CompareToggle } from "@/components/compare-toggle";
 import { BandBadge, bandMeta, ComponentList, Notice, PageHeader, PlacementBlock, QualityScore, RankGauge, RankingLine, ScoreBar, Skeleton, FeeBlock } from "@/components/ui";
-import { api, type Meta, num, type Option, post, type Profile, type Recommendations, type Route } from "@/lib/api";
+import { api, type CsabLeads, type Meta, num, type Option, post, type Profile, type Recommendations, type Route } from "@/lib/api";
 import { loadProfile, saveProfile } from "@/lib/store";
 
 const BANDS = ["all", "safer", "competitive", "ambitious", "limited_history"] as const;
@@ -42,6 +42,7 @@ function OptionCard({ option, index }: { option: Option; index: number }) {
           {route.low_closing != null && route.high_closing != null && <RankGauge rank={route.rank_used} low={route.low_closing} high={route.high_closing} color={band.color} />}
           <p className="tnum text-xs text-ink-3">Your {listName(route.rank_list)} rank: {num(route.rank_used)}</p>
           <p className="text-xs text-ink-3"><RouteLine route={route} /></p>
+          {route.seats != null && route.seats > 0 && <p className="tnum text-xs text-ink-3">{num(route.seats)} {route.seats === 1 ? "seat" : "seats"} in this category, {num(option.total_seats ?? route.seats)} in all, in 2026</p>}
         </div>
         <div>
           <p className="text-xs text-ink-3">Fit with your priorities</p>
@@ -54,6 +55,9 @@ function OptionCard({ option, index }: { option: Option; index: number }) {
           <p className="text-xs text-ink-3">{Math.round(option.quality.coverage * 100)}% evidence, 50% needed</p>
         </div>
       </div>
+
+      {option.institution.campus_note && <p className="mt-3 text-xs text-ink-3">{option.institution.campus_note}</p>}
+      {(option.earlier_names?.length ?? 0) > 0 && <p className="mt-3 text-xs text-ink-3">Past cutoffs include its earlier name: {option.earlier_names?.map((e) => `${e.name} (until ${e.until})`).join(", ")}. We joined these by comparing JoSAA’s lists, and the institute hasn’t confirmed it.</p>}
 
       <button type="button" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
         <ChevronDown size={15} className={`chev ${open ? "rotate-180" : ""}`} aria-hidden /> {open ? "Hide" : "Why this option"}
@@ -78,6 +82,34 @@ function OptionCard({ option, index }: { option: Option; index: number }) {
         </div>
       )}
     </article>
+  );
+}
+
+function CsabPanel({ csab }: { csab: CsabLeads }) {
+  const [open, setOpen] = useState(false);
+  if (csab.count === 0) return null;
+  return (
+    <section className="card mt-6 p-4" aria-labelledby="csab-title">
+      <h2 id="csab-title" className="text-lg">Also worth checking: CSAB special rounds</h2>
+      <p className="mt-1 text-sm text-ink-2">{num(csab.count)} programmes closed at or beyond your rank of {num(csab.rank_used)} in 2026.</p>
+      <p className="mt-1 text-xs text-ink-3">{csab.note}</p>
+      <button type="button" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <ChevronDown size={15} className={`chev ${open ? "rotate-180" : ""}`} aria-hidden /> {open ? "Hide" : `Show ${csab.count > csab.options.length ? `the first ${num(csab.options.length)}` : "them"}`}
+      </button>
+      {open && (
+        <ul className="rise mt-3 divide-y divide-line">
+          {csab.options.map((o) => (
+            <li key={o.programme_id} className="py-2 text-sm">
+              <div className="flex flex-wrap justify-between gap-x-4">
+                <span className="font-medium">{o.institution.short_name}: {o.programme}</span>
+                <span className="tnum text-ink-2">closed at {num(o.closing_rank)}</span>
+              </div>
+              <p className="text-xs text-ink-3">Round {o.round} · {o.quota} quota · {o.seat_type} · {o.gender_pool_label} · <a className="underline" href={o.source_url} target="_blank" rel="noreferrer">source</a></p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -192,17 +224,18 @@ export default function RecommendationsPage() {
           )}
           {result && <BandMix counts={result.counts} />}
           {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0 || result.excluded.no_latest_cutoff > 0) && (
-            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} with no {result.data_year} cutoff, which may no longer be offered. Each band shows its 25 best matches for you, and options with limited history come last.</p>
+            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} missing from the {result.data_year} seat matrix, so not offered this year{(result.excluded.no_seat_in_category ?? 0) > 0 ? `, and ${num(result.excluded.no_seat_in_category)} with no ${result.data_year} seat in your category` : ""}. Each band shows its 25 best matches for you, and options with limited history come last.</p>
           )}
           {loading && !result && <Skeleton lines={4} />}
           <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}>
             {shown.map((o, i) => <OptionCard key={o.programme_id} option={o} index={i} />)}
           </div>
+          {result?.csab && <CsabPanel csab={result.csab} />}
           {result && shown.length === 0 && !loading && (
             <div className="space-y-3">
               {result.options.length === 0 && result.warnings.filter((w) => w.includes("no options")).map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
               <Notice>{result.options.length === 0
-                ? "No JoSAA programme has closed within 20% of your rank in recent years. Check that your ranks and Class XII state are correct. CSAB special rounds and state counselling aren't covered here, and they may still have options."
+                ? "No JoSAA programme has closed within 20% of your rank in recent years. Check that your ranks and Class XII state are correct. State counselling isn't covered here, and it may still have options."
                 : "No options in this view. Try another band, or check that your ranks and Class XII state are correct."}</Notice>
             </div>
           )}

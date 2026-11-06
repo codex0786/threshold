@@ -4,28 +4,33 @@ Usage: python -m ingest.load
 """
 from __future__ import annotations
 
+import csv
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
 from app.models import (
-    AuditLog, CutoffRecord, DataSource, Institution, InstitutionAlias, InstitutionRanking, Programme,
-    QuotaEligibleState, SourceDocument,
+    AuditLog, CsabCutoff, CutoffRecord, DataSource, Institution, InstitutionAlias, InstitutionRanking, Programme,
+    QuotaEligibleState, SeatMatrixRecord, SourceDocument,
 )
-from app.services.branches import branch_family, required_paper
+from app.services.branches import branch_family, campus_of, required_paper
 from app.services.eligibility import exam_for, rank_list_name
+from ingest.csab_fetch import QUOTAS as CSAB_QUOTAS, SKIPPED_QUOTAS as CSAB_SKIPPED
 from ingest.josaa_parse import RawRow, clean, parse_file, parse_programme, parse_rank
+from ingest.seat_matrix import parse as parse_seat_matrix
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "data" / "registry"
 RAW = ROOT / "data" / "raw" / "josaa"
+RAW_CSAB = ROOT / "data" / "raw" / "csab"
 
 SEAT_TYPES = {
     "OPEN": "OPEN", "EWS": "EWS", "OBC-NCL": "OBC-NCL", "SC": "SC", "ST": "ST",
@@ -33,17 +38,6 @@ SEAT_TYPES = {
     "SC (PwD)": "SC-PwD", "ST (PwD)": "ST-PwD",
 }
 GENDER_POOLS = {"Gender-Neutral": "neutral", "Female-only (including Supernumerary)": "female"}
-
-# Business Rules 2026, clauses 11 and 12. Everything else with HS seats uses its own state.
-NORTH_EAST_MALDA = ["Arunachal Pradesh", "Assam", "Nagaland", "Manipur", "Meghalaya", "Mizoram", "Sikkim", "Tripura"]
-QUOTA_OVERRIDES: dict[str, dict[str, list[str]]] = {
-    "nit-goa": {"GO": ["Goa"], "HS": ["Daman and Diu", "Dadra and Nagar Haveli", "Lakshadweep"]},
-    "nit-srinagar": {"JK": ["Jammu and Kashmir"], "LA": ["Ladakh"]},
-    "nit-puducherry": {"HS": ["Puducherry", "Andaman and Nicobar Islands"]},
-    "nit-delhi": {"HS": ["Delhi", "Chandigarh"]},
-    "gkciet-malda": {"HS": NORTH_EAST_MALDA},
-}
-
 
 class UnmappedInstitution(ValueError):
     pass
@@ -66,6 +60,12 @@ def load_sources(db: Session) -> dict[str, DataSource]:
 def load_institutions(db: Session) -> tuple[dict[str, Institution], dict[str, Institution]]:
     by_alias: dict[str, Institution] = {}
     by_slug: dict[str, Institution] = {}
+    websites = {}
+    placements = ROOT / "data" / "import" / "placements_nirf.csv"
+    if placements.exists():
+        with placements.open(newline="") as handle:
+            for row in csv.DictReader(handle):
+                websites[row["institution_slug"]] = "https://" + urlsplit(row["source_url"]).netloc
     for entry in yaml.safe_load((REGISTRY / "institutions.yaml").read_text()):
         inst = db.scalar(select(Institution).where(Institution.slug == entry["slug"])) or Institution(slug=entry["slug"])
         inst.official_name = clean(entry["names"][0])
@@ -73,7 +73,8 @@ def load_institutions(db: Session) -> tuple[dict[str, Institution], dict[str, In
         inst.institute_type = entry["type"]
         inst.city = entry.get("city")
         inst.state = entry["state"]
-        inst.website = entry.get("website")
+        # Otherwise use the site that published this institute's own accepted NIRF document.
+        inst.website = entry.get("website") or websites.get(entry["slug"])
         inst.is_pilot = bool(entry.get("website"))
         inst.location_verification = "manual_unverified"
         db.add(inst)
@@ -90,15 +91,18 @@ def load_institutions(db: Session) -> tuple[dict[str, Institution], dict[str, In
 
 
 def load_rankings(db: Session, by_slug: dict[str, Institution], sources: dict[str, DataSource]) -> int:
-    rows = yaml.safe_load((REGISTRY / "nirf_2025_engineering_secondary.yaml").read_text())
-    for row in rows:
-        stmt = insert(InstitutionRanking).values(
-            institution_id=by_slug[row["slug"]].id, framework="NIRF", category="Engineering", year=2025,
-            rank=row["rank"], score=row["score"], verification_status="secondary_unverified",
-            source_id=sources["nirf_2025_careers360"].id,
-        ).on_conflict_do_nothing()
-        db.execute(stmt)
-    return len(rows)
+    total = 0
+    for filename, source_key in (("nirf_2025_engineering_secondary.yaml", "nirf_2025_careers360"), ("nirf_2025_engineering_top100_secondary.yaml", "nirf_2025_top100_copies")):
+        rows = yaml.safe_load((REGISTRY / filename).read_text())
+        for row in rows:
+            stmt = insert(InstitutionRanking).values(
+                institution_id=by_slug[row["slug"]].id, framework="NIRF", category="Engineering", year=2025,
+                rank=row["rank"], score=row["score"], verification_status="secondary_unverified",
+                source_id=sources[source_key].id,
+            ).on_conflict_do_nothing()
+            db.execute(stmt)
+        total += len(rows)
+    return total
 
 
 def row_values(row: RawRow, programme: Programme, inst: Institution, year: int, round_no: int, is_final: bool, doc_id: int) -> dict:
@@ -155,26 +159,124 @@ def load_table(db: Session, path: Path, source: DataSource, by_alias: dict[str, 
     return len(unique)
 
 
-def load_quota_states(db: Session, by_slug: dict[str, Institution]) -> list[str]:
-    """Record home states from the institutes that actually publish those quotas."""
-    pairs = db.execute(
-        select(Programme.institution_id, CutoffRecord.quota).join(CutoffRecord.programme)
-        .where(CutoffRecord.quota.in_(["HS", "GO", "JK", "LA"])).distinct()
-    ).all()
-    by_id = {i.id: i for i in by_slug.values()}
+def _source_document(db: Session, source: DataSource, meta: dict, raw_folder: str, title: str, row_count: int) -> SourceDocument:
+    doc = db.scalar(select(SourceDocument).where(SourceDocument.source_id == source.id, SourceDocument.sha256 == meta["sha256"]))
+    if doc is None:
+        doc = SourceDocument(
+            source_id=source.id, title=title, url=meta["url"], raw_path=f"data/raw/{raw_folder}/{meta['file']}", sha256=meta["sha256"],
+            reporting_year=meta["year"], fetched_at=datetime.fromisoformat(meta["fetched_at"]), row_count=row_count,
+        )
+        db.add(doc)
+        db.flush()
+    return doc
+
+
+def refresh_programme_labels(db: Session) -> list[str]:
+    """Apply the current naming rules to stored programmes, and report each change."""
+    changes = []
+    for programme in db.scalars(select(Programme)):
+        family = branch_family(programme.name)
+        if family != programme.branch_family:
+            changes.append(f"{programme.name}: {programme.branch_family} to {family}")
+            programme.branch_family = family
+        campus = campus_of(programme.name)
+        programme.campus_city, programme.campus_country = campus if campus else (None, None)
+    return sorted(set(changes))
+
+
+def load_lineage(db: Session, by_slug: dict[str, Institution]) -> int:
+    pairs = yaml.safe_load((REGISTRY / "programme_lineage.yaml").read_text())
+    db.execute(update(Programme).values(successor_id=None))
+    for pair in pairs:
+        inst_id = by_slug[pair["institution"]].id
+        earlier = db.scalar(select(Programme).where(Programme.institution_id == inst_id, Programme.raw_name == pair["earlier"]))
+        later = db.scalar(select(Programme).where(Programme.institution_id == inst_id, Programme.raw_name == pair["later"]))
+        if earlier is None or later is None:
+            raise ValueError(f"programme_lineage.yaml names a programme that doesn't exist: {pair}")
+        earlier.successor_id = later.id
+    return len(pairs)
+
+
+def load_seat_matrix(db: Session, source: DataSource, by_alias: dict[str, Institution], programmes: dict) -> dict[int, dict[str, set[str]]]:
+    """Store seats, and return each institute's home states exactly as the seat matrix prints them."""
+    home_states: dict[int, dict[str, set[str]]] = {}
+    for path in sorted(RAW.glob("seatmatrix_*.html")):
+        meta = json.loads(path.with_suffix(".json").read_text())
+        rows = parse_seat_matrix(path.read_text(encoding="utf-8"))
+        doc = _source_document(db, source, meta, "josaa", f"JoSAA {meta['year']} seat matrix", len(rows))
+        values = {}
+        for row in rows:
+            inst = by_alias.get(row.institute)
+            programme = programmes.get((inst.id, row.programme)) if inst else None
+            if programme is None:
+                raise UnmappedInstitution(f"{path.name}: the seat matrix names an unknown programme: {row.institute}: {row.programme}")
+            quota = row.quota
+            # NIT Goa's first list is Goa alone, which JoSAA's rank tables call the Goa quota.
+            if quota == "HS" and row.states == ("Goa",) and inst.slug == "nit-goa":
+                quota = "GO"
+            if quota in ("HS", "GO", "JK", "LA"):
+                home_states.setdefault(inst.id, {}).setdefault(quota, set()).update(row.states)
+            for seat_type, seats in row.seats.items():
+                values[(programme.id, meta["year"], quota, seat_type, row.gender_pool)] = {
+                    "programme_id": programme.id, "year": meta["year"], "quota": quota, "seat_type": seat_type,
+                    "gender_pool": row.gender_pool, "seats": seats, "source_document_id": doc.id,
+                }
+        batch = list(values.values())
+        for start in range(0, len(batch), 2000):
+            db.execute(insert(SeatMatrixRecord).values(batch[start:start + 2000]).on_conflict_do_nothing(constraint="uq_seat_identity"))
+        print(f"{path.name}: {len(batch):,} seat cells")
+    return home_states
+
+
+def load_quota_states(db: Session, home_states: dict[int, dict[str, set[str]]], by_slug: dict[str, Institution]) -> int:
+    """Replace the home-state list with the official one, and mark each institute whose state it confirms."""
     db.query(QuotaEligibleState).delete()
-    defaulted = set()
-    for inst_id, quota in pairs:
-        inst = by_id[inst_id]
-        override = QUOTA_OVERRIDES.get(inst.slug, {})
-        if quota in override:
-            states = override[quota]
-        else:
-            states = [inst.state]
-            defaulted.add(inst.short_name)
-        for state in states:
-            db.add(QuotaEligibleState(institution_id=inst_id, quota=quota, state=state))
-    return sorted(defaulted)
+    confirmed = 0
+    for inst in by_slug.values():
+        quotas = home_states.get(inst.id, {})
+        for quota, states in quotas.items():
+            for state in states:
+                db.add(QuotaEligibleState(institution_id=inst.id, quota=quota, state=state))
+        if inst.state in set().union(*quotas.values(), set()):
+            inst.location_verification = "state_official"
+            confirmed += 1
+    return confirmed
+
+
+def load_csab(db: Session, source: DataSource, by_alias: dict[str, Institution], programmes: dict) -> int:
+    """Only programmes already known from JoSAA are stored. Anything else is reported, not guessed at."""
+    total = 0
+    skipped: set[tuple[str, str]] = set()
+    for path in sorted(RAW_CSAB.glob("csab_*.html")):
+        meta = json.loads(path.with_suffix(".json").read_text())
+        rows = parse_file(path)
+        doc = _source_document(db, source, meta, "csab", f"CSAB special round {meta['round']}, {meta['year']}: opening and closing ranks", len(rows))
+        values = {}
+        for row in rows:
+            if row.quota in CSAB_SKIPPED:
+                continue
+            quota = CSAB_QUOTAS[row.quota]
+            inst = by_alias.get(row.institute)
+            programme = programmes.get((inst.id, row.programme)) if inst else None
+            opening, opening_prep = parse_rank(row.opening)
+            closing, closing_prep = parse_rank(row.closing)
+            if programme is None:
+                skipped.add((row.institute, row.programme))
+                continue
+            if opening_prep or closing_prep:
+                continue
+            values[(programme.id, quota, row.seat_type, row.gender)] = {
+                "programme_id": programme.id, "year": meta["year"], "round": meta["round"], "quota": quota,
+                "seat_type": SEAT_TYPES[row.seat_type], "gender_pool": GENDER_POOLS[row.gender],
+                "opening_rank": opening, "closing_rank": closing, "source_document_id": doc.id,
+            }
+        batch = list(values.values())
+        for start in range(0, len(batch), 2000):
+            db.execute(insert(CsabCutoff).values(batch[start:start + 2000]).on_conflict_do_nothing(constraint="uq_csab_identity"))
+        total += len(batch)
+    if skipped:
+        print(f"CSAB programmes with no JoSAA match, left out ({len(skipped)}):", sorted(skipped))
+    return total
 
 
 def main() -> None:
@@ -191,11 +293,17 @@ def main() -> None:
         for path in sorted(RAW.glob("orcr_*.html")):
             total += load_table(db, path, sources["josaa_orcr"], by_alias, programmes)
             db.flush()
-        defaulted = load_quota_states(db, by_slug)
-        db.add(AuditLog(actor="ingest.load", action="load", entity="cutoff_records", detail={"rows": total, "rankings": ranking_count}))
+        db.flush()
+        relabelled = refresh_programme_labels(db)
+        lineage = load_lineage(db, by_slug)
+        home_states = load_seat_matrix(db, sources["josaa_seat_matrix"], by_alias, programmes)
+        confirmed = load_quota_states(db, home_states, by_slug)
+        csab = load_csab(db, sources["csab_special"], by_alias, programmes)
+        db.add(AuditLog(actor="ingest.load", action="load", entity="cutoff_records", detail={"rows": total, "rankings": ranking_count, "csab": csab}))
         db.commit()
-        print(f"Loaded {total:,} cutoff rows, {len(programmes):,} programmes, {ranking_count} rankings")
-        print("Institutes using their own state as home state:", defaulted)
+        print(f"Loaded {total:,} cutoff rows, {len(programmes):,} programmes, {ranking_count} rankings, {csab:,} CSAB rows, {lineage} renames")
+        print(f"State confirmed by the seat matrix: {confirmed} institutes")
+        print("Relabelled:", relabelled)
 
 
 if __name__ == "__main__":

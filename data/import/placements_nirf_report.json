@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T14:18:31.507274+00:00",
+  "generated_at": "2026-11-06T13:36:57.848805+00:00",
   "institutes": {
     "iit-bombay": {
       "status": "extracted",
@@ -716,6 +716,102 @@
       "problems": [],
       "rows": 3,
       "sha256": "57c3d1d3eadf0c344b0039649091d24b063356c74c841c8ccdab5eda29d93698"
+    },
+    "iit-indore": {
+      "status": "extracted",
+      "url": "https://www.iiti.ac.in/uploads/nirf_data/2026/Apr/9f25085e271e0b1bf9dad932666cb6f7.pdf",
+      "file": "iit-indore_2026_86d613dc.pdf",
+      "document_institute": "IndianInstituteofTechnologyIndore",
+      "document_code": "IR-E-U-0273",
+      "document_year": 2026,
+      "category": "Engineering",
+      "problems": [],
+      "rows": 3,
+      "sha256": "1215844ab89e47ed35cdedaa961033bb7c113d6efb9eef0cc6fd134d4759968b"
+    },
+    "iit-jodhpur": {
+      "status": "extracted",
+      "url": "https://www.iitj.ac.in/PageImages/Gallery/03-2025/NIRF%202025%20Engineering%20Final%20Sumitted%20Data%2031Jan2025.pdf",
+      "file": "iit-jodhpur_2025_7bae2c21.pdf",
+      "document_institute": "IndianInstituteofTechnologyJodhpur",
+      "document_code": "IR-E-U-0395",
+      "document_year": 2025,
+      "category": "Engineering",
+      "problems": [],
+      "rows": 3,
+      "sha256": "17ac215df6096c5acf04e4045ab57ff9d53036f6ff33ee2c66a760ef7cb314c5"
+    },
+    "iit-bhilai": {
+      "status": "extracted",
+      "url": "https://www.iitbhilai.ac.in/index.php?pid=report_engineering_2026",
+      "file": "iit-bhilai_2026_5e5d1805.pdf",
+      "document_institute": "IndianInstituteofTechnologyBhilai",
+      "document_code": "IR-E-U-0946",
+      "document_year": 2026,
+      "category": "Engineering",
+      "problems": [],
+      "rows": 3,
+      "sha256": "242d40e746f54387818742b07999ed12168dafef29972d570fda3a7973b79d0f"
+    },
+    "nit-puducherry": {
+      "status": "extracted",
+      "url": "https://www.nitpy.ac.in/assets/docs/academics/nirf/2025/Engineering.pdf",
+      "file": "nit-puducherry_2025_73d1ebd8.pdf",
+      "document_institute": "NationalInstituteofTechnologyPuducherry",
+      "document_code": "IR-E-U-0621",
+      "document_year": 2025,
+      "category": "Engineering",
+      "problems": [],
+      "rows": 3,
+      "sha256": "611121b288d65eaf77f592938cf17f616cea741953ebec36a2313d1c6533f860"
+    },
+    "nit-raipur": {
+      "status": "extracted",
+      "url": "https://www.nitrr.ac.in/downloads/nirf_data/2026/overall%202026.pdf",
+      "file": "nit-raipur_2026_b2431fa5.pdf",
+      "document_institute": "NationalInstituteofTechnology,Raipur",
+      "document_code": "IR-O-U-0092",
+      "document_year": 2026,
+      "category": "Overall",
+      "problems": [],
+      "rows": 3,
+      "sha256": "d313f855beb133069eaf4008b821a60cba25f21ae542f28db1581e5922bc4065"
+    },
+    "iit-ropar": {
+      "status": "extracted",
+      "url": "https://www.iitrpr.ac.in/downloads/sites/default/files/April/overall%202026.pdf",
+      "file": "iit-ropar_2026_658f9c06.pdf",
+      "document_institute": "IndianInstituteofTechnologyRopar",
+      "document_code": "IR-O-U-0378",
+      "document_year": 2026,
+      "category": "Overall",
+      "problems": [],
+      "rows": 3,
+      "sha256": "970af8983e11b441468e66a4d040be436ee263fb269f6b8d63e82b4841d8bbf8"
+    },
+    "iiit-naya-raipur": {
+      "status": "extracted",
+      "url": "https://www.iiitnr.ac.in/newspace/pdf/NIFRengineering.pdf",
+      "file": "iiit-naya-raipur_2026_4ad01f05.pdf",
+      "document_institute": "Dr.ShyamaPrasadMukherjeeInternationalInstituteofInformationTechnology,NayaRaipur",
+      "document_code": "IR-E-S-16059",
+      "document_year": 2026,
+      "category": "Engineering",
+      "problems": [],
+      "rows": 3,
+      "sha256": "e94cb68df0df3f806332be1f4d72230dc689f5d9e73b00f0d6cba95c27c2c1de"
+    },
+    "iiit-kota": {
+      "status": "extracted",
+      "url": "https://cdn.iiitkota.ac.in/nirf/2026-04-02_UPLOADED%20NIRF-2026%20Overall.pdf",
+      "file": "iiit-kota_2026_258b8a6a.pdf",
+      "document_institute": "INDIANINSTITUTEOFINFORMATIONTECHNOLOGY,KOTA",
+      "document_code": "IR-O-U-0799",
+      "document_year": 2026,
+      "category": "Overall",
+      "problems": [],
+      "rows": 3,
+      "sha256": "70b8e1a1d0070783b8eea97a879261187f71dd0bb197ac0df8630b70bcf4d436"
     }
   }
 }

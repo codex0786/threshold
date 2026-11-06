@@ -7,7 +7,7 @@ The brief's phases were reordered slightly. Its first vertical slice crosses Pha
 | 0 | Inspection, architecture, docs | **Done** |
 | 1 | Database, auth, master data, admin foundation | **Partial**: database and master data done. Auth and admin not built |
 | 2 | Source registry, imports, verification | **Partial**: registry, JoSAA ingestion, NIRF PDF extraction and validated CSV import done. Excel, review queue not built |
-| 3 | Admission intelligence | **Mostly done** for JoSAA. Seat matrix not built |
+| 3 | Admission intelligence | **Mostly done** for JoSAA, with the seat matrix and one year of CSAB ranks |
 | 4 | Placements, faculty, fees, finance | **Partial**: placements, recruiters, sectors, an alumni sample, fees and the calculator are in. Faculty and curriculum aren't |
 | 5 | Decision engine | **Partial**: suitability, bands, comparison done. Quality awaits data |
 | 6 | User experience | **Partial**: 11 of the 15 sections built |
@@ -27,9 +27,8 @@ Not built: student dashboard, AI assistant, admin dashboard.
 4. Have a person review a sample of placement rows.
 5. Side-by-side cost comparison.
 6. Faculty data and OpenAlex research metrics, then curriculum.
-7. Seat matrix, and intermediate rounds.
-8. CSAB adapter, then a first state adapter.
-9. Programme alias table for renames.
+7. Intermediate rounds.
+8. CSAB history as each year is published, then a first state adapter.
 10. OCI/PIO and foreign candidate support.
 11. RAG assistant with structured tools (needs an LLM key and `pgvector`).
 12. Rate limiting, security review, staging deployment.

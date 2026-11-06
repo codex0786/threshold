@@ -1,0 +1,27 @@
+# NIRF 2025 Engineering ranks 51-100, for JoSAA institutes only, as shown by secondary copies (see sources.yaml).
+# corpready.in/nirf/2025/Engineering gives rank and score, and its rows agree with all 26 ranks in the top-50 file.
+# collegedekho.com lists the same institutes in the same order, but its numbering slips by one from about rank 41.
+# Stored as secondary_unverified until someone enters the ranks from nirfindia.org, which blocks scripts.
+- {slug: bit-mesra, rank: 51, score: 55.28}
+- {slug: nit-patna, rank: 53, score: 53.89}
+- {slug: iiest-shibpur, rank: 54, score: 53.63}
+- {slug: nit-jalandhar, rank: 55, score: 53.38}
+- {slug: iit-jammu, rank: 56, score: 53.08}
+- {slug: iit-tirupati, rank: 57, score: 52.73}
+- {slug: mnnit-allahabad, rank: 62, score: 52.15}
+- {slug: iit-palakkad, rank: 64, score: 51.2}
+- {slug: nit-delhi, rank: 65, score: 50.79}
+- {slug: svnit-surat, rank: 66, score: 50.77}
+- {slug: iit-bhilai, rank: 72, score: 50.37}
+- {slug: nit-srinagar, rank: 73, score: 50.23}
+- {slug: university-of-hyderabad, rank: 74, score: 49.36}
+- {slug: iit-dharwad, rank: 77, score: 48.61}
+- {slug: sliet-longowal, rank: 79, score: 48.42}
+- {slug: manit-bhopal, rank: 81, score: 48.26}
+- {slug: nit-jamshedpur, rank: 82, score: 48.25}
+- {slug: nit-meghalaya, rank: 83, score: 48.21}
+- {slug: nit-kurukshetra, rank: 85, score: 47.98}
+- {slug: nit-raipur, rank: 86, score: 47.59}
+- {slug: abv-iiitm-gwalior, rank: 96, score: 46.25}
+- {slug: nit-hamirpur, rank: 97, score: 46.1}
+- {slug: nit-puducherry, rank: 99, score: 45.83}

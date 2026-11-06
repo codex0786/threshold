@@ -8,7 +8,7 @@ from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.db import get_db
-from app.models import CutoffRecord, DataSource, FeeRecord, Institution, InstitutionAlias, InstitutionRanking, PlacementRecord, Programme, SourceDocument
+from app.models import CsabCutoff, CutoffRecord, DataSource, FeeRecord, Institution, InstitutionAlias, InstitutionRanking, PlacementRecord, Programme, SeatMatrixRecord, SourceDocument
 from app.schemas import STATES, ComparisonRequest, ParentReportRequest, PreferenceListRequest, RecommendationRequest, RoiRequest
 from app.services import careers, finance, preferences, report
 from app.services import recommend as rec
@@ -45,7 +45,7 @@ def meta(db: Session = Depends(get_db)) -> dict:
 def _institution_completeness(inst: Institution, has_cutoffs: bool, has_placements: bool, has_fees: bool) -> dict:
     fields = {
         "cutoffs": has_cutoffs, "nirf_rank": bool(inst.rankings), "placements": has_placements, "fees": has_fees,
-        "website": bool(inst.website), "location_verified": inst.location_verification == "verified",
+        "website": bool(inst.website), "location_confirmed": inst.location_verification in ("verified", "state_official"),
     }
     return {"fields": fields, "percent": round(100 * sum(fields.values()) / len(fields))}
 
@@ -108,6 +108,8 @@ def get_institution(slug: str, db: Session = Depends(get_db)) -> dict:
         .where(CutoffRecord.programme_id.in_([p.id for p in programmes])).group_by(CutoffRecord.programme_id)
     ).all())
     latest = rec.latest_year(db)
+    offered = rec.offered_programmes(db, latest)
+    names = {p.id: p.name for p in programmes}
     placements = rec.latest_per_year(list(db.scalars(select(PlacementRecord).options(joinedload(PlacementRecord.source_document)).where(PlacementRecord.institution_id == inst.id, PlacementRecord.scope == "institution"))))
     fees = db.scalars(select(FeeRecord).options(joinedload(FeeRecord.source_document)).where(FeeRecord.institution_id == inst.id).order_by(FeeRecord.academic_year.desc())).all()
     quota_states: dict[str, list[str]] = defaultdict(list)
@@ -126,7 +128,7 @@ def get_institution(slug: str, db: Session = Depends(get_db)) -> dict:
             {
                 "id": p.id, "name": p.name, "degree": p.degree, "duration_years": p.duration_years, "branch_family": p.branch_family,
                 "branch_label": FAMILY_LABELS.get(p.branch_family, "Other"), "last_seen_year": years.get(p.id),
-                "currently_offered": years.get(p.id) == latest,
+                "currently_offered": p.id in offered, "renamed_to": names.get(p.successor_id), "campus_city": p.campus_city, "campus_country": p.campus_country,
             } for p in programmes
         ],
         "completeness": _institution_completeness(inst, bool(programmes), bool(placements), bool(fees)),
@@ -145,14 +147,18 @@ def get_programme(programme_id: int, db: Session = Depends(get_db)) -> dict:
     ).all()
     evidence = rec.institution_evidence(db)
     records, _ = rec.career_for(programme, evidence)
+    latest = rec.latest_year(db)
+    seat_counts = db.execute(select(SeatMatrixRecord.quota, SeatMatrixRecord.seat_type, SeatMatrixRecord.gender_pool, SeatMatrixRecord.seats).where(SeatMatrixRecord.programme_id == programme_id, SeatMatrixRecord.year == latest)).all()
     return {
         "id": programme.id, "name": programme.name, "degree": programme.degree, "duration_years": programme.duration_years,
         "branch_family": programme.branch_family, "branch_label": FAMILY_LABELS.get(programme.branch_family, "Other"),
         "required_paper": programme.required_paper,
-        "institution": {"slug": inst.slug, "short_name": inst.short_name, "official_name": inst.official_name, "type": inst.institute_type, "city": inst.city, "state": inst.state},
+        "institution": rec.institution_json(programme),
+        "earlier_names": rec.earlier_names(db, rec.lineage_map(db), programme_id),
         "available_seats": [{"seat_type": s, "quota": q, "gender_pool": g} for s, q, g in sorted(seats)],
-        "placements": rec.placement_json(records), "ranking": rec.ranking_json(evidence["rankings"].get(inst.id)),
-        "fee": rec.fee_json(evidence["fees"].get(inst.id)),
+        "seat_matrix": {"year": latest, "seats": [{"quota": q, "seat_type": t, "gender_pool": g, "seats": n} for q, t, g, n in sorted(seat_counts)]} if seat_counts else None,
+        "placements": rec.placement_json(records), "ranking": rec.ranking_json(rec.ranking_for(programme, evidence)),
+        "fee": rec.fee_json(rec.fee_for(programme, evidence)),
         "curriculum": None, "faculty": None,
     }
 
@@ -164,7 +170,7 @@ def programme_cutoffs(
 ) -> dict:
     query = (
         select(CutoffRecord).options(joinedload(CutoffRecord.source_document))
-        .where(CutoffRecord.programme_id == programme_id, CutoffRecord.seat_type == seat_type, CutoffRecord.gender_pool == gender_pool)
+        .where(CutoffRecord.programme_id.in_(rec.history_ids(rec.lineage_map(db), programme_id)), CutoffRecord.seat_type == seat_type, CutoffRecord.gender_pool == gender_pool)
         .order_by(CutoffRecord.quota, CutoffRecord.year, CutoffRecord.round)
     )
     if quota:
@@ -278,6 +284,14 @@ def data_completeness(db: Session = Depends(get_db)) -> dict:
     count = lambda model: db.scalar(select(func.count()).select_from(model))  # noqa: E731
     institutions = count(Institution)
     with_col = lambda col: db.scalar(select(func.count(distinct(col))))  # noqa: E731
+    complete_fees = (FeeRecord.annual_tuition_inr.is_not(None), FeeRecord.annual_hostel_inr.is_not(None), FeeRecord.annual_mess_inr.is_not(None))
+    type_rows = {}
+    for institute_type, total in db.execute(select(Institution.institute_type, func.count()).group_by(Institution.institute_type)):
+        within = lambda col: db.scalar(select(func.count(distinct(Institution.id))).join(col.class_, col == Institution.id).where(Institution.institute_type == institute_type))  # noqa: E731
+        type_rows[institute_type] = {
+            "institutions": total, "nirf_rank": within(InstitutionRanking.institution_id), "placements": within(PlacementRecord.institution_id),
+            "fees": within(FeeRecord.institution_id),
+        }
     return {
         "institutions": institutions, "programmes": count(Programme), "cutoff_records": count(CutoffRecord),
         "cutoff_years": sorted(db.scalars(select(distinct(CutoffRecord.year)))),
@@ -286,5 +300,16 @@ def data_completeness(db: Session = Depends(get_db)) -> dict:
             "placements": with_col(PlacementRecord.institution_id), "fees": with_col(FeeRecord.institution_id),
             "location_verified": db.scalar(select(func.count()).select_from(Institution).where(Institution.location_verification == "verified")),
         },
-        "not_yet_collected": ["Faculty", "Curriculum", "Seat matrix", "CSAB and state counselling", "Verified alumni outcomes"],
+        "detail": {
+            "seat_matrix_programmes": with_col(SeatMatrixRecord.programme_id),
+            "seats": db.scalar(select(func.sum(SeatMatrixRecord.seats))) or 0,
+            "csab_programmes": with_col(CsabCutoff.programme_id),
+            "state_confirmed": db.scalar(select(func.count()).select_from(Institution).where(Institution.location_verification == "state_official")),
+            "complete_yearly_fees": db.scalar(select(func.count(distinct(FeeRecord.institution_id))).where(*complete_fees)),
+            "branch_placements": with_col(PlacementRecord.programme_id),
+            "renamed_programmes": db.scalar(select(func.count()).select_from(Programme).where(Programme.successor_id.is_not(None))),
+            "official_rankings": db.scalar(select(func.count()).select_from(InstitutionRanking).where(InstitutionRanking.verification_status.in_(("official", "verified")))),
+        },
+        "by_type": type_rows,
+        "not_yet_collected": ["Faculty", "Curriculum", "State counselling", "Verified alumni outcomes", "Official NIRF ranks"],
     }

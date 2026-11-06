@@ -21,6 +21,23 @@ _RULES: list[tuple[str, str]] = [
     (r"physics|chemistry|mathematics|economics|statistics|science", "SCIENCE"),
 ]
 _COMPILED = [(re.compile(p, re.I), family) for p, family in _RULES]
+# Names the rules above would misread, because a specialisation or a second degree comes after the
+# main discipline, or because one word means something else here. Checked first.
+_SPECIFIC: list[tuple[str, str]] = [
+    (r"^electronics and electrical communication", "ECE"),
+    (r"^electronics and communication engineering .*internet of things", "ECE"),
+    (r"^agricultural engineering with data analytics", "BIO"),
+    (r"^chemical engineering with data analytics", "CHEM_E"),
+    (r"mechanical engineering and m\.?\s?tech", "ME"),
+    (r"^computer science and engineering with minor in", "CS"),
+    (r"^mechanics and computing", "OTHER"),
+    (r"^(applied and )?industrial chemistry", "SCIENCE"),
+    (r"^(bs in )?chemical sciences?$", "SCIENCE"),
+    (r"^ceramic engineering", "CHEM_E"),
+    (r"^industrial design", "OTHER"),
+    (r"^(biochemical|biotechnology and biochemical) engineering", "BIO"),
+]
+_COMPILED_SPECIFIC = [(re.compile(p, re.I), family) for p, family in _SPECIFIC]
 
 FAMILY_LABELS = {
     "CS": "Computer Science & IT", "AI_DS": "AI & Data Science", "MATH_COMP": "Mathematics & Computing",
@@ -43,7 +60,10 @@ CAREER_BRANCH_AFFINITY: dict[str, set[str]] = {
 
 
 def branch_family(programme_name: str) -> str:
-    name = re.sub(r"\s+", " ", programme_name)
+    name = re.sub(r"\s+", " ", programme_name).strip()
+    for pattern, family in _COMPILED_SPECIFIC:
+        if pattern.search(name):
+            return family
     # Maths and computing names mention "computing", so they are checked before the CS rule.
     if re.search(r"mathematics", name, re.I) and re.search(r"comput|data", name, re.I):
         return "MATH_COMP"
@@ -51,6 +71,13 @@ def branch_family(programme_name: str) -> str:
         if pattern.search(name):
             return family
     return "OTHER"
+
+
+def campus_of(programme_name: str) -> tuple[str, str] | None:
+    """(city, country) when the name places the programme on a campus away from the institute's main one."""
+    if re.match(r"abu dhabi campus\b", programme_name, re.I):
+        return "Abu Dhabi", "United Arab Emirates"
+    return None
 
 
 def required_paper(institute_type: str, degree: str | None, programme_name: str) -> str:

@@ -252,3 +252,96 @@ def test_rate_limit_returns_429_after_the_limit():
     limited = TestClient(app)
     assert [limited.get("/x", headers={"x-forwarded-for": "1.1.1.1"}).status_code for _ in range(3)] == [200, 200, 429]
     assert limited.get("/x", headers={"x-forwarded-for": "2.2.2.2"}).status_code == 200
+
+
+def ids_of(result):
+    return {o["programme_id"] for o in result["options"]}
+
+
+def goa_option(client, programme_id, **kw):
+    result = generate(client, main={"crl": 70000}, **kw)
+    return next((o for o in result["options"] if o["programme_id"] == programme_id), None), result
+
+
+def test_renamed_programme_keeps_its_history_and_says_so(client, seeded):
+    result = generate(client)
+    option = next(o for o in result["options"] if o["programme_id"] == seeded["renamed_new"])
+    assert set(option["best_route"]["years_used"]) == {2024, 2025, 2026} and option["band"] is not None
+    assert option["earlier_names"] == [{"name": "Computer Engineering", "until": 2025}]
+    assert seeded["renamed_old"] not in ids_of(result)
+
+
+def test_renamed_programme_cutoffs_show_the_whole_history(client, seeded):
+    records = client.get(f"/api/v1/programmes/{seeded['renamed_new']}/cutoffs?seat_type=OPEN").json()["records"]
+    assert {r["year"] for r in records} == {2024, 2025, 2026}
+
+
+def test_rename_does_not_mix_ranks_from_a_different_list(client, seeded):
+    with SessionLocal() as db:
+        lists = {r.rank_list for r in db.scalars(select(CutoffRecord).where(CutoffRecord.programme_id.in_([seeded["renamed_old"], seeded["renamed_new"]])))}
+    assert len(lists) == 1
+
+
+def test_campus_abroad_does_not_inherit_the_parent_institute(client, seeded):
+    result = generate(client, advanced={"crl": 2000}, advanced_qualified=True)
+    option = next(o for o in result["options"] if o["programme_id"] == seeded["abroad"])
+    assert option["institution"]["city"] == "Abu Dhabi" and option["institution"]["state"] == "United Arab Emirates"
+    assert "campus_note" in option["institution"]
+    assert option["ranking"] is None and option["fee"] is None and all(p["scope"] == "programme" for p in option["placements"])
+
+
+def test_thin_category_warns_and_shows_seats_without_changing_the_band(client, seeded):
+    option, _ = goa_option(client, seeded["thin"])
+    assert option["best_route"]["seats"] == 2 and any("Only 2 seats" in w for w in option["weaknesses"])
+    assert option["band"] == "safer"
+
+
+def test_past_cutoff_with_no_seat_this_year_is_removed(client, seeded):
+    option, result = goa_option(client, seeded["gone"])
+    assert option is None and result["excluded"]["no_seat_in_category"] >= 1
+
+
+def test_seat_with_a_current_cutoff_stays(client, seeded):
+    result = generate(client, category="SC", main={"crl": 70000, "category_rank": 70000})
+    option = next(o for o in result["options"] if o["programme_id"] == seeded["gone"])
+    assert option["best_route"]["seat_type"] == "SC" and option["best_route"]["seats"] == 3
+
+
+def test_csab_is_listed_apart_and_never_changes_the_shortlist(client, seeded):
+    result = generate(client, main={"crl": 350000}, eligibility_state="Tamil Nadu")
+    assert result["options"] == [] and sum(result["counts"].values()) == 0
+    assert result["csab"]["count"] >= 1 and "vacant" in result["csab"]["note"]
+    assert all("band" not in o and o["closing_rank"] >= 350000 for o in result["csab"]["options"])
+
+
+def test_csab_applies_quota_and_category_rules(client, seeded):
+    other_state = generate(client, main={"crl": 350000}, eligibility_state="Tamil Nadu")["csab"]["options"]
+    home = generate(client, main={"crl": 450000}, eligibility_state="Kerala")["csab"]["options"]
+    assert {o["programme_id"] for o in other_state} == {seeded["civil"]}
+    assert seeded["cse_two"] in {o["programme_id"] for o in home}
+    assert all(o["seat_type"] == "OPEN" for o in other_state)
+    sc = generate(client, category="SC", main={"crl": 550000, "category_rank": 9000}, eligibility_state="Tamil Nadu")["csab"]["options"]
+    assert {(o["programme_id"], o["seat_type"]) for o in sc} == {(seeded["civil"], "SC")}
+
+
+def test_completeness_reports_coverage_by_institute_type(client, seeded):
+    body = client.get("/api/v1/data/completeness").json()
+    assert body["by_type"]["NIT"]["institutions"] >= 3 and body["detail"]["renamed_programmes"] == 1
+    assert "Seat matrix" not in body["not_yet_collected"]
+
+
+def test_parent_report_and_comparison_give_the_campus_abroad_its_own_location(client, seeded):
+    body = {"profile": profile(advanced={"crl": 2000}, advanced_qualified=True), "programme_ids": [seeded["abroad"], seeded["iit_cse"]]}
+    report = client.post("/api/v1/reports/parent", json=body).json()
+    place = {o["programme_id"]: o["institution"] for o in report["options"]}
+    assert place[seeded["abroad"]]["city"] == "Abu Dhabi" and place[seeded["iit_cse"]]["city"] == "Z"
+    compared = client.post("/api/v1/comparisons", json=body).json()["items"]
+    assert compared[0]["institution"]["state"] == "United Arab Emirates" and compared[0]["ranking"] is None
+
+
+def test_preference_list_points_an_old_name_to_the_new_one(client, seeded):
+    items = client.post("/api/v1/preference-lists/analyse", json={"profile": profile(), "programme_ids": [seeded["renamed_old"], seeded["renamed_new"]]}).json()["items"]
+    assert "Computer Engineering and Systems" in items[0]["issues"][0]
+    assert not any("cutoff" in issue for issue in items[1]["issues"])
+    assert items[1]["band"] is not None
+

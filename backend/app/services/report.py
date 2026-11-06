@@ -68,8 +68,8 @@ def build(db: Session, profile: StudentProfile, programme_ids: list[int]) -> dic
         inst = programme.institution
         records, _ = rec.career_for(programme, evidence)
         placement = rec.placement_json(records)
-        fee = rec.fee_json(evidence["fees"].get(inst.id))
-        ranking = rec.ranking_json(evidence["rankings"].get(inst.id))
+        fee = rec.fee_json(rec.fee_for(programme, evidence))
+        ranking = rec.ranking_json(rec.ranking_for(programme, evidence))
         own = next((p for p in placement if p["scope"] == "programme" and p["median_salary_inr"]), None)
         nirf = next((p for p in placement if p["reporting_definition"].startswith("nirf_") and p["median_salary_inr"]), None)
         salary = own or nirf
@@ -90,7 +90,7 @@ def build(db: Session, profile: StudentProfile, programme_ids: list[int]) -> dic
         options.append({
             "position": item["position"], "programme_id": programme.id, "programme": programme.name, "degree": programme.degree, "duration_years": programme.duration_years,
             "branch_plain": BRANCH_PLAIN.get(programme.branch_family, "See the institute's website for what this programme covers."),
-            "institution": {"short_name": inst.short_name, "official_name": inst.official_name, "type": inst.institute_type, "city": inst.city, "state": inst.state},
+            "institution": rec.institution_json(programme),
             "admission": {
                 "title": band_title, "text": band_text, "band": item.get("band"), "issues": item["issues"],
                 "routes": [{**route, "explanation": route["explanation"].replace("Your rank", "The student's rank")} for route in item.get("routes", [])[:1]],

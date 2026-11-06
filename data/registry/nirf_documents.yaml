@@ -137,3 +137,19 @@ tezpur-university:
   - {year: 2026, category: Engineering, url: "http://www.tezu.ernet.in/notice/2026/April/EngineeringNIRF2026.pdf"}
 iit-ism-dhanbad:
   - {year: 2026, category: Engineering, url: "https://www.iitism.ac.in/storage/files/submitted-data-engineering-nirf-2026.pdf"}
+iit-indore:
+  - {year: 2026, category: Engineering, url: "https://www.iiti.ac.in/uploads/nirf_data/2026/Apr/9f25085e271e0b1bf9dad932666cb6f7.pdf"}
+iit-jodhpur:
+  - {year: 2025, category: Engineering, url: "https://www.iitj.ac.in/PageImages/Gallery/03-2025/NIRF%202025%20Engineering%20Final%20Sumitted%20Data%2031Jan2025.pdf"}
+iit-bhilai:
+  - {year: 2026, category: Engineering, url: "https://www.iitbhilai.ac.in/index.php?pid=report_engineering_2026"}
+nit-puducherry:
+  - {year: 2025, category: Engineering, url: "https://www.nitpy.ac.in/assets/docs/academics/nirf/2025/Engineering.pdf"}
+nit-raipur:
+  - {year: 2026, category: Overall, url: "https://www.nitrr.ac.in/downloads/nirf_data/2026/overall%202026.pdf"}
+iit-ropar:
+  - {year: 2026, category: Overall, url: "https://www.iitrpr.ac.in/downloads/sites/default/files/April/overall%202026.pdf"}
+iiit-naya-raipur:
+  - {year: 2026, category: Engineering, url: "https://www.iiitnr.ac.in/newspace/pdf/NIFRengineering.pdf"}
+iiit-kota:
+  - {year: 2026, category: Overall, url: "https://cdn.iiitkota.ac.in/nirf/2026-04-02_UPLOADED%20NIRF-2026%20Overall.pdf"}

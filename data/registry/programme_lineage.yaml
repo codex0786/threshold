@@ -1,0 +1,71 @@
+# Programmes JoSAA lists under a new name. Reviewed by hand: each pair runs in consecutive years with the
+# same duration, and the OPEN closing rank moved by under about 30% across the change. Institutes haven't
+# confirmed these. Pairs where the discipline or degree may really have changed are deliberately left out:
+# IIT Patna Mathematics and Computing (BS to B.Tech), NIT Kurukshetra Architecture and Planning, IIT Jodhpur
+# Chemistry and Physics, IIT (BHU) Bioengineering to Biomedical, NIELIT Aurangabad, University of Hyderabad 2021.
+- institution: iit-mandi
+  earlier: Data Science and Engineering (4 Years, Bachelor of Technology)
+  later: Data Science and Artificial Intelligence (4 Years, Bachelor of Technology)
+- institution: iit-jammu
+  earlier: Materials Science and Engineering (4 Years, Bachelor of Technology)
+  later: Materials Engineering (4 Years, Bachelor of Technology)
+- institution: iit-jammu
+  earlier: Materials Engineering (4 Years, Bachelor of Technology)
+  later: Materials and Metallurgical Engineering (4 Years, Bachelor of Technology)
+- institution: iit-dharwad
+  earlier: Electrical Engineering (4 Years, Bachelor of Technology)
+  later: Electrical and Electronics Engineering (4 Years, Bachelor of Technology)
+- institution: manit-bhopal
+  earlier: Materials Science and Metallurgical Engineering (4 Years, Bachelor of Technology)
+  later: Materials and Metallurgical Engineering (4 Years, Bachelor of Technology)
+- institution: nit-delhi
+  earlier: Electrical and Electronics Engineering (4 Years, Bachelor of Technology)
+  later: Electrical Engineering (4 Years, Bachelor of Technology)
+- institution: nit-kurukshetra
+  earlier: Computer Engineering (4 Years, Bachelor of Technology)
+  later: Computer Science and Engineering (4 Years, Bachelor of Technology)
+- institution: nit-mizoram
+  earlier: Electrical and Electronics Engineering (4 Years, Bachelor of Technology)
+  later: Electrical Engineering (4 Years, Bachelor of Technology)
+- institution: svnit-surat
+  earlier: Chemistry (5 Years, Integrated Master of Science)
+  later: Chemistry (5 Years, Integrated Bachelor of Science-Master of Science)
+- institution: svnit-surat
+  earlier: Mathematics (5 Years, Integrated Master of Science)
+  later: Mathematics (5 Years, Integrated Bachelor of Science-Master of Science)
+- institution: svnit-surat
+  earlier: Physics (5 Years, Integrated Master of Science)
+  later: Physics (5 Years, Integrated Bachelor of Science-Master of Science)
+- institution: iiit-bhagalpur
+  earlier: Mechatronics Engineering (4 Years, Bachelor of Technology)
+  later: Mechatronics and Automation Engineering (4 Years, Bachelor of Technology)
+- institution: niamt-ranchi
+  earlier: Metallurgy and Materials Engineering (4 Years, Bachelor of Technology)
+  later: Metallurgical and Materials Engineering (4 Years, Bachelor of Technology)
+- institution: university-of-hyderabad
+  earlier: Computer Science and Engineering (5 Years, Bachelor and Master of Technology (Dual Degree))
+  later: Computer Science and Engineering (5 Years, Integrated Master of Technology)
+- institution: bit-mesra
+  earlier: Artificial Intelligence and Machine Learning (4 Years, Bachelor of Technology)
+  later: Computer Science and Engineering (Artificial Intelligence and Machine Learning) (4 Years, Bachelor of Technology)
+- institution: niamt-ranchi
+  earlier: Computer Engineering (4 Years, Bachelor of Technology)
+  later: Computer Science and Engineering (4 Years, Bachelor of Technology)
+- institution: iit-indore
+  earlier: Space Sciences and Engineering (4 Years, Bachelor of Technology)
+  later: Space Science and Engineering (4 Years, Bachelor of Technology)
+- institution: iit-patna
+  earlier: B. Tech. (ME) - MBA (NITIE) (5 Years, Bachelor of Technology and MBA (Dual Degree))
+  later: B.Tech (Mechanical Engineering) - MBA (IIM Mumbai) (5 Years, Bachelor of Technology and MBA (Dual Degree))
+- institution: iiitdm-kancheepuram
+  earlier: B.Tech. in Electronics and Communication Engineering and M.Tech. in VLSI Design (5 Years, Bachelor and Master of Technology (Dual Degree))
+  later: B.Tech. in Electronics and Communication Engineering and M.Tech. in Microelectronics and VLSI Systems (5 Years, Bachelor and Master of Technology (Dual Degree))
+- institution: iiit-sonepat
+  earlier: CSE ( Data Science & Analytics) (4 Years, Bachelor of Technology)
+  later: Computer Science & Engineering (Data Science and Analytics) (4 Years, Bachelor of Technology)
+- institution: bit-patna
+  earlier: Artificial Intelligence and Machine Learning (4 Years, Bachelor of Technology)
+  later: Computer Science and Engineering (Artificial Intelligence and Machine Learning) (4 Years, Bachelor of Technology)
+- institution: iit-ism-dhanbad
+  earlier: B.Tech Mining Engineering and MBA in Logistic and Supply Chain Management (IIM Mumbai) (5 Years, Integrated B. Tech. and MBA)
+  later: B.Tech Mining Engineering and MBA in Logistic and Supply Chain Management (IIM Mumbai) (5 Years, Bachelor of Technology and MBA (Dual Degree))

@@ -104,6 +104,11 @@ class Programme(Base):
     duration_years: Mapped[int | None] = mapped_column(Integer)
     # Rank list paper needed: main_paper1 | main_paper2a | main_paper2b | advanced
     required_paper: Mapped[str] = mapped_column(String(16))
+    # Set only when the programme runs away from the institute's main campus, e.g. IIT Delhi in Abu Dhabi.
+    campus_city: Mapped[str | None] = mapped_column(String(80))
+    campus_country: Mapped[str | None] = mapped_column(String(80))
+    # The later name of this programme, from the reviewed list in programme_lineage.yaml.
+    successor_id: Mapped[int | None] = mapped_column(ForeignKey("programmes.id"))
     institution: Mapped[Institution] = relationship(back_populates="programmes")
 
 
@@ -135,6 +140,49 @@ class CutoffRecord(Base):
     is_preparatory: Mapped[bool] = mapped_column(Boolean, default=False)
     raw_opening: Mapped[str] = mapped_column(String(16))
     raw_closing: Mapped[str] = mapped_column(String(16))
+    source_document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    programme: Mapped[Programme] = relationship()
+    source_document: Mapped[SourceDocument] = relationship()
+
+
+class SeatMatrixRecord(Base):
+    """Seats a programme offers in one quota, category and gender pool, as JoSAA publishes them."""
+
+    __tablename__ = "seat_matrix_records"
+    __table_args__ = (
+        UniqueConstraint("programme_id", "year", "quota", "seat_type", "gender_pool", name="uq_seat_identity"),
+        CheckConstraint("seats >= 0", name="seats_not_negative"),
+        Index("ix_seats_programme", "programme_id", "year"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    programme_id: Mapped[int] = mapped_column(ForeignKey("programmes.id"))
+    year: Mapped[int] = mapped_column(Integer)
+    quota: Mapped[str] = mapped_column(String(4))
+    seat_type: Mapped[str] = mapped_column(String(16))
+    gender_pool: Mapped[str] = mapped_column(String(8))
+    seats: Mapped[int] = mapped_column(Integer)
+    source_document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    programme: Mapped[Programme] = relationship()
+    source_document: Mapped[SourceDocument] = relationship()
+
+
+class CsabCutoff(Base):
+    """A CSAB special round rank. Kept apart from JoSAA because every rank here is on the common list and only vacant seats are offered."""
+
+    __tablename__ = "csab_cutoffs"
+    __table_args__ = (
+        UniqueConstraint("programme_id", "year", "round", "quota", "seat_type", "gender_pool", name="uq_csab_identity"),
+        Index("ix_csab_lookup", "year", "quota", "seat_type", "gender_pool"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    programme_id: Mapped[int] = mapped_column(ForeignKey("programmes.id"))
+    year: Mapped[int] = mapped_column(Integer)
+    round: Mapped[int] = mapped_column(Integer)
+    quota: Mapped[str] = mapped_column(String(4))
+    seat_type: Mapped[str] = mapped_column(String(16))
+    gender_pool: Mapped[str] = mapped_column(String(8))
+    opening_rank: Mapped[int | None] = mapped_column(Integer)
+    closing_rank: Mapped[int | None] = mapped_column(Integer)
     source_document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
     programme: Mapped[Programme] = relationship()
     source_document: Mapped[SourceDocument] = relationship()

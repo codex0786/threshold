@@ -190,8 +190,8 @@ def test_four_year_figures_are_not_scored_for_a_five_year_programme(seeded):
         source_document=SimpleNamespace(reporting_year=2026),
     )
     evidence = {"placements": {7: [record]}, "cohorts": {("institution", "nirf_graduation_outcomes"): {2024: [2000000.0] * 60}}}
-    five = SimpleNamespace(id=1, institution_id=7, duration_years=5)
-    four = SimpleNamespace(id=2, institution_id=7, duration_years=4)
+    five = SimpleNamespace(id=1, institution_id=7, duration_years=5, campus_city=None)
+    four = SimpleNamespace(id=2, institution_id=7, duration_years=4, campus_city=None)
     assert recommend.career_for(five, evidence)[1][0] is None and "5 years" in recommend.career_for(five, evidence)[1][1]
     assert recommend.career_for(four, evidence)[1][0] is not None
 

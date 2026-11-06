@@ -27,6 +27,7 @@ const VERIFY: Record<string, { label: string; tone: string }> = {
   verified: { label: "Independently verified", tone: "var(--safer)" },
   secondary_unverified: { label: "Secondary source, unverified", tone: "var(--competitive)" },
   manual_unverified: { label: "Entered by hand, unverified", tone: "var(--competitive)" },
+  state_official: { label: "State confirmed by JoSAA, city unverified", tone: "var(--competitive)" },
   outdated: { label: "Outdated", tone: "var(--ambitious)" },
   test_fixture: { label: "TEST FIXTURE, not real data", tone: "var(--ambitious)" },
 };
@@ -124,6 +125,7 @@ export function FeeBlock({ fee }: { fee: Fee | null }) {
       <dl className="mt-2 space-y-0.5">
         {lines.filter(([, v]) => v != null).map(([label, v]) => <div key={label} className="flex justify-between gap-3"><dt className="text-ink-2">{label}</dt><dd className="tnum">{inr(v)}</dd></div>)}
       </dl>
+      {fee.annual_complete_inr != null && <p className="tnum mt-2 font-medium">{inr(fee.annual_complete_inr)} <span className="font-normal text-ink-2">a year in total</span></p>}
       {fee.annual_complete_inr == null && <p className="mt-2 text-xs text-ink-3">This doesn’t show a full yearly cost, because tuition, hostel and mess aren’t all listed together.</p>}
       {fee.notes && <p className="mt-2 text-xs text-ink-3">{fee.notes}</p>}
       <p className="mt-1"><VerificationTag status={fee.verification_status} /></p>

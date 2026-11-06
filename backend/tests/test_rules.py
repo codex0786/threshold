@@ -4,7 +4,10 @@ import pytest
 from app.services.bands import CutoffPoint, classify
 from app.services.branches import branch_family, required_paper
 from app.services.eligibility import Student, StudentRanks, class12_threshold, gender_pools, quota_applies, rank_list_name, seat_claims
-from app.services.scoring import FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
+from app.services.branches import campus_of
+from ingest.josaa_parse import SourceFormatError
+from ingest.seat_matrix import parse as parse_seat_matrix
+from app.services.scoring import NEUTRAL, FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
 from ingest.josaa_parse import SourceFormatError, parse_programme, parse_rank, parse_table
 
 
@@ -170,6 +173,7 @@ def test_required_paper_separates_architecture_and_planning():
 def test_missing_rank_is_no_evidence_not_a_low_score():
     assert reputation_score(None) is None
     assert reputation_score(1) == 100
+    assert reputation_score(100) > NEUTRAL  # Being ranked never scores below having no rank.
 
 
 def test_quality_is_withheld_when_evidence_is_thin():
@@ -316,3 +320,60 @@ def test_tiny_graduating_classes_are_shown_but_not_scored():
 def test_career_note_states_the_comparison():
     records = [PlacementEvidence("institution", 3000000, None, 300, 2024, "nirf_graduation_outcomes", 400)]
     assert "100% of 2+" in career_score(records, {2024: [1000000.0, 3000000.0]}, min_cohort=2)[1]
+
+
+@pytest.mark.parametrize("name,family", [
+    ("Electronics and Electrical Communication Engineering", "ECE"),
+    ("Electronics and Communication Engineering (Internet of Things)", "ECE"),
+    ("Chemical Engineering with Data Analytics", "CHEM_E"),
+    ("Mechanical Engineering and M.Tech. in Computer Integrated Manufacturing", "ME"),
+    ("B.Tech in Mechanical Engineering and M.Tech in AI and Robotics", "ME"),
+    ("Computer Science and Engineering with minor in AI and ML", "CS"),
+    ("Industrial Chemistry", "SCIENCE"),
+    ("BS in Chemical Sciences", "SCIENCE"),
+    ("Biochemical Engineering", "BIO"),
+    ("B. Tech in CE. - M. Tech. in Structural Engineering", "CIVIL"),
+    ("Computer Science and Engineering (Artificial Intelligence)", "AI_DS"),
+    ("Chemical Engineering", "CHEM_E"),
+])
+def test_branch_labels_follow_the_main_discipline(name, family):
+    assert branch_family(name) == family
+
+
+def test_campus_abroad_is_recognised_from_the_name():
+    assert campus_of("Abu Dhabi Campus - Energy Engineering") == ("Abu Dhabi", "United Arab Emirates")
+    assert campus_of("Energy Engineering") is None
+
+
+def _affordability(**kw):
+    result = suitability_score(FitInputs(branch_family="CS", institute_type="NIT", state="Goa", nirf_rank=None, career_dimension_score=None, annual_cost_inr=None, **kw))
+    return next(c for c in result.components if c.key == "affordability")
+
+
+def test_partial_charges_can_only_show_a_budget_is_exceeded():
+    over = _affordability(annual_known_inr=150_000, annual_budget_inr=100_000)
+    assert over.score == 50.0 and "above your annual budget" in over.note
+    within = _affordability(annual_known_inr=150_000, annual_budget_inr=500_000)
+    assert within.score is None and "missing" in within.note
+    assert _affordability(annual_known_inr=150_000).score is None
+
+
+SEAT_PAGE = """<table>
+<tr><td><span id="lblnm">Fixture  Institute</span></td><td><span id="lblAcademicProgram">Civil (4 Years, Bachelor of Technology)</span></td>
+<td><span id="lblQuota"><font>{label}</font></span><span id="lblstate1">{state}</span><span id="lblstate2"></span></td><td>Gender-Neutral</td>
+<td>1</td><td>0</td><td>2</td><td>0</td><td>3</td><td>0</td><td>4</td><td>0</td><td>5</td><td>0</td><td>15</td><td>15 0</td></tr>
+<tr><td>Female-only (including Supernumerary)</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td></td><td></td><td></td><td>Total Seats</td><td>{total}</td><td>0</td><td>2</td><td>0</td><td>3</td><td>0</td><td>4</td><td>0</td><td>5</td><td>0</td><td>16</td></tr>
+</table>"""
+
+
+def test_seat_matrix_reads_home_states_and_pools():
+    rows = parse_seat_matrix(SEAT_PAGE.format(label="", state="DELHI (NCT)", total=2))
+    assert [(r.quota, r.gender_pool, r.seats["OPEN"], r.seats["OBC-NCL"]) for r in rows] == [("HS", "neutral", 1, 5), ("HS", "female", 1, 0)]
+    assert rows[0].states == ("Delhi",)
+    assert parse_seat_matrix(SEAT_PAGE.format(label="Other than", state="TAMIL NADU", total=2))[0].states == ("Tamil Nadu",)
+
+
+def test_seat_matrix_stops_when_rows_do_not_match_the_published_totals():
+    with pytest.raises(SourceFormatError):
+        parse_seat_matrix(SEAT_PAGE.format(label="All India", state="", total=99))

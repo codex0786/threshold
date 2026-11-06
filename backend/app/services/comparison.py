@@ -131,23 +131,24 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
     data_year = rec.latest_year(db)
     goals = rec.career_goal_families(profile.career_goals) if profile else None
     contest = rec.contest_view(db, data_year) if profile else {}
+    lineage = rec.lineage_map(db)
     items = []
     for programme_id in programme_ids:
         programme = programmes[programme_id]
         inst = programme.institution
-        records = db.scalars(select(CutoffRecord).options(joinedload(CutoffRecord.source_document)).where(CutoffRecord.programme_id == programme_id)).all()
+        records = db.scalars(select(CutoffRecord).options(joinedload(CutoffRecord.source_document)).where(CutoffRecord.programme_id.in_(rec.history_ids(lineage, programme_id)))).all()
         quota_states: dict[str, set[str]] = {}
         for row in db.scalars(select(QuotaEligibleState).where(QuotaEligibleState.institution_id == inst.id)):
             quota_states.setdefault(row.quota, set()).add(row.state)
-        ranking = evidence["rankings"].get(inst.id)
-        fee = evidence["fees"].get(inst.id)
+        ranking = rec.ranking_for(programme, evidence)
+        fee = rec.fee_for(programme, evidence)
         placement_records, career = rec.career_for(programme, evidence)
         note = f"NIRF {ranking.year} rank {ranking.rank} ({ranking.verification_status.replace('_', ' ')})" if ranking else ""
         quality = quality_score(ranking.rank if ranking else None, note, career)
         item = {
             "programme_id": programme.id, "programme": programme.name, "degree": programme.degree, "duration_years": programme.duration_years,
             "branch_family": programme.branch_family, "branch_label": FAMILY_LABELS.get(programme.branch_family, "Other"),
-            "institution": {"slug": inst.slug, "short_name": inst.short_name, "type": inst.institute_type, "city": inst.city, "state": inst.state},
+            "institution": rec.institution_json(programme, full=False),
             "reference_cutoff": _reference_cutoff(list(records)), "ranking": rec.ranking_json(ranking),
             "placements": rec.placement_json(placement_records), "fee": rec.fee_json(fee), "quality": rec.describe_quality(quality),
             "data_gaps": rec.data_gaps(placement_records, ranking, fee, quality.components),
@@ -157,8 +158,8 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
         if profile:
             item["student_route"] = _student_route(profile, programme, list(records), quota_states, data_year)
             fit = suitability_score(FitInputs(
-                branch_family=programme.branch_family, institute_type=inst.institute_type, state=inst.state,
-                nirf_rank=ranking.rank if ranking else None, career_dimension_score=career[0], annual_cost_inr=rec.annual_cost(fee),
+                branch_family=programme.branch_family, institute_type=inst.institute_type, state=rec.location_of(programme)[1],
+                nirf_rank=ranking.rank if ranking else None, career_dimension_score=career[0], **rec.cost_inputs(fee, profile),
                 preferred_branches=frozenset(profile.preferred_branches), acceptable_branches=frozenset(profile.acceptable_branches),
                 career_goal_families=goals, preferred_states=frozenset(profile.preferred_states), preferred_types=frozenset(profile.preferred_types),
                 annual_budget_inr=profile.annual_budget_inr, career_note=career[1], priorities=profile.priorities,

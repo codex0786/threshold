@@ -4,7 +4,7 @@ export type Band = "safer" | "competitive" | "ambitious" | "beyond" | null;
 export type Route = {
   quota: string; seat_type: string; gender_pool: string; gender_pool_label?: string; rank_used: number; rank_list: string; band: Band;
   low_closing?: number | null; high_closing?: number | null; latest_year?: number | null; latest_closing?: number | null;
-  years_used?: number[]; explanation: string; quota_reason: string;
+  years_used?: number[]; explanation: string; quota_reason: string; seats?: number | null;
 };
 export type Component = { key: string; label: string; weight: number; score: number | null; note: string };
 export type Ranking = { framework: string; category: string; year: number; rank: number; score: number | null; verification_status: string; source_name: string; source_url: string };
@@ -28,12 +28,12 @@ export type Careers = {
   not_available: string;
 };
 export type Fee = {
-  academic_year: string; seat_type_group: string; annual_complete_inr: number | null; annual_tuition_inr: number | null; annual_hostel_inr: number | null;
+  academic_year: string; seat_type_group: string; annual_complete_inr: number | null; annual_known_inr?: number | null; annual_tuition_inr: number | null; annual_hostel_inr: number | null;
   annual_mess_inr: number | null; annual_other_inr: number | null; one_time_inr: number | null; refundable_deposit_inr: number | null;
   payable_at_admission_inr: number | null; verification_status: string; notes: string | null; source_title: string; source_url: string; source_page: number | null;
 };
 export type Quality = { score: number | null; coverage: number; status: string; components: Component[] };
-export type InstitutionRef = { slug: string; short_name: string; official_name?: string; type: string; city: string | null; state: string };
+export type InstitutionRef = { slug: string; short_name: string; official_name?: string; type: string; city: string | null; state: string; campus_note?: string };
 
 export type Option = {
   programme_id: number; programme: string; degree: string | null; duration_years: number | null; branch_family: string; branch_label: string;
@@ -41,10 +41,11 @@ export type Option = {
   suitability: { score: number | null; coverage: number; components: Component[] };
   ranking: Ranking | null; placements: Placement[]; fee: Fee | null;
   strengths: string[]; weaknesses: string[]; data_gaps: string[]; why: string[];
+  earlier_names?: { name: string; until: number }[]; total_seats?: number | null;
 };
 export type Recommendations = {
   engine_version: string; data_year?: number; history_window?: [number, number]; counts: Record<string, number>;
-  excluded?: Record<string, number>; warnings: string[]; options: Option[]; result_hash?: string;
+  excluded?: Record<string, number>; warnings: string[]; options: Option[]; result_hash?: string; csab?: CsabLeads | null;
 };
 export type Meta = {
   states: string[]; branch_families: Record<string, string>; career_options: Record<string, string>; career_mapped: string[];
@@ -84,7 +85,15 @@ export type ComparisonItem = {
 };
 export type Comparison = { items: ComparisonItem[]; trade_offs: string[]; note: string };
 export type DataSource = { key: string; name: string; publisher: string; url: string; tier: string; access_method: string; access_status: string; terms_note: string | null; documents: number; last_checked_at: string | null };
-export type Completeness = { institutions: number; programmes: number; cutoff_records: number; cutoff_years: number[]; coverage: Record<string, number>; not_yet_collected: string[] };
+export type Completeness = {
+  institutions: number; programmes: number; cutoff_records: number; cutoff_years: number[]; coverage: Record<string, number>; not_yet_collected: string[];
+  detail?: Record<string, number>; by_type?: Record<string, { institutions: number; nirf_rank: number; placements: number; fees: number }>;
+};
+export type CsabLead = {
+  programme_id: number; programme: string; degree: string | null; branch_label: string; institution: InstitutionRef; year: number; round: number; quota: string;
+  seat_type: string; gender_pool_label: string; closing_rank: number; source_title: string; source_url: string;
+};
+export type CsabLeads = { count: number; rank_used: number; note: string; options: CsabLead[] };
 
 export class ApiError extends Error {}
 

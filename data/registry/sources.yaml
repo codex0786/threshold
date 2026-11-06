@@ -20,17 +20,17 @@
   publisher: Joint Seat Allocation Authority
   url: https://josaa.admissions.nic.in/applicant/seatmatrix/seatmatrixinfo.aspx
   tier: official
-  access_method: Public form. Reachable, but not yet ingested.
-  access_status: planned
-  terms_note: Same position as josaa_orcr.
+  access_method: Public form with no login or CAPTCHA. One ALL query per year, checked against the page's own seat totals.
+  access_status: available
+  terms_note: Same position as josaa_orcr. It also prints each institute's home states, which replace the earlier assumptions.
 - key: csab_special
-  name: CSAB Special Round
+  name: CSAB Special Round Opening and Closing Ranks
   publisher: Central Seat Allocation Board
-  url: https://csab.nic.in/
+  url: https://admissions.nic.in/csabspl/Applicant/seatallotmentresult/currentorcr.aspx
   tier: official
-  access_method: Site reachable. Needs its own adapter because its rules differ from JoSAA.
-  access_status: planned
-  terms_note: Not yet reviewed.
+  access_method: Public form with no login or CAPTCHA. Offers the current year only, so there is no multi-year history.
+  access_status: available
+  terms_note: Rules differ from JoSAA, and only seats left vacant are offered. All ranks are on the common rank list. Foreign-candidate rows are left out. Reuse rights not stated.
 - key: nirf_official
   name: NIRF India Rankings and institute data
   publisher: Ministry of Education
@@ -95,3 +95,11 @@
   access_method: Hand-entered from names and general reference.
   access_status: available
   terms_note: Marked manual_unverified until checked against official institute pages.
+- key: nirf_2025_top100_copies
+  name: NIRF 2025 Engineering ranks 51-100, secondary copies
+  publisher: CorpReady, cross-checked against CollegeDekho
+  url: https://corpready.in/nirf/2025/Engineering
+  tier: secondary
+  access_method: Public pages, transcribed on 2026-11-06. Rows agree with the 26 ranks already held. Both copies give the same order.
+  access_status: available
+  terms_note: Secondary copy, kept as secondary_unverified. CollegeDekho's rank numbers slip by one from about rank 41, so only its order was used. Replace with nirfindia.org data when someone enters it.

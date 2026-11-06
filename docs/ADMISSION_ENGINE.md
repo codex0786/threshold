@@ -56,9 +56,10 @@ For OPEN gender-neutral seats alone, the Safer edge held 94.5% to 96.9% of the t
 **How to read this:** it measures whether seats stayed stable, at the worst rank in each band. It is not an individual's chance of admission. It ignores what other applicants choose and the student's own preference order. It doesn't justify showing numerical probabilities, so none are shown. Individual outcomes are not public, so calibration isn't possible.
 
 ## Known limitations
-- JoSAA only. CSAB and state routes need separate adapters.
+- Bands cover JoSAA only. CSAB special round ranks are listed apart, on the common rank list, for 2026 only and with no bands. State routes need separate adapters.
 - Only Round 1 and the last round are stored, and only the last round drives bands. Students wanting an early seat may also care about Round 1.
-- Seat matrix isn't used.
+- The 2026 seat matrix decides whether a programme is offered, and removes a route with no seat and no 2026 cutoff. A category with one or two seats gets a warning. Seats don't change a band.
+- Renamed programmes share one history, only for pairs reviewed by hand in `data/registry/programme_lineage.yaml`.
 - Very small seat pools are noisy, which the "other seats" backtest reflects.
 - Programme name changes break history, which shows up as Limited history.
 - Rules come from 2026 and are applied to all past years' cutoffs.

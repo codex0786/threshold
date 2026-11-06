@@ -6,6 +6,8 @@ import { AddToList } from "@/components/add-to-list";
 import { CompareToggle } from "@/components/compare-toggle";
 import { BandBadge, bandMeta, ComponentList, Notice, PageHeader, PlacementBlock, QualityScore, RankGauge, RankingLine, ScoreBar, Skeleton, FeeBlock } from "@/components/ui";
 import { api, type CsabLeads, type Meta, num, type Option, post, type Profile, type Recommendations, type Route } from "@/lib/api";
+import { RankEditor } from "@/components/rank-editor";
+import { ResetData } from "@/components/reset-data";
 import { loadProfile, saveProfile } from "@/lib/store";
 
 const BANDS = ["all", "safer", "competitive", "ambitious", "limited_history"] as const;
@@ -136,16 +138,20 @@ export default function RecommendationsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [showPriorities, setShowPriorities] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef(0);
 
   const run = useCallback(async (p: Profile) => {
+    // A slower earlier request must not replace the results for newer answers.
+    const request = ++latest.current;
     setLoading(true);
     setError(null);
     try {
-      setResult(await post<Recommendations>("/recommendations/generate", { profile: p }));
+      const next = await post<Recommendations>("/recommendations/generate", { profile: p });
+      if (request === latest.current) setResult(next);
     } catch (e) {
-      setError((e as Error).message);
+      if (request === latest.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (request === latest.current) setLoading(false);
     }
   }, []);
 
@@ -165,6 +171,16 @@ export default function RecommendationsPage() {
     timer.current = setTimeout(() => run(next), 300);
   };
 
+  const changeRanks = (next: Profile) => {
+    if (timer.current) clearTimeout(timer.current);
+    setProfile(next);
+    saveProfile(next);
+    // Results for the old rank must not stay on screen, even if this request fails.
+    setResult(null);
+    setFilter("all");
+    run(next);
+  };
+
   const shown = useMemo(() => (result?.options ?? []).filter((o) => filter === "all" || (o.band ?? "limited_history") === filter), [result, filter]);
 
   if (profile === undefined) return <div className="mx-auto max-w-6xl px-4 py-10"><Skeleton /></div>;
@@ -181,9 +197,13 @@ export default function RecommendationsPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <PageHeader title="Your shortlist" intro={result?.data_year ? `Compared with official JoSAA final-round closing ranks from ${result.history_window?.[0]} to ${result.history_window?.[1]}.` : undefined}>
-        <Link href="/onboarding" className="btn btn-secondary">Edit my answers</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/onboarding" className="btn btn-secondary">Edit my answers</Link>
+          <ResetData />
+        </div>
       </PageHeader>
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
+      <RankEditor profile={profile} onChange={changeRanks} />
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">

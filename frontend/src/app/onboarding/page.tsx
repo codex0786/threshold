@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type FieldPath, useForm } from "react-hook-form";
 import { z } from "zod";
+import { ResetData } from "@/components/reset-data";
 import { Notice, PageHeader, Skeleton } from "@/components/ui";
 import { api, type Meta, type Profile } from "@/lib/api";
-import { loadDraft, saveDraft, saveProfile } from "@/lib/store";
+import { loadDraft, loadProfile, saveDraft, saveProfile } from "@/lib/store";
 
 const rank = z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) > 0), "Enter a whole number above 0, or leave this blank");
 
@@ -120,7 +121,10 @@ export default function Onboarding() {
   };
   const submit = (v: Form) => {
     if (!meta) return;
-    saveProfile(toProfile(v, meta));
+    // Editing answers keeps the priorities the student set, and reopens at the first step.
+    const kept = loadProfile()?.priorities;
+    saveProfile({ ...toProfile(v, meta), priorities: { ...meta.default_priorities, ...kept } });
+    saveDraft({ values: v, step: 0 });
     router.push("/recommendations");
   };
 
@@ -210,6 +214,7 @@ export default function Onboarding() {
         </div>
         {Object.keys(errors).length > 0 && step === STEPS.length - 1 && <Notice tone="error">Some answers need attention in an earlier step. Go back and check your ranks.</Notice>}
       </form>
+      <div className="mt-8 border-t border-line pt-4 text-sm text-ink-3">Want a blank form? <ResetData label="Clear my saved data" className="font-medium text-brand underline underline-offset-2" /></div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ResetData } from "@/components/reset-data";
 import { loadCompare } from "@/lib/store";
 
 const LINKS = [
@@ -74,7 +75,10 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-ink-3">
         <Logo />
         <p className="mt-3 max-w-3xl">Threshold is an independent decision aid and is not affiliated with JoSAA, CSAB, NTA or any institute. Always confirm details on official counselling websites before making a decision.</p>
-        <p className="mt-2"><Link href="/methodology" className="underline underline-offset-2 hover:text-brand">Data sources and methodology</Link></p>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/methodology" className="underline underline-offset-2 hover:text-brand">Data sources and methodology</Link>
+          <ResetData label="Clear my saved data" className="underline underline-offset-2 hover:text-brand" />
+        </div>
       </div>
     </footer>
   );

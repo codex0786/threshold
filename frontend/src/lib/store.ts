@@ -27,6 +27,18 @@ export const saveProfile = (p: Profile) => write(PROFILE_KEY, p);
 export const loadDraft = <T,>() => read<T>(DRAFT_KEY);
 export const saveDraft = (d: unknown) => write(DRAFT_KEY, d);
 
+// Removes everything Threshold keeps in this browser: answers, ranks, priorities, compare selection and lists.
+export function clearAllData() {
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (key.startsWith("threshold.")) window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Storage can be blocked, in which case nothing was saved.
+  }
+  window.dispatchEvent(new Event("threshold-compare"));
+}
+
 export type CompareEntry = { id: number; label: string };
 export const loadCompare = () => read<CompareEntry[]>(COMPARE_KEY) ?? [];
 export function toggleCompare(entry: CompareEntry): CompareEntry[] {

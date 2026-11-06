@@ -163,12 +163,12 @@ export default function RecommendationsPage() {
             <div className="mt-3 space-y-3">
               {meta && Object.entries(meta.suitability_labels).map(([key, label]) => (
                 <label key={key} className="block text-sm">
-                  <span className="flex justify-between"><span>{label}</span><span className="tnum text-ink-3">{profile.priorities[key] ?? 0}</span></span>
-                  <input type="range" min={0} max={100} step={5} className="w-full accent-[var(--brand)]" value={profile.priorities[key] ?? 0} onChange={(e) => changePriority(key, Number(e.target.value))} />
+                  <span className="flex justify-between"><span>{label}</span><span className="tnum text-ink-3">{profile.priorities[key] ?? meta.default_priorities[key] ?? 0}</span></span>
+                  <input type="range" min={0} max={100} step={5} className="w-full accent-[var(--brand)]" value={profile.priorities[key] ?? meta.default_priorities[key] ?? 0} onChange={(e) => changePriority(key, Number(e.target.value))} />
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-xs text-ink-3">Where an institute publishes no comparable placement data, it counts as neutral. That doesn’t mean its outcomes are average, and it may flatter institutes that publish nothing. Affordability is rarely scored, because few institutes publish a full yearly cost.</p>
+            <p className="mt-2 text-xs text-ink-3">Where an institute publishes no comparable placement data, it counts as neutral. That doesn’t mean its outcomes are average, and it may flatter institutes that publish nothing. Affordability is rarely scored, because few institutes publish a full yearly cost. How contested a seat is comes from past closing ranks: it shows what earlier candidates chose, not how good the seat is, so lower it if you’d rather not follow the crowd.</p>
           </section>
           <section className={`space-y-2 text-sm text-ink-2 ${showPriorities ? "" : "hidden lg:block"}`}>
             {result?.warnings.map((w) => <p key={w} className="text-xs text-ink-3">{w}</p>)}
@@ -191,8 +191,8 @@ export default function RecommendationsPage() {
             </div>
           )}
           {result && <BandMix counts={result.counts} />}
-          {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0) && (
-            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks and {num(result.excluded.avoided_branch)} in branches you chose to avoid. Each band shows its 25 best matches for you.</p>
+          {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0 || result.excluded.no_latest_cutoff > 0) && (
+            <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} with no {result.data_year} cutoff, which may no longer be offered. Each band shows its 25 best matches for you, and options with limited history come last.</p>
           )}
           {loading && !result && <Skeleton lines={4} />}
           <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}>
@@ -201,7 +201,9 @@ export default function RecommendationsPage() {
           {result && shown.length === 0 && !loading && (
             <div className="space-y-3">
               {result.options.length === 0 && result.warnings.filter((w) => w.includes("no options")).map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
-              <Notice>No options in this view. Try another band, or check that your ranks and Class XII state are correct.</Notice>
+              <Notice>{result.options.length === 0
+                ? "No JoSAA programme has closed within 20% of your rank in recent years. Check that your ranks and Class XII state are correct. CSAB special rounds and state counselling aren't covered here, and they may still have options."
+                : "No options in this view. Try another band, or check that your ranks and Class XII state are correct."}</Notice>
             </div>
           )}
         </div>

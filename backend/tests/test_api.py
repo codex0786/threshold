@@ -122,6 +122,39 @@ def test_changing_priorities_reorders_results(client):
     assert rank_first["options"][0]["institution"]["short_name"] == "Fixture NIT"
 
 
+def test_seat_with_one_closing_rank_is_hidden_when_far_out_of_reach(client, seeded):
+    ids = lambda r: {o["programme_id"] for o in r["options"]}  # noqa: E731
+    near, far = generate(client, main={"crl": 21000}), generate(client, main={"crl": 500000})
+    assert seeded["new_seat"] in ids(near) and seeded["new_seat"] not in ids(far)
+    assert next(o for o in near["options"] if o["programme_id"] == seeded["new_seat"])["band"] is None
+    assert far["excluded"]["beyond_range"] >= 1
+
+
+def test_limited_history_seats_come_after_banded_seats(client):
+    bands = [o["band"] for o in generate(client, main={"crl": 21000}, preferred_branches=["ROBOTICS"])["options"]]
+    assert None in bands and None not in bands[:bands.index(None)] and set(bands[bands.index(None):]) == {None}
+
+
+def test_programme_with_no_latest_cutoff_is_removed_and_counted(client, seeded):
+    result = generate(client, main={"crl": 50000})
+    assert seeded["old_seat"] not in {o["programme_id"] for o in result["options"]}
+    assert result["excluded"]["no_latest_cutoff"] == 1
+
+
+def test_how_contested_a_seat_is_orders_otherwise_equal_options(client, seeded):
+    result = generate(client, main={"crl": 500}, eligibility_state="Goa", priorities={"demand": 100})
+    programme_ids = [o["programme_id"] for o in result["options"]]
+    assert programme_ids.index(seeded["cse"]) < programme_ids.index(seeded["civil"])
+    component = next(c for c in by_name(result, "Fixture NIT")["suitability"]["components"] if c["key"] == "demand")
+    assert "past candidates' choices, not quality" in component["note"]
+
+
+def test_browser_profile_saved_before_the_contested_factor_gets_its_default(client):
+    saved = {k: v for k, v in client.get("/api/v1/meta").json()["default_priorities"].items() if k != "demand"}
+    components = generate(client, priorities=saved)["options"][0]["suitability"]["components"]
+    assert next(c for c in components if c["key"] == "demand")["weight"] > 0
+
+
 def test_avoided_branches_are_removed_and_counted(client):
     result = generate(client, main={"crl": 9000}, avoid_branches=["CIVIL"])
     assert all(o["branch_family"] != "CIVIL" for o in result["options"]) and result["excluded"]["avoided_branch"] >= 1

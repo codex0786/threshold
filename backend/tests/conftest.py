@@ -72,6 +72,8 @@ def seeded(schema):
         iit_cse = _programme(db, iit, "Computer Science and Engineering")
         arch = _programme(db, nit, "Architecture", "ARCH", paper="main_paper2a")
         goa_cse = _programme(db, goa, "Computer Science and Engineering")
+        new_seat = _programme(db, other_nit, "Mechatronics Engineering", "ROBOTICS")
+        old_seat = _programme(db, other_nit, "Production Engineering", "ME")
         years = (2024, 2025, 2026)
         for programme, inst, quota, seat, pool, value in [
             (cse, nit, "HS", "OPEN", "neutral", 20000), (cse, nit, "OS", "OPEN", "neutral", 5000),
@@ -83,6 +85,8 @@ def seeded(schema):
             (goa_cse, goa, "GO", "OPEN", "neutral", 50000), (goa_cse, goa, "HS", "OPEN", "neutral", 70000), (goa_cse, goa, "OS", "OPEN", "neutral", 15000),
         ]:
             _cutoffs(db, programme, inst, doc, quota, seat, pool, {y: value for y in years})
+        _cutoffs(db, new_seat, other_nit, doc, "OS", "OPEN", "neutral", {2026: 20000})
+        _cutoffs(db, old_seat, other_nit, doc, "OS", "OPEN", "neutral", {2024: 90000, 2025: 90000})
         # A preparatory rank must never be treated as a normal numeric cutoff.
         db.add(CutoffRecord(
             programme_id=iit_cse.id, authority="JOSAA", year=2026, round=6, is_final_round=True, quota="AI", seat_type="SC-PwD", gender_pool="neutral",
@@ -94,7 +98,7 @@ def seeded(schema):
             median_salary_inr=1_000_000, verification_status="test_fixture", source_document_id=doc.id,
         ))
         db.commit()
-        ids = {"cse": cse.id, "civil": civil.id, "cse_two": cse_two.id, "ece_two": ece_two.id, "iit_cse": iit_cse.id, "arch": arch.id, "goa_cse": goa_cse.id}
+        ids = {"cse": cse.id, "civil": civil.id, "cse_two": cse_two.id, "ece_two": ece_two.id, "iit_cse": iit_cse.id, "arch": arch.id, "goa_cse": goa_cse.id, "new_seat": new_seat.id, "old_seat": old_seat.id}
     yield ids
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE recommendation_runs"))

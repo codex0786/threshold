@@ -17,14 +17,43 @@ from app.schemas import StudentProfile
 from app.services.bands import BAND_RANK, LOOKBACK_YEARS, CutoffPoint, classify
 from app.services.branches import CAREER_BRANCH_AFFINITY, FAMILY_LABELS
 from app.services.eligibility import exam_for, gender_pools, quota_applies, seat_claims
-from app.services.scoring import ENGINE_VERSION, MIN_GRADUATING_CLASS, FitInputs, PlacementEvidence, career_score, quality_score, suitability_score
+from app.services.scoring import ENGINE_VERSION, MIN_GRADUATING_CLASS, FitInputs, PlacementEvidence, career_score, contest_scores, quality_score, suitability_score
 
 PAPER_FOR_EXAM = {"JEE_MAIN": "main_paper1", "JEE_ADVANCED": "advanced"}
 POOL_LABEL = {"neutral": "Gender-neutral", "female": "Female-only"}
+CONTEST_GROUP = {"JEE_MAIN": "NIT, IIIT and GFTI programmes", "JEE_ADVANCED": "IIT and IISc programmes"}
 
 
 def latest_year(db: Session) -> int:
     return db.scalar(select(func.max(CutoffRecord.year)).where(CutoffRecord.is_final_round))
+
+
+def offered_programmes(db: Session, data_year: int) -> set[int]:
+    """Programmes with a final-round cutoff in the latest year. A single seat type can go unfilled, so this is judged per programme."""
+    return set(db.scalars(select(CutoffRecord.programme_id).where(CutoffRecord.is_final_round, CutoffRecord.year == data_year).distinct()))
+
+
+def contest_view(db: Session, data_year: int) -> dict[int, tuple[float, str]]:
+    """How contested each programme is, within its own exam, using OPEN gender-neutral seats open to candidates from anywhere."""
+    rows = db.execute(
+        select(CutoffRecord.programme_id, CutoffRecord.closing_rank, Institution.institute_type)
+        .join(CutoffRecord.programme).join(Programme.institution)
+        .where(
+            CutoffRecord.is_final_round, CutoffRecord.year > data_year - LOOKBACK_YEARS, CutoffRecord.seat_type == "OPEN",
+            CutoffRecord.gender_pool == "neutral", CutoffRecord.quota.in_(("AI", "OS")), CutoffRecord.is_preparatory.is_(False),
+            CutoffRecord.closing_rank.is_not(None), Programme.required_paper.in_(PAPER_FOR_EXAM.values()),
+        )
+    )
+    offered = offered_programmes(db, data_year)
+    closings: dict[str, dict[int, list[int]]] = {exam: defaultdict(list) for exam in PAPER_FOR_EXAM}
+    for programme_id, closing, institute_type in rows:
+        if programme_id in offered:
+            closings[exam_for(institute_type)][programme_id].append(closing)
+    view = {}
+    for exam, by_programme in closings.items():
+        for programme_id, score in contest_scores({p: sum(v) / len(v) for p, v in by_programme.items()}).items():
+            view[programme_id] = (score, f"More contested than about {round(score)}% of {CONTEST_GROUP[exam]}. This reflects past candidates' choices, not quality")
+    return view
 
 
 def career_goal_families(goals: list[str]) -> frozenset[str] | None:
@@ -185,7 +214,7 @@ def _strengths_and_weaknesses(band, suitability, ranking) -> tuple[list[str], li
             continue
         if c.score >= 75 and c.key != "reputation":
             strengths.append(c.note)
-        elif c.score <= 35:
+        elif c.score <= 35 and c.key != "demand":
             weaknesses.append(c.note)
     if ranking and ranking.rank <= 25:
         strengths.append(f"NIRF {ranking.year} Engineering rank {ranking.rank}")
@@ -194,6 +223,11 @@ def _strengths_and_weaknesses(band, suitability, ranking) -> tuple[list[str], li
     elif band == "competitive":
         weaknesses.append("Close to recent closing ranks, so the outcome could go either way")
     return strengths, weaknesses
+
+
+def fit_contest(contest: dict[int, tuple[float, str]], programme_id: int) -> dict:
+    score, note = contest.get(programme_id, (None, None))
+    return {"demand_score": score, "demand_note": note} if note else {}
 
 
 def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True) -> dict:
@@ -266,21 +300,27 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     goals = career_goal_families(profile.career_goals)
     avoided = set(profile.avoid_branches)
     options = []
-    excluded = {"avoided_branch": 0, "beyond_range": 0}
+    excluded = {"avoided_branch": 0, "beyond_range": 0, "no_latest_cutoff": 0}
+    offered = offered_programmes(db, data_year)
+    contest = contest_view(db, data_year)
     for programme_id, seat_routes in routes.items():
         programme = programmes[programme_id]
         inst = programme.institution
         if programme.branch_family in avoided:
             excluded["avoided_branch"] += 1
             continue
-        banded = [r for r in seat_routes if r["band"] is not None]
-        best = min(
-            banded or seat_routes,
-            key=lambda r: (BAND_RANK.get(r["band"], 9), r["rank_used"] / (r["high_closing"] or r["latest_closing"] or 1), r["quota"], r["seat_type"], r["gender_pool"]),
-        )
-        if best["band"] == "beyond":
+        within_reach = [r for r in seat_routes if r["band"] != "beyond"]
+        if not within_reach:
             excluded["beyond_range"] += 1
             continue
+        if programme_id not in offered:
+            excluded["no_latest_cutoff"] += 1
+            continue
+        banded = [r for r in within_reach if r["band"] is not None]
+        best = min(
+            banded or within_reach,
+            key=lambda r: (BAND_RANK.get(r["band"], 9), r["rank_used"] / (r["high_closing"] or r["latest_closing"] or 1), r["quota"], r["seat_type"], r["gender_pool"]),
+        )
         ranking = evidence["rankings"].get(inst.id)
         fee = evidence["fees"].get(inst.id)
         placement_records, career = career_for(programme, evidence)
@@ -295,6 +335,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             career_goal_families=goals, preferred_states=frozenset(profile.preferred_states),
             preferred_types=frozenset(profile.preferred_types), annual_budget_inr=profile.annual_budget_inr,
             career_note=career[1], priorities=profile.priorities,
+            **fit_contest(contest, programme_id),
         ))
         strengths, weaknesses = _strengths_and_weaknesses(best["band"], suitability, ranking)
         options.append({
@@ -312,7 +353,8 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             "why": [best["explanation"], best["quota_reason"]] + [c.note for c in suitability.components if c.score is not None and c.score >= 75],
         })
 
-    options.sort(key=lambda o: (-(o["suitability"]["score"] or 0), BAND_RANK.get(o["band"], 9), o["institution"]["short_name"], o["programme"], o["programme_id"]))
+    # Seats without a band come last, since their one closing rank says little about next year.
+    options.sort(key=lambda o: (o["band"] is None, -(o["suitability"]["score"] or 0), BAND_RANK.get(o["band"], 9), o["institution"]["short_name"], o["programme"], o["programme_id"]))
     counts: dict[str, int] = defaultdict(int)
     limited = []
     for option in options:

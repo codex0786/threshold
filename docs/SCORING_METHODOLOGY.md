@@ -1,6 +1,6 @@
 # Scoring methodology
 
-Code: `backend/app/services/scoring.py`. Version `0.1.0`.
+Code: `backend/app/services/scoring.py`. Version `0.2.0`.
 
 There are three separate outputs, and they are never combined: quality, suitability and admission band.
 
@@ -42,6 +42,7 @@ A weighted average from 0 to 100, using the student's priorities.
 | Institution type | Preferred 100, otherwise 30 |
 | Placements | Career score where evidence exists |
 | Affordability | Annual cost compared with budget, only where tuition, hostel and mess are all published. A partial cost would look cheaper |
+| How contested the seat is | Share of programmes on the same exam that close at a weaker rank, using the mean of the latest three years' OPEN, gender-neutral, All India or Other State closing ranks |
 
 **Unknown dimensions count as a neutral 50**, and the share based on known information is displayed. Otherwise an option with little data could beat one with more evidence just by skipping weak dimensions. This is a scoring convention, not an invented data point.
 
@@ -52,13 +53,18 @@ A weighted average from 0 to 100, using the student's priorities.
 4. **The figures are self-reported** and not audited.
 5. **The cohort margin is thin.** At 52 institutes, a few changes could bring a year back under 50.
 
+### Why seat contest is in suitability but not quality
+Validation in November 2026 showed that the order below about rank 6,000 mostly reflected which institutes publish data, because NIRF ranks cover 26 institutes and scored placements fewer than half. Closing ranks exist for nearly every seat, so they now count for 20 of the default 120 priority points. Students can change that weight, and it is labelled as past candidates' choices.
+
+It stays out of quality, because closing rank mostly reflects demand and would double-count reputation. Main and Advanced programmes are each compared only within their own exam, so a student holding both ranks sees scores on two separate scales. A preferred branch always beats an unlisted one at default weights, but a very contested acceptable branch can beat a barely contested preferred one.
+
 The branch-to-career table (`CAREER_BRANCH_AFFINITY`) is a product assumption and is labelled that way in the interface.
 
 ## C. Admission band
 See `ADMISSION_ENGINE.md`. Priorities never change bands.
 
 ## Ordering
-Sort by suitability, then band, institute name, programme name and ID. The same input gives the same output, and each run stores input and result hashes. No LLM is involved, and commercial relationships aren't an input.
+Options with a band come first, followed by those with limited history. Within each group, sort by suitability, then band, institute name, programme name and ID. The same input gives the same output, and each run stores input and result hashes. No LLM is involved, and commercial relationships aren't an input.
 
 ## Not yet implemented from the brief
 Year adjustment of placement data, like-for-like peer groups beyond scope, correlation checks between indicators, and evidence-confidence scores beyond coverage. All of these need real data to design properly.

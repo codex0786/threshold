@@ -46,6 +46,12 @@ def classify(rank: int, final_round_cutoffs: Sequence[CutoffPoint], latest_data_
     years = tuple(c.year for c in recent)
     if len(recent) < MIN_YEARS_FOR_BAND:
         latest = recent[-1] if recent else None
+        # One closing rank can't place a seat in a band, but it can show a rank is far out of reach.
+        if latest and rank > AMBITIOUS_MARGIN * latest.closing_rank:
+            return BandResult(
+                "beyond", None, None, latest.year, latest.closing_rank, years,
+                f"Your rank {rank:,} is more than 20% beyond the only recent final-round closing rank ({latest.closing_rank:,} in {latest.year}).",
+            )
         return BandResult(
             None, None, None, latest.year if latest else None, latest.closing_rank if latest else None, years,
             f"Only {len(recent)} year(s) of comparable history since {window_start}, so no band is shown.",

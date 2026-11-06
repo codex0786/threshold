@@ -5,11 +5,12 @@ bands live in bands.py. The three are never merged into one number.
 """
 from __future__ import annotations
 
+from bisect import bisect_right
 from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.1.0"
+ENGINE_VERSION = "0.2.0"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -30,12 +31,12 @@ QUALITY_LABELS = {
 }
 DEFAULT_PRIORITIES: dict[str, float] = {
     "branch_fit": 30, "career_fit": 20, "reputation": 20, "location": 10, "institution_type": 5,
-    "placements": 10, "affordability": 5,
+    "placements": 10, "affordability": 5, "demand": 20,
 }
 SUITABILITY_LABELS = {
     "branch_fit": "Branch preference", "career_fit": "Career goal", "reputation": "Institutional reputation",
     "location": "Location", "institution_type": "Institution type", "placements": "Placement outcomes",
-    "affordability": "Affordability",
+    "affordability": "Affordability", "demand": "How contested the seat is",
 }
 
 
@@ -72,6 +73,12 @@ def reputation_score(nirf_rank: int | None) -> float | None:
     if nirf_rank is None:
         return None
     return float(max(1, 101 - nirf_rank))
+
+
+def contest_scores(closing_ranks: Mapping[int, float]) -> dict[int, float]:
+    """Share of comparable programmes that close at a weaker rank, on a 0-100 scale. Lower closing ranks are more contested."""
+    values = sorted(closing_ranks.values())
+    return {key: round(100.0 * (len(values) - bisect_right(values, rank)) / len(values), 1) for key, rank in closing_ranks.items()}
 
 
 def percentile_of(value: float, cohort: Sequence[float]) -> float | None:
@@ -161,6 +168,8 @@ class FitInputs:
     preferred_types: frozenset[str] = frozenset()
     annual_budget_inr: int | None = None
     career_note: str = "Data not available"
+    demand_score: float | None = None
+    demand_note: str = "No all-comers cutoff to compare"
     priorities: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_PRIORITIES))
 
 
@@ -200,6 +209,7 @@ def suitability_score(f: FitInputs) -> ScoreResult:
         dims["affordability"] = (max(0.0, min(100.0, 100.0 * (2 - ratio))), "Compared with your annual budget")
     else:
         dims["affordability"] = (None, "No complete yearly cost on record" if f.annual_cost_inr is None else "No budget given")
+    dims["demand"] = (f.demand_score, f.demand_note)
 
     total = sum(max(0.0, f.priorities.get(k, 0.0)) for k in dims)
     if total <= 0:

@@ -8,7 +8,7 @@ const BAND_STYLE: Record<string, { label: string; color: string; bg: string; hin
   competitive: { label: "Competitive", color: "var(--competitive)", bg: "var(--competitive-soft)", hint: "Close to or within recent closing ranks" },
   ambitious: { label: "Ambitious", color: "var(--ambitious)", bg: "var(--ambitious-soft)", hint: "Up to 20% beyond recent closing ranks" },
   beyond: { label: "Beyond recent range", color: "var(--ink-2)", bg: "var(--neutral-soft)", hint: "More than 20% beyond recent closing ranks" },
-  limited_history: { label: "Limited history", color: "var(--ink-2)", bg: "var(--neutral-soft)", hint: "Too few recent years to place in a band" },
+  limited_history: { label: "Limited history", color: "var(--ink-2)", bg: "var(--neutral-soft)", hint: "Too few recent years to place in a band, so treat this with extra care" },
 };
 
 export const bandMeta = (band: Band | "limited_history") => BAND_STYLE[band ?? "limited_history"];

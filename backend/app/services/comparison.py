@@ -130,6 +130,7 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
     evidence = rec.institution_evidence(db)
     data_year = rec.latest_year(db)
     goals = rec.career_goal_families(profile.career_goals) if profile else None
+    contest = rec.contest_view(db, data_year) if profile else {}
     items = []
     for programme_id in programme_ids:
         programme = programmes[programme_id]
@@ -161,6 +162,7 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
                 preferred_branches=frozenset(profile.preferred_branches), acceptable_branches=frozenset(profile.acceptable_branches),
                 career_goal_families=goals, preferred_states=frozenset(profile.preferred_states), preferred_types=frozenset(profile.preferred_types),
                 annual_budget_inr=profile.annual_budget_inr, career_note=career[1], priorities=profile.priorities,
+                **rec.fit_contest(contest, programme_id),
             ))
             item["suitability"] = {"score": fit.score, "coverage": fit.coverage, "components": [c.__dict__ for c in fit.components]}
         items.append(item)

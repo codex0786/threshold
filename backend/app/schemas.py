@@ -66,6 +66,9 @@ class StudentProfile(BaseModel):
             raise ValueError("A branch cannot be both preferred and avoided")
         if any(v < 0 for v in self.priorities.values()):
             raise ValueError("Priorities cannot be negative")
+        # Profiles saved in a browser before this factor existed hold every other priority. Partial API requests stay as sent.
+        if "demand" not in self.priorities and set(DEFAULT_PRIORITIES) - {"demand"} <= set(self.priorities):
+            self.priorities["demand"] = DEFAULT_PRIORITIES["demand"]
         return self
 
     def to_student(self) -> Student:

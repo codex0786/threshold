@@ -4,7 +4,7 @@ import pytest
 from app.services.bands import CutoffPoint, classify
 from app.services.branches import branch_family, required_paper
 from app.services.eligibility import Student, StudentRanks, class12_threshold, gender_pools, quota_applies, rank_list_name, seat_claims
-from app.services.scoring import FitInputs, PlacementEvidence, career_score, percentile_of, quality_score, reputation_score, suitability_score
+from app.services.scoring import FitInputs, PlacementEvidence, career_score, contest_scores, percentile_of, quality_score, reputation_score, suitability_score
 from ingest.josaa_parse import SourceFormatError, parse_programme, parse_rank, parse_table
 
 
@@ -122,6 +122,12 @@ def test_band_needs_two_recent_years():
     assert result.band is None and "1 year" in result.explanation
 
 
+def test_one_year_of_history_can_still_rule_a_seat_out():
+    far = classify(25000, [CutoffPoint(2026, 20000)], 2026)
+    assert far.band == "beyond" and "only recent" in far.explanation and far.low_closing is None
+    assert classify(24000, [CutoffPoint(2026, 20000)], 2026).band is None
+
+
 def test_old_years_are_ignored():
     result = classify(100, [CutoffPoint(2020, 1000), CutoffPoint(2021, 1000), CutoffPoint(2026, 1000)], 2026)
     assert result.band is None
@@ -221,6 +227,21 @@ def test_changing_priorities_changes_score():
     other = {"branch_fit": 90, "reputation": 10}
     kw = {"preferred_branches": frozenset({"ECE"}), "nirf_rank": 2}
     assert fit(priorities=base, **kw).score > fit(priorities=other, **kw).score
+
+
+def test_more_contested_programmes_score_higher():
+    scores = contest_scores({1: 500, 2: 5000, 3: 5000, 4: 90000})
+    assert scores == {1: 75.0, 2: 25.0, 3: 25.0, 4: 0.0}
+
+
+def test_contest_counts_as_neutral_when_unknown_and_moves_the_score_when_known():
+    assert fit(demand_score=None).score == 50.0
+    assert fit(demand_score=90.0).score > fit(demand_score=10.0).score
+
+
+def test_preferred_branch_beats_an_unlisted_branch_however_contested():
+    prefs = {"preferred_branches": frozenset({"ME"})}
+    assert fit(branch_family="ME", demand_score=0.0, **prefs).score > fit(branch_family="CS", demand_score=100.0, **prefs).score
 
 
 def test_suitability_is_reproducible():

@@ -34,7 +34,7 @@ Uses final-round closing ranks from the latest three admission years, for the sa
 | Beyond | anything further. Hidden from the shortlist, but counted |
 | Limited history | under two recent years, and rank within 120% of the one closing rank we have. No band is given, and these are listed after banded options |
 
-With only one recent year, a rank more than 20% past that closing rank counts as Beyond. Programmes with no final-round cutoff in the latest year are hidden and counted, because they may no longer be offered. That can't be confirmed from cutoffs alone. Single seat types can go unfilled, so the check applies to the whole programme.
+With only one recent year, a rank more than 20% past that closing rank counts as Beyond. IIT B.Arch programmes are hidden and counted, because JoSAA opens them only to candidates who qualify the Architecture Aptitude Test, which this version doesn't ask about. Programmes with no final-round cutoff in the latest year are hidden and counted, because they may no longer be offered. That can't be confirmed from cutoffs alone. Single seat types can go unfilled, so the check applies to the whole programme.
 
 A student may compete through several routes. The card shows the best one, and the rest are listed.
 

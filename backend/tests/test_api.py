@@ -113,6 +113,13 @@ def test_recommendations_are_reproducible_and_logged(client):
         assert not any(k in row.input_snapshot for k in ("name", "email", "phone"))
 
 
+def test_iit_architecture_is_hidden_and_counted_because_it_needs_the_aptitude_test(client):
+    result = generate(client, advanced={"crl": 400}, advanced_qualified=True)
+    assert all(o["branch_family"] != "ARCH" for o in result["options"])
+    assert result["excluded"]["needs_aptitude_test"] == 1
+    assert any("Architecture Aptitude Test" in w for w in result["warnings"])
+
+
 def test_changing_priorities_reorders_results(client):
     rank_first = generate(client, eligibility_state="Punjab", main={"crl": 9000}, preferred_branches=["ECE"], priorities={"branch_fit": 5, "reputation": 95})
     branch_first = generate(client, eligibility_state="Punjab", main={"crl": 9000}, preferred_branches=["ECE"], priorities={"branch_fit": 95, "reputation": 5})

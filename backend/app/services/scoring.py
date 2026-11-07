@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.5.0"
+ENGINE_VERSION = "0.5.1"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50

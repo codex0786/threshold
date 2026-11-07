@@ -452,7 +452,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     goals = career_goal_families(profile.career_goals)
     avoided = set(profile.avoid_branches)
     options = []
-    excluded = {"avoided_branch": 0, "beyond_range": 0, "no_latest_cutoff": 0, "no_seat_in_category": len(no_seat_now - routes.keys())}
+    excluded = {"avoided_branch": 0, "beyond_range": 0, "no_latest_cutoff": 0, "no_seat_in_category": len(no_seat_now - routes.keys()), "needs_aptitude_test": 0}
     offered = offered_programmes(db, data_year)
     contest = contest_view(db, data_year)
     for programme_id, seat_routes in routes.items():
@@ -467,6 +467,10 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             continue
         if programme_id not in offered:
             excluded["no_latest_cutoff"] += 1
+            continue
+        # JoSAA 2026 opens AAT-specific choices only to candidates who qualify the AAT, and this version doesn't ask.
+        if programme.branch_family == "ARCH":
+            excluded["needs_aptitude_test"] += 1
             continue
         banded = [r for r in within_reach if r["band"] is not None]
         best = min(
@@ -513,6 +517,8 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             "why": [best["explanation"], best["quota_reason"]] + [c.note for c in suitability.components if c.score is not None and c.score >= 75 and c.weight > 0],
         })
 
+    if excluded["needs_aptitude_test"]:
+        warnings.append(f"{excluded['needs_aptitude_test']} IIT B.Arch options aren't shown, because they need the separate Architecture Aptitude Test, which this version doesn't ask about.")
     # Seats without a band come last, since their one closing rank says little about next year.
     position = (lambda o: -o["standing"]) if order == "top" else (lambda o: -(o["suitability"]["score"] or 0))
     options.sort(key=lambda o: (o["band"] is None, position(o), BAND_RANK.get(o["band"], 9), o["institution"]["short_name"], o["programme"], o["programme_id"]))

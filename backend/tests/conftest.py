@@ -93,6 +93,9 @@ def seeded(schema):
         renamed_old.successor_id = renamed_new.id
         _cutoffs(db, renamed_old, other_nit, doc, "OS", "OPEN", "neutral", {2024: 16000, 2025: 16000})
         _cutoffs(db, renamed_new, other_nit, doc, "OS", "OPEN", "neutral", {2026: 16000})
+        # IIT B.Arch needs the separate Architecture Aptitude Test.
+        iit_arch = _programme(db, iit, "Architecture", "ARCH")
+        _cutoffs(db, iit_arch, iit, doc, "AI", "OPEN", "neutral", {y: 1000 for y in years})
         # A campus abroad doesn't inherit the parent institute's rank.
         abroad = _programme(db, iit, "Abu Dhabi Campus - Computer Science and Engineering")
         abroad.campus_city, abroad.campus_country = "Abu Dhabi", "United Arab Emirates"

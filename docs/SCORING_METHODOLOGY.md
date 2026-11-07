@@ -1,6 +1,6 @@
 # Scoring methodology
 
-Code: `backend/app/services/scoring.py`. Version `0.5.0`.
+Code: `backend/app/services/scoring.py`. Version `0.5.1`.
 
 There are three separate outputs, and they are never combined: quality, suitability and admission band.
 

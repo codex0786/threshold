@@ -22,6 +22,8 @@ cd backend
 vercel deploy --prod --yes --scope ab-c4
 ```
 
+Routes beyond JEE read `backend/snapshot/exam_routes.json`, which is git-ignored and bundled in the same way. Build it with `python -m ingest.exam_extract`, and check it with `.venv/bin/python ingest/exam_oracle.py`. A fresh API deployment needs this file, or `/exams` shows nothing.
+
 Before publishing a data change, compare API responses from Postgres and the snapshot. They differ only in alphabetical tie-order and timestamp timezones.
 
 ## Run locally

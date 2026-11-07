@@ -1,0 +1,88 @@
+from app.services.exam_routes import invalid_value, query, summary
+
+RANK = {"metric": {"lower_is_better": True}, "records": [
+    {"institute": "A", "programme": "Law", "group": "V", "category": "General", "value": 120},
+    {"institute": "B", "programme": "Law", "group": "V", "category": "General", "value": 500},
+    {"institute": "A", "programme": "Law", "group": "H", "category": "Women", "value": None},
+]}
+SCORE = {"metric": {"lower_is_better": False}, "records": [
+    {"institute": "A", "programme": "CSE", "group": "R1", "category": "OPEN", "value": 700},
+    {"institute": "B", "programme": "Civil", "group": "R1", "category": "OPEN", "value": 400},
+]}
+
+
+def test_rank_matches_closing_ranks_at_or_beyond_the_student():
+    result = query(RANK, value=300, category="General")
+    assert [r["institute"] for r in result["records"]] == ["B"]
+    assert query(RANK, value=120, category="General")["matched"] == 2
+
+
+def test_score_matches_closing_scores_at_or_below_the_student():
+    assert [r["programme"] for r in query(SCORE, value=500, category="OPEN")["records"]] == ["Civil"]
+
+
+def test_a_figure_is_never_compared_across_categories():
+    result = query(RANK, value=300)
+    assert result["compared"] is False and result["matched"] == 2
+    assert query(RANK, value=300, category="General")["compared"] is True
+
+
+def test_strongest_past_outcome_comes_first():
+    assert [r["institute"] for r in query(RANK)["records"]] == ["A", "B"]
+    assert [r["institute"] for r in query(SCORE)["records"]] == ["A", "B"]
+
+
+def test_missing_cutoff_is_reported_and_never_treated_as_a_number():
+    result = query(RANK, value=1)
+    assert result["total"] == 2 and result["matched"] == 2
+    assert [r["category"] for r in result["no_figure"]] == ["Women"]
+    assert query(RANK, value=1, category="Women")["matched"] == 0
+
+
+def test_filters_narrow_the_records():
+    assert query(RANK, category="Women")["no_figure"][0]["group"] == "H"
+    assert query(SCORE, search="civ")["matched"] == 1
+    assert query(RANK, group="V")["total"] == 2
+
+
+def test_summary_omits_records():
+    result = summary({**RANK, "code": "x"})
+    assert "records" not in result and result["record_count"] == 3 and result["institute_count"] == 2
+
+
+def test_a_route_with_restricted_quotas_needs_a_quota_before_comparing():
+    route = {"compare_requires_group": True, **RANK}
+    assert query(route, value=300, category="General")["missing"] == ["quota"]
+    assert query(route, value=300, category="General")["compared"] is False
+    assert query(route, value=300)["missing"] == ["category", "quota"]
+    assert query(route, value=300, category="General", group="V")["compared"] is True
+
+
+def test_a_student_sees_only_the_chosen_quota():
+    route = {"compare_requires_group": True, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India", "category": "Open", "value": 28000},
+        {"institute": "B", "programme": "MBBS", "group": "NRI", "category": "Open", "value": 90000},
+    ]}
+    assert query(route, value=50000, category="Open", group="All India")["matched"] == 0
+    assert query(route, value=50000, category="Open", group="NRI")["matched"] == 1
+
+
+def test_figures_outside_the_scale_are_refused():
+    percentile = {"metric": {"label": "Percentile", "max": 100}}
+    rank = {"metric": {"label": "Rank", "whole_number": True}}
+    assert invalid_value(percentile, 150) and invalid_value(rank, 1.5)
+    assert invalid_value(percentile, 100) is None and invalid_value(rank, 2) is None
+
+
+def test_course_filter_keeps_courses_apart():
+    route = {"metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India", "category": "Open", "value": 20000},
+        {"institute": "A", "programme": "BDS", "group": "All India", "category": "Open", "value": 90000},
+    ]}
+    assert [r["programme"] for r in query(route, programme="BDS")["records"]] == ["BDS"]
+    assert summary(route)["programmes"] == ["BDS", "MBBS"]
+
+
+def test_exam_routes_api_refuses_figures_outside_the_scale(client):
+    assert client.get("/api/v1/exams").status_code == 200
+    assert client.get("/api/v1/exams/not-a-route").status_code == 404

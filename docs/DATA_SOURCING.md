@@ -164,3 +164,15 @@ Their website addresses were entered from general knowledge and have not been in
 
 ## Scraping rules
 Use only permitted access. Never bypass CAPTCHAs, logins or blocks. Don't collect restricted personal data. Keep raw documents apart from validated records.
+
+## Routes beyond JEE
+`/exams` shows past figures from official documents, with no bands or probabilities. Each route states its limits on the page.
+
+| Route | Source | Status |
+|---|---|---|
+| NEET UG | MCC stray round allotment result, 2026 | Last rank allotted, calculated by us |
+| CLAT UG | Consortium of NLUs, NLSIU fifth provisional list, 2026 | Official cut-off table, one university |
+| GATE to NITs | CCMT 2025 score report | Official, 20 records for NIT Warangal |
+| Maharashtra engineering | State CET Cell, CAP Round I, 2024-25 | Official, all institutes in that document |
+
+The project owner reports written confirmation from these authorities. Candidate identifiers, such as CLAT admit card numbers, are never stored.

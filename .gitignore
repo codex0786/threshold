@@ -12,3 +12,6 @@ backend/snapshot/
 frontend/tsconfig.tsbuildinfo
 .vercel/
 **/.vercel/
+
+# Inputs for backend/snapshot/exam_routes.json. Never commit: this repository is public.
+data/demo/

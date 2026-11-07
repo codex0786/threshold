@@ -28,6 +28,16 @@ async function loadTrace(programmeId: number | null): Promise<Trace | null> {
   };
 }
 
+type ExamRoute = { code: string; stream: string; level: string; name: string; authority: string; record_count: number; institute_count: number; document: { round: string; year: string } };
+
+async function loadExams(): Promise<ExamRoute[]> {
+  try {
+    return (await api<{ routes: ExamRoute[] }>("/exams")).routes;
+  } catch {
+    return [];
+  }
+}
+
 async function loadPreview(): Promise<{ stats: Completeness; comparison: Comparison | null; trace: Trace | null } | null> {
   try {
     const stats = await api<Completeness>("/data/completeness");
@@ -87,6 +97,7 @@ const CAPABILITIES: { title: string; text: string; ready: boolean }[] = [
   { title: "Faculty and academic information", text: "Faculty numbers, doctorates, funded research and resources for 67 institutes, each kept separate. Whole institutes only, and never a rating of teaching.", ready: true },
   { title: "Alumni and career outcomes", text: "Recruiters, sectors and a labelled sample of documented alumni, where sources exist. It isn’t the full alumni network.", ready: true },
   { title: "Financial ROI", text: "Low, base and high scenarios using median salaries, never the highest package.", ready: true },
+  { title: "Other exams and colleges", text: "Past official figures for NEET UG, CLAT, GATE to NITs and Maharashtra engineering, with sources. Early coverage, with no admission bands yet.", ready: true },
   { title: "Counselling assistant", text: "Ask about colleges, branches and JoSAA rules, and get stored records with sources. It uses fixed lookups, not an AI model, and it never decides for you.", ready: true },
 ];
 
@@ -99,7 +110,7 @@ const FAQ = [
 ];
 
 export default async function Home() {
-  const preview = await loadPreview();
+  const [preview, exams] = await Promise.all([loadPreview(), loadExams()]);
   const stats = preview?.stats;
   const coverage = stats ? [
     { label: "Official JoSAA cutoffs", value: stats.coverage.cutoffs, color: "var(--teal)" },
@@ -137,6 +148,29 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {exams.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 pt-16" aria-labelledby="other-exams">
+          <Reveal>
+            <p className="eyebrow">Beyond JEE</p>
+            <h2 id="other-exams" className="mt-2 text-3xl sm:text-4xl">NEET, law, GATE and state colleges</h2>
+            <p className="mt-2 max-w-2xl text-ink-2">See past official figures for your exam, with the source beside each one. This is early coverage, so each exam lists what it does and doesn’t include.</p>
+          </Reveal>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {exams.map((exam, i) => (
+              <Reveal key={exam.code} delay={i * 80} className="h-full">
+                <Link href={`/exams?route=${exam.code}`} className="card card-hover group flex h-full flex-col p-5">
+                  <span className="text-sm text-ink-3">{exam.stream} · {exam.level}</span>
+                  <span className="mt-1 font-display text-lg font-semibold group-hover:text-brand">{exam.name}</span>
+                  <span className="tnum mt-2 text-sm text-ink-2">{num(exam.record_count)} records, {num(exam.institute_count)} {exam.institute_count === 1 ? "institute" : "institutes"}</span>
+                  <span className="mt-1 text-xs text-ink-3">{exam.document.round}, {exam.document.year}</span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+          <p className="mt-4"><Link href="/exams" className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">See all exams <ArrowRight size={15} aria-hidden /></Link></p>
+        </section>
+      )}
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <Reveal>

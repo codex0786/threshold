@@ -16,6 +16,8 @@ Base path `/api/v1`. Interactive schema at `/docs` when the backend is running. 
 | `GET /programmes/{id}/cutoffs` | `seat_type`, `quota`, `gender_pool`. Each row has `rank_list` and its source |
 | `GET /programmes/{id}/placements` | Records, or status "Data not available" |
 | `POST /recommendations/generate` | Shortlist |
+| `GET /exams` | Routes beyond JEE, with sources and limits |
+| `GET /exams/{code}` | Past figures for one route. A student's figure is compared only once a category is chosen, and a quota too where the route needs one |
 | `POST /comparisons` | 2 to 4 distinct programme IDs, optional profile |
 | `POST /preference-lists/analyse` | Checks an ordered list, and returns it in the same order |
 | `POST /reports/parent` | Plain-language report for up to 8 programmes |

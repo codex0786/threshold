@@ -9,6 +9,7 @@ import { loadCompare } from "@/lib/store";
 const LINKS = [
   { href: "/recommendations", label: "My shortlist" },
   { href: "/colleges", label: "Colleges" },
+  { href: "/exams", label: "Other exams" },
   { href: "/compare", label: "Compare" },
   { href: "/preferences", label: "Preference list" },
   { href: "/finance", label: "Costs" },

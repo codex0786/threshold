@@ -320,11 +320,13 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
+            # Both quotas are open to candidates from any state. MCC files AIIMS and JIPMER seats under Open Seat Quota.
+            "combined_quotas": {"All India and Open Seat Quota (AIIMS, JIPMER)": ["All India", "Open Seat Quota"]},
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
             "document": document("NEET-UG Counselling Seats Allotment 2026, Rounds 2 and 3 and stray round", MCC_SOURCES[1]["url"], "2026", "Rounds 2 and 3, and stray round", "derived"),
             "sources": MCC_SOURCES,
             "limits": [
-                "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges are missing from these lists.",
+                "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges are missing from these lists. AIIMS New Delhi is one: all its Open MBBS seats were filled in Round 1.",
                 "Calculated by us from MCC's rank-wise allotments: the last rank allotted to each seat in that round. MCC doesn't publish these as cutoffs.",
                 "Round 1 isn't included, because MCC labels its Round 1 file provisional.",
                 "Excludes the 85% state quota, which each state runs separately.",

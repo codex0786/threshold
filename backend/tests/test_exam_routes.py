@@ -117,3 +117,29 @@ def test_an_empty_list_reports_how_far_it_went_and_which_quotas_reached_the_stud
     result = query(route, value=50000, category="Open", group="All India", programme="MBBS")
     assert result["matched"] == 0 and result["furthest"] == 28000
     assert result["elsewhere"] == [{"group": "Deemed", "count": 1}]
+
+
+def test_a_combined_list_joins_quotas_open_to_the_same_candidates():
+    route = {"compare_requires_group": True, "combined_quotas": {"All open": ["All India", "Open Seat Quota"]}, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "KGMU", "programme": "MBBS", "group": "All India · Round 3", "category": "Open", "value": 2500, "ranking": {"rank": 8}},
+        {"institute": "AIIMS Jodhpur", "programme": "MBBS", "group": "Open Seat Quota · Round 3", "category": "Open", "value": 300, "ranking": {"rank": 19}},
+        {"institute": "Private", "programme": "MBBS", "group": "Self-Financed Merit Seat · Round 3", "category": "Open", "value": 90000},
+    ]}
+    add_standing(route)
+    assert summary(route)["groups"][0] == "All open · Round 3"
+    result = query(route, value=200, category="Open", group="All open · Round 3")
+    assert {r["institute"] for r in result["records"]} == {"KGMU", "AIIMS Jodhpur"}
+    assert result["elsewhere"] == [{"group": "Self-Financed Merit Seat · Round 3", "count": 1}]
+
+
+def test_quotas_shown_together_are_scored_together():
+    route = {"combined_quotas": {"All open": ["All India", "Open Seat Quota"]}, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "KGMU", "programme": "MBBS", "group": "All India · Round 3", "category": "Open", "value": 2500, "ranking": {"rank": 8}},
+        {"institute": "Other", "programme": "MBBS", "group": "All India · Round 3", "category": "Open", "value": 9000},
+        {"institute": "JIPMER", "programme": "MBBS", "group": "Open Seat Quota · Round 3", "category": "Open", "value": 400, "ranking": {"rank": 4}},
+        {"institute": "AIIMS", "programme": "MBBS", "group": "Open Seat Quota · Round 3", "category": "Open", "value": 300, "ranking": {"rank": 19}},
+    ]}
+    add_standing(route)
+    # Scored per quota, the Open Seat Quota seats would only be compared with each other and drop below KGMU.
+    order = [r["institute"] for r in query(route, value=100, category="Open", group="All open · Round 3")["records"]]
+    assert order.index("JIPMER") < order.index("KGMU") and order.index("AIIMS") < order.index("KGMU")

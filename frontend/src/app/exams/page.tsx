@@ -38,7 +38,7 @@ function defaultsFor(route: Route) {
     category: OPEN_CATEGORIES.find((c) => route.categories.includes(c)) ?? "",
     // The latest main round's All India list, when the route has rounds.
     group: route.compare_requires_group
-      ? (["All India · Round 3", "All India"].find((g) => route.groups.includes(g)) ?? route.groups.find((g) => g.startsWith("All India")) ?? route.groups[0] ?? "")
+      ? (["All India and Open Seat Quota (AIIMS, JIPMER) · Round 3", "All India · Round 3", "All India"].find((g) => route.groups.includes(g)) ?? route.groups.find((g) => g.startsWith("All India")) ?? route.groups[0] ?? "")
       : "",
     // MBBS, BDS and nursing are different degrees, so NEET opens on MBBS. Other routes show every course.
     programme: route.programmes.includes("MBBS") ? "MBBS" : "",

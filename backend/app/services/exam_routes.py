@@ -20,13 +20,16 @@ def add_standing(route: dict) -> None:
 
     NIRF rank uses the reputation scale (rank 1 is 100, rank 100 is 50.5) and a missing rank counts as a
     neutral 50. How contested a seat is compares its closing figure only with the same course, category and
-    quota, so it never mixes rank lists. It only orders the list. It isn't a quality score.
+    list, so it never mixes rank lists. It only orders the list. It isn't a quality score.
     """
     lower_is_better = route["metric"]["lower_is_better"]
+    # Quotas shown together are scored together, or AIIMS seats would only be compared with other AIIMS seats.
+    together = {member: name for name, members in combined_groups(route).items() for member in members}
     peers: dict[tuple, dict[int, float]] = defaultdict(dict)
     for index, record in enumerate(route["records"]):
         if record["value"] is not None:
-            peers[(record["programme"], record["category"], record.get("group"))][index] = record["value"] if lower_is_better else -record["value"]
+            group = together.get(record.get("group"), record.get("group"))
+            peers[(record["programme"], record["category"], group)][index] = record["value"] if lower_is_better else -record["value"]
     contest = {index: score for group in peers.values() for index, score in contest_scores(group).items()}
     for index, record in enumerate(route["records"]):
         institute = reputation_score((record.get("ranking") or {}).get("rank"))
@@ -41,6 +44,19 @@ def load() -> dict:
     return data
 
 
+def combined_groups(route: dict) -> dict[str, set[str]]:
+    """Lists that join quotas open to the same candidates, such as MCC's All India and Open Seat Quota (AIIMS,
+    JIPMER), one per round. Returns each combined name with the published groups it covers."""
+    groups = {r["group"] for r in route["records"] if r.get("group")}
+    combined: dict[str, set[str]] = {}
+    for name, quotas in (route.get("combined_quotas") or {}).items():
+        for round_label in sorted({g.rsplit(" · ", 1)[1] for g in groups if " · " in g}):
+            members = {f"{quota} · {round_label}" for quota in quotas} & groups
+            if len(members) > 1:
+                combined[f"{name} · {round_label}"] = members
+    return combined
+
+
 def summary(route: dict) -> dict:
     records = route["records"]
     return {
@@ -48,7 +64,7 @@ def summary(route: dict) -> dict:
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
-        "groups": sorted({r["group"] for r in records if r.get("group")}),
+        "groups": sorted(combined_groups(route)) + sorted({r["group"] for r in records if r.get("group")}),
         "programmes": sorted({r["programme"] for r in records}) if len({r["programme"] for r in records}) <= MAX_PROGRAMME_CHOICES else [],
     }
 
@@ -76,9 +92,10 @@ def query(
 ) -> dict:
     needle = (search or "").casefold()
     lower_is_better = route["metric"]["lower_is_better"]
+    in_group = combined_groups(route).get(group or "", {group})
     records = [
         r for r in route["records"]
-        if (not category or r["category"] == category) and (not group or r.get("group") == group) and (not programme or r["programme"] == programme)
+        if (not category or r["category"] == category) and (not group or r.get("group") in in_group) and (not programme or r["programme"] == programme)
         and (not needle or needle in r["institute"].casefold() or needle in r["programme"].casefold())
     ]
     no_figure = [r for r in records if r["value"] is None]
@@ -100,7 +117,7 @@ def query(
     if compared and route.get("compare_requires_group"):
         for r in route["records"]:
             if (
-                r["category"] == category and r.get("group") != group and r["value"] is not None and within(route, r, value)
+                r["category"] == category and r.get("group") not in in_group and r["value"] is not None and within(route, r, value)
                 and (not programme or r["programme"] == programme)
                 and (not needle or needle in r["institute"].casefold() or needle in r["programme"].casefold())
             ):

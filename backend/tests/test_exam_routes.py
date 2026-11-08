@@ -1,4 +1,4 @@
-from app.services.exam_routes import invalid_value, query, summary
+from app.services.exam_routes import add_standing, invalid_value, query, summary
 
 RANK = {"metric": {"lower_is_better": True}, "records": [
     {"institute": "A", "programme": "Law", "group": "V", "category": "General", "value": 120},
@@ -27,9 +27,9 @@ def test_a_figure_is_never_compared_across_categories():
     assert query(RANK, value=300, category="General")["compared"] is True
 
 
-def test_strongest_past_outcome_comes_first():
-    assert [r["institute"] for r in query(RANK)["records"]] == ["A", "B"]
-    assert [r["institute"] for r in query(SCORE)["records"]] == ["A", "B"]
+def test_closest_order_puts_the_strongest_past_outcome_first():
+    assert [r["institute"] for r in query(RANK, order="closest")["records"]] == ["A", "B"]
+    assert [r["institute"] for r in query(SCORE, order="closest")["records"]] == ["A", "B"]
 
 
 def test_missing_cutoff_is_reported_and_never_treated_as_a_number():
@@ -86,3 +86,23 @@ def test_course_filter_keeps_courses_apart():
 def test_exam_routes_api_refuses_figures_outside_the_scale(client):
     assert client.get("/api/v1/exams").status_code == 200
     assert client.get("/api/v1/exams/not-a-route").status_code == 404
+
+
+def test_top_order_puts_ranked_institutes_first_then_contested_seats():
+    route = {"metric": {"lower_is_better": True}, "records": [
+        {"institute": "Unranked", "programme": "MBBS", "group": "All India", "category": "Open", "value": 3000},
+        {"institute": "Ranked", "programme": "MBBS", "group": "All India", "category": "Open", "value": 9000, "ranking": {"rank": 5}},
+        {"institute": "Ranked lower", "programme": "MBBS", "group": "All India", "category": "Open", "value": 6000, "ranking": {"rank": 40}},
+    ]}
+    add_standing(route)
+    assert [r["institute"] for r in query(route)["records"]] == ["Ranked", "Ranked lower", "Unranked"]
+    assert [r["institute"] for r in query(route, order="closest")["records"]] == ["Unranked", "Ranked lower", "Ranked"]
+
+
+def test_contest_compares_only_within_the_same_course_category_and_quota():
+    route = {"metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India", "category": "Open", "value": 1000},
+        {"institute": "B", "programme": "MBBS", "group": "All India", "category": "SC", "value": 90000},
+    ]}
+    add_standing(route)
+    assert route["records"][0]["standing"] == route["records"][1]["standing"]

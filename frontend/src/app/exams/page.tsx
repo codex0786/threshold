@@ -10,7 +10,8 @@ type Route = {
   code: string; stream: string; level: string; name: string; authority: string; metric: Metric; document: Doc; limits: string[];
   record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[];
 };
-type DemoRecord = { institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
+type Ranking = { category: string; rank: number; year: number; source_url: string };
+type DemoRecord = { ranking?: Ranking; standing?: number; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
 type Result = { total: number; matched: number; compared: boolean; missing: string[]; no_figure: DemoRecord[]; records: DemoRecord[] };
 
 const STATUS = {
@@ -24,6 +25,11 @@ const NOT_COVERED: [string, string][] = [
   ["Maharashtra law and medical", "No public cutoff document found. Medical portals open at a login page."],
   ["Other states and PG exams", "Not yet audited."],
 ];
+type ListOrder = "top" | "closest";
+const ORDERS: Record<ListOrder, { label: string; note: string }> = {
+  top: { label: "Top colleges first", note: "Colleges with a better official NIRF 2025 rank in their field come first, then the most contested seats. Colleges NIRF doesn’t list count as neutral, which doesn’t mean they’re weaker. This isn’t a quality score." },
+  closest: { label: "Closest to my figure", note: "Past figures nearest yours come first." },
+};
 const ICONS: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };
 
 export default function ExamsPage() {
@@ -34,10 +40,11 @@ export default function ExamsPage() {
   const [group, setGroup] = useState("");
   const [search, setSearch] = useState("");
   const [programme, setProgramme] = useState("");
+  const [order, setOrder] = useState<ListOrder>("top");
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string }) => {
+  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder }) => {
     const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v));
     setError(null);
     api<Result>(`/exams/${route.code}?${query}`).then(setResult).catch((e) => setError(e.message));
@@ -45,9 +52,9 @@ export default function ExamsPage() {
 
   const choose = useCallback((route: Route) => {
     setSelected(route);
-    setValue(""); setCategory(""); setGroup(""); setSearch(""); setProgramme("");
+    setValue(""); setCategory(""); setGroup(""); setSearch(""); setProgramme(""); setOrder("top");
     setResult(null);
-    run(route, { value: "", category: "", group: "", search: "", programme: "" });
+    run(route, { value: "", category: "", group: "", search: "", programme: "", order: "top" });
   }, [run]);
   useEffect(() => {
     api<{ routes: Route[] }>("/exams").then((d) => {
@@ -99,7 +106,7 @@ export default function ExamsPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">{selected.limits.map((l) => <li key={l}>{l}</li>)}</ul>
           </div>
 
-          <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value, category, group, search, programme }); }}>
+          <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value, category, group, search, programme, order }); }}>
             <label className="block text-sm">Your {selected.metric.label}
               <input className="input tnum mt-1" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={Boolean(problem)} />
             </label>
@@ -127,8 +134,21 @@ export default function ExamsPage() {
             {problem && <p className="text-sm sm:col-span-2 lg:col-span-4" style={{ color: "var(--ambitious)" }} role="alert">{problem}</p>}
           </form>
 
+          <div className="mt-5">
+            <div className="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1" role="group" aria-label="Sort the list">
+              {(Object.keys(ORDERS) as ListOrder[]).map((key) => (
+                <button key={key} type="button" aria-pressed={order === key}
+                  onClick={() => { setOrder(key); if (!problem) run(selected, { value, category, group, search, programme, order: key }); }}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === key ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>
+                  {ORDERS[key].label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-ink-3">{ORDERS[order].note}</p>
+          </div>
+
           {result && (
-            <div className="mt-5" aria-live="polite">
+            <div className="mt-4" aria-live="polite">
               <p className="tnum text-sm text-ink-2">{result.compared
                 ? `${num(result.matched)} of ${num(result.total)} past figures in ${[group, category].filter(Boolean).join(", ")} closed at or ${selected.metric.lower_is_better ? "beyond" : "below"} your ${selected.metric.unit} of ${value}`
                 : `${num(result.total)} past figures`}{result.matched > result.records.length ? `. Showing the first ${result.records.length}.` : "."}</p>
@@ -140,6 +160,7 @@ export default function ExamsPage() {
                     <p className="font-semibold">{r.programme}</p>
                     <p className="text-sm text-ink-2">{r.institute}{r.programme_code ? ` · course code ${r.programme_code}` : ""}</p>
                     <p className="text-xs text-ink-3">{[r.group, r.category].filter(Boolean).join(" · ")}</p>
+                    {r.ranking && <p className="mt-1 text-xs"><span className="font-semibold">NIRF {r.ranking.year} {r.ranking.category} rank {r.ranking.rank}</span> <SourceLink href={r.ranking.source_url} label="Official NIRF list" /></p>}
                     <dl className="tnum mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                       <div><dt className="inline text-ink-3">{selected.metric.value_label}: </dt><dd className="inline font-semibold">{r.value === null ? "Data not available" : num(r.value)}</dd></div>
                       {selected.metric.second_label && <div><dt className="inline text-ink-3">{selected.metric.second_label}: </dt><dd className="inline">{r.second_value == null ? "Data not available" : num(r.second_value)}</dd></div>}

@@ -5,16 +5,40 @@ Reads backend/snapshot/exam_routes.json, which like the JEE snapshot is git-igno
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
+
+from app.services.scoring import NEUTRAL, contest_scores, reputation_score
 
 MAX_PROGRAMME_CHOICES = 6
 DATA = Path(__file__).resolve().parents[2] / "snapshot" / "exam_routes.json"
 
 
+def add_standing(route: dict) -> None:
+    """Default list position, as on the JEE shortlist: two parts NIRF rank to one part how contested the seat is.
+
+    NIRF rank uses the reputation scale (rank 1 is 100, rank 100 is 50.5) and a missing rank counts as a
+    neutral 50. How contested a seat is compares its closing figure only with the same course, category and
+    quota, so it never mixes rank lists. It only orders the list. It isn't a quality score.
+    """
+    lower_is_better = route["metric"]["lower_is_better"]
+    peers: dict[tuple, dict[int, float]] = defaultdict(dict)
+    for index, record in enumerate(route["records"]):
+        if record["value"] is not None:
+            peers[(record["programme"], record["category"], record.get("group"))][index] = record["value"] if lower_is_better else -record["value"]
+    contest = {index: score for group in peers.values() for index, score in contest_scores(group).items()}
+    for index, record in enumerate(route["records"]):
+        institute = reputation_score((record.get("ranking") or {}).get("rank"))
+        record["standing"] = round((2 * (NEUTRAL if institute is None else institute) + contest.get(index, NEUTRAL)) / 3, 1)
+
+
 @lru_cache(maxsize=1)
 def load() -> dict:
-    return json.loads(DATA.read_text()) if DATA.exists() else {"routes": []}
+    data = json.loads(DATA.read_text()) if DATA.exists() else {"routes": []}
+    for route in data["routes"]:
+        add_standing(route)
+    return data
 
 
 def summary(route: dict) -> dict:
@@ -46,7 +70,10 @@ def invalid_value(route: dict, value: float) -> str | None:
     return None
 
 
-def query(route: dict, value: float | None = None, category: str | None = None, group: str | None = None, search: str | None = None, limit: int = 50, programme: str | None = None) -> dict:
+def query(
+    route: dict, value: float | None = None, category: str | None = None, group: str | None = None, search: str | None = None,
+    limit: int = 50, programme: str | None = None, order: str = "top",
+) -> dict:
     needle = (search or "").casefold()
     lower_is_better = route["metric"]["lower_is_better"]
     records = [
@@ -62,6 +89,9 @@ def query(route: dict, value: float | None = None, category: str | None = None, 
         missing.append("quota")
     compared = value is not None and not missing
     matched = [r for r in usable if within(route, r, value)] if compared else usable
-    # Strongest past outcomes first.
-    matched.sort(key=lambda r: (r["value"] if lower_is_better else -r["value"], r["institute"], r["programme"]))
+    closest = (lambda r: r["value"]) if lower_is_better else (lambda r: -r["value"])
+    if order == "top":
+        matched.sort(key=lambda r: (-r.get("standing", NEUTRAL), closest(r), r["institute"], r["programme"]))
+    else:
+        matched.sort(key=lambda r: (closest(r), r["institute"], r["programme"]))
     return {"total": len(usable), "matched": len(matched), "compared": compared, "missing": missing, "no_figure": no_figure[:limit], "records": matched[:limit]}

@@ -39,8 +39,11 @@ for r in data["routes"]:
             if res["matched"]!=len(want) or res["total"]!=len(usable): fail("demo count",(code,cat,v,res["matched"],len(want)))
             if any(x["category"]!=cat for x in res["records"]): fail("demo category leak",(code,cat,v))
             if any(not (x["value"]>=v if low else x["value"]<=v) for x in res["records"]): fail("demo wrong inclusion",(code,cat,v))
-            vals=[x["value"] for x in res["records"]]
-            if vals!=sorted(vals,reverse=not low): fail("demo order",(code,cat,v))
+            st=[x["standing"] for x in res["records"]]
+            if st!=sorted(st,reverse=True): fail("exam top order",(code,cat,v))
+            close=c.get(f"/api/v1/exams/{code}",params={**q,"order":"closest"}).json()["records"]
+            vals=[x["value"] for x in close]
+            if vals!=sorted(vals,reverse=not low): fail("exam closest order",(code,cat,v))
             if prev is not None and (res["matched"]>prev if low else res["matched"]<prev): fail("demo monotonic",(code,cat,v,prev,res["matched"]))
             prev=res["matched"]
     # across-category comparison must never happen

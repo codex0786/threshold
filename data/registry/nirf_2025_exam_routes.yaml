@@ -1,0 +1,78 @@
+# Official NIRF 2025 ranks for institutes in the routes beyond JEE, read from nirfindia.org on 2026-11-08.
+# A rank applies only where the counselling document names the same ranked institution. Each `match` is the
+# start of the institute name exactly as the counselling document prints it.
+# Left unmatched on purpose, so they count as neutral:
+# - IMS BHU Dental: NIRF lists both Banaras Hindu University (Dental 15) and "Faculty of Dental Sciences,
+#   Institute of Medical Sciences, Varanasi" (Dental 18), so it's unclear which applies.
+# - Amrita: NIRF lists the university at Coimbatore, but the medical and dental colleges here are at Kochi and Faridabad.
+# - Separate campuses of a ranked university: JIPMER Karaikal, Datta Meghe Nagpur, SOA campus II, ICT Jalna, DY Patil Kolhapur.
+year: 2025
+retrieved: "2026-11-08"
+lists:
+  Medical:
+    source: https://www.nirfindia.org/Rankings/2025/MedicalRanking.html
+    programmes: [MBBS]
+    ranks:
+      - {rank: 8, nirf_id: IR-D-U-0523, name: "King George`s Medical University", match: "King George Medical University, Lucknow"}
+      - {rank: 10, nirf_id: IR-D-C-7242, name: "Kasturba Medical College, Manipal", match: "Kasturba Medical College, Manipal"}
+      - {rank: 11, nirf_id: IR-D-I-1441, name: "Saveetha Institute of Medical and Technical Sciences", match: "Saveetha Medical College and Hospital"}
+      - {rank: 12, nirf_id: IR-D-I-1110, name: "Dr. D. Y. Patil Vidyapeeth, Pune", match: "Dr. D Y Patil Medical College, Hospital and Research Centre, Pimpri, Pune"}
+      - {rank: 13, nirf_id: IR-D-U-0691, name: "All India Institute of Medical Sciences Rishikesh", match: "AIIMS, Rishikesh"}
+      - {rank: 14, nirf_id: IR-D-U-0688, name: "All India Institute of Medical Sciences Bhubaneswar", match: "AIIMS, Bhubaneswar"}
+      - {rank: 15, nirf_id: IR-D-U-0363, name: "Siksha `O` Anusandhan", match: "Instt. Of Medical Sciences & SUM Hospital, Bhubaneswar"}
+      - {rank: 16, nirf_id: IR-D-C-49008, name: "Madras Medical College & Government General Hospital, Chennai", match: "Madras Medical College, Chennai"}
+      - {rank: 18, nirf_id: IR-D-U-0473, name: "S.R.M. Institute of Science and Technology", match: "SRM Medical College Hospital & Research Centre"}
+      - {rank: 20, nirf_id: IR-D-U-0295, name: "Datta Meghe Institute of Higher Education and Research, Wardha", match: "Jawaharlal Nehru Medical College, Sawangi (Meghe), Wardha"}
+      - {rank: 21, nirf_id: IR-D-I-1486, name: "Sri Ramachandra Institute of Higher Education and Research", match: "Sri Ramachandra Medical College & Research Institute, Chennai"}
+      - {rank: 24, nirf_id: IR-D-U-0356, name: "Kalinga Institute of Industrial Technology", match: "Kalinga Institute of Medical Sciences, Bhubaneswar"}
+      - {rank: 27, nirf_id: IR-D-U-0686, name: "All India Institute of Medical Sciences Patna", match: "AIIMS, Patna"}
+      - {rank: 29, nirf_id: IR-D-U-0496, name: "Aligarh Muslim University", match: "Jawaharlal Nehru Medical College, Aligarh"}
+      - {rank: 32, nirf_id: IR-D-C-22461, name: "Lady Hardinge Medical College", match: "Lady Hardinge Medical College, New Delhi"}
+      - {rank: 33, nirf_id: IR-D-U-0168, name: "Maharishi Markandeshwar, Ambala", match: "Maharishi Markandeshwar Institute Of Medical Sciences & Research, Mullana, Ambala"}
+      - {rank: 35, nirf_id: IR-D-C-7251, name: "Kasturba Medical College, Mangalore", match: "Kasturba Medical College, Mangalore"}
+      - {rank: 37, nirf_id: IR-D-C-35009, name: "JSS Medical College, Mysore", match: "JSS Medical College, Mysore"}
+      - {rank: 38, nirf_id: IR-D-I-1409, name: "University College of Medical Sciences", match: "University College of Medical Sciences & GTB Hospital, New Delhi"}
+      - {rank: 40, nirf_id: IR-D-U-0107, name: "Jamia Hamdard", match: "Hamdard Institute of Medical Sciences & Research, New Delhi"}
+      - {rank: 41, nirf_id: IR-D-C-16424, name: "Medical College, Kolkata", match: "MEDICAL COLLEGE, KOLKATA"}
+      - {rank: 42, nirf_id: IR-D-C-47762, name: "Mahatma Gandhi Medical College and Research Institute", match: "Mahatma Gandhi Medical College & Research Institute, Pondicherry"}
+      - {rank: 46, nirf_id: IR-D-C-24503, name: "Jawaharlal Nehru Medical College, Belagavi", match: "Jawaharlal Nehru Medical College, Belgaum"}
+      - {rank: 48, nirf_id: IR-D-C-30588, name: "Osmania Medical College", match: "Osmania Medical College, Hyderabad"}
+      - {rank: 49, nirf_id: IR-D-U-0451, name: "Chettinad Academy of Research and Education, Kelambakkam", match: "Chettinad Hospital & Research Institute, Kanchipuram"}
+  Dental:
+    source: https://www.nirfindia.org/Rankings/2025/DentalRanking.html
+    programmes: [BDS]
+    ranks:
+      - {rank: 3, nirf_id: IR-N-C-28507, name: "Maulana Azad Institute of Dental Sciences", match: "Maulana Azad Institute of Dental Sciences, New Delhi"}
+      - {rank: 4, nirf_id: IR-N-I-1110, name: "Dr. D. Y. Patil Vidyapeeth, Pune", match: "Dr. DY Patil Dental College and Hosp. Pune"}
+      - {rank: 6, nirf_id: IR-N-C-19320, name: "A.B.Shetty Memorial Institute of Dental Sciences", match: "AB Shetty Memorial Inst. of Dental Sce., Mangaluru"}
+      - {rank: 10, nirf_id: IR-N-C-35008, name: "JSS Dental College and Hospital", match: "JSS Dental College, Mysuru"}
+      - {rank: 11, nirf_id: IR-N-C-7240, name: "Manipal College of Dental Sciences, Mangalore", match: "Manipal College of Dental Science, Mangalore"}
+      - {rank: 12, nirf_id: IR-N-C-30756, name: "Postgraduate Institute of Dental Sciences, Rohtak", match: "GDC,PT.BDS UNIV.OF HEALTH SCI,ROHTAK"}
+      - {rank: 17, nirf_id: IR-N-U-0108, name: "Jamia Millia Islamia", match: "Faculty of Dentistry, Jamia Millia Islamia, New Delhi"}
+      - {rank: 19, nirf_id: IR-N-N-153, name: "Nair Hospital Dental College", match: "NAIR HOSP DENTAL COLLEGE & HOSP,MUMBAI"}
+      - {rank: 20, nirf_id: IR-N-C-14033, name: "Govt. Dental College, Nagpur", match: "GOVT. DENTAL COLLEGE & HOSP.,NAGPUR"}
+      - {rank: 21, nirf_id: IR-N-C-13829, name: "Govt. Dental College, Mumbai", match: "GOVT. DENTAL COLLEGE & HOSP.,MUMBAI"}
+      - {rank: 26, nirf_id: IR-N-U-0356, name: "Kalinga Institute of Industrial Technology", match: "Kalinga Institute of Dental Sciences, Bhubaneswar"}
+      - {rank: 27, nirf_id: IR-N-N-91, name: "Sree Balaji Dental College & Hospital", match: "Sree Balaji Dental College and Hospital, Chennai"}
+      - {rank: 28, nirf_id: IR-N-U-0496, name: "Aligarh Muslim University", match: "Dr. Ziauddin Ahmed Dental College and Hospital"}
+      - {rank: 29, nirf_id: IR-N-C-24504, name: "KLE Vishwanath Katti Institute of Dental Sciences", match: "KLE VK Inst. of Dental Scie. Belagavi"}
+      - {rank: 31, nirf_id: IR-N-C-8528, name: "Yenepoya Dental College", match: "Yenepoya Dental College, Yenepoya"}
+      - {rank: 33, nirf_id: IR-N-U-0169, name: "Manav Rachna International Institute of Research & Studies", match: "MANAV RACHNA DENTAL COLLEGE FARIDABAD"}
+      - {rank: 35, nirf_id: IR-N-C-48122, name: "Government Dental College, Thiruvananthapuram", match: "GOVT. DENTAL COLLEGE, TRIVANDRUM"}
+      - {rank: 36, nirf_id: IR-N-U-0295, name: "Datta Meghe Institute of Higher Education and Research, Wardha", match: "Sharad Pawar Dental College and Hospital, Wardha"}
+      - {rank: 38, nirf_id: IR-N-C-8121, name: "Government Dental College, Kozhikode", match: "GOVT. DENTAL COLLEGE, KOZIKODE"}
+  Law:
+    source: https://www.nirfindia.org/Rankings/2025/LawRanking.html
+    ranks:
+      - {rank: 1, nirf_id: IR-L-U-0238, name: "National Law School of India University", match: "National Law School of India University (NLSIU), Bengaluru"}
+  Engineering:
+    source: https://www.nirfindia.org/Rankings/2025/EngineeringRanking.html
+    ranks:
+      - {rank: 28, nirf_id: IR-E-U-0025, name: "National Institute of Technology Warangal", match: "NIT Warangal"}
+      - {rank: 41, nirf_id: IR-E-U-0308, name: "Institute of Chemical Technology, Mumbai", match: "Institute of Chemical Technology, Matunga, Mumbai"}
+      - {rank: 90, nirf_id: IR-E-U-1257, name: "COEP Technological University", match: "COEP Technological University"}
+routes:
+  neet-ug: [Medical, Dental]
+  clat: [Law]
+  gate-ccmt: [Engineering]
+  maharashtra-engineering: [Engineering]

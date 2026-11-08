@@ -175,4 +175,6 @@ Use only permitted access. Never bypass CAPTCHAs, logins or blocks. Don't collec
 | GATE to NITs | CCMT 2025 score report | Official, 20 records for NIT Warangal |
 | Maharashtra engineering | State CET Cell, CAP Round I, 2024-25 | Official, all institutes in that document |
 
+By default each list puts top colleges first, as on the JEE shortlist: two parts official NIRF 2025 rank in the matching field (Medical for MBBS, Dental for BDS, Law, Engineering) to one part how contested the seat is within the same course, category and quota. Ranks come from `data/registry/nirf_2025_exam_routes.yaml`, read from nirfindia.org, and apply only where the counselling document names the same ranked institution. `python -m ingest.exam_rankings` attaches them and stops if any entry finds no institute. Students can switch to "Closest to my figure".
+
 The project owner reports written confirmation from these authorities. Candidate identifiers, such as CLAT admit card numbers, are never stored.

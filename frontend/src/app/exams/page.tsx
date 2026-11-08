@@ -9,6 +9,7 @@ type Doc = { title: string; url: string; year: string; round: string; retrieved:
 type Route = {
   code: string; stream: string; level: string; name: string; authority: string; metric: Metric; document: Doc; limits: string[];
   record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[]; compare_requires_group?: boolean;
+  sources?: { title: string; url: string }[];
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
 type DemoRecord = { ranking?: Ranking; standing?: number; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
@@ -35,7 +36,10 @@ const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS"];
 function defaultsFor(route: Route) {
   return {
     category: OPEN_CATEGORIES.find((c) => route.categories.includes(c)) ?? "",
-    group: route.compare_requires_group ? (route.groups.includes("All India") ? "All India" : route.groups[0] ?? "") : "",
+    // The latest main round's All India list, when the route has rounds.
+    group: route.compare_requires_group
+      ? (["All India · Round 3", "All India"].find((g) => route.groups.includes(g)) ?? route.groups.find((g) => g.startsWith("All India")) ?? route.groups[0] ?? "")
+      : "",
     programme: route.programmes.length > 1 ? (route.programmes.includes("MBBS") ? "MBBS" : route.programmes[0]) : "",
   };
 }
@@ -120,7 +124,7 @@ export default function ExamsPage() {
           <div className="card mt-3 p-4 text-sm">
             <p className="font-semibold" style={{ color: STATUS[selected.document.status].color }}>{STATUS[selected.document.status].label}</p>
             <p className="mt-1">{selected.authority}. {selected.document.round}, {selected.document.year}.</p>
-            <p className="mt-1"><SourceLink href={selected.document.url} label={selected.document.title} /></p>
+            {(selected.sources ?? [selected.document]).map((s) => <p key={s.url} className="mt-1"><SourceLink href={s.url} label={s.title} /></p>)}
             <details className="mt-2">
               <summary className="cursor-pointer font-medium text-brand">What this covers, and what it doesn’t ({selected.limits.length})</summary>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">{selected.limits.map((l) => <li key={l}>{l}</li>)}</ul>

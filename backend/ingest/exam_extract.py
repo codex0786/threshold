@@ -4,7 +4,9 @@ Writes the git-ignored backend/snapshot/exam_routes.json. This repository is pub
 Candidate-level identifiers (such as CLAT admit card numbers) are never read
 into the output.
 
-Usage: python -m ingest.exam_extract --mcc a.pdf --clat b.pdf --maharashtra c.pdf --ccmt d.json
+Usage: python -m ingest.exam_extract --mcc-stray a.pdf --mcc-round2 b.pdf --mcc-round3 c.pdf --clat d/*.pdf \
+           [--maharashtra e.pdf] [--ccmt f.json]
+Routes whose inputs aren't given are kept from the existing file, so a slow source needn't be re-read.
 """
 from __future__ import annotations
 
@@ -17,7 +19,7 @@ from pathlib import Path
 import pymupdf
 
 OUT = Path(__file__).resolve().parents[1] / "snapshot" / "exam_routes.json"
-RETRIEVED = "2026-11-06"
+RETRIEVED = "2026-11-08"
 CLAT_RESERVATION_END = "Note :"
 
 
@@ -25,8 +27,115 @@ def clean(text: str | None) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
 
+NEET_COURSES = {"MBBS", "BDS", "B.Sc. Nursing"}
+NEET_CATEGORIES = {"Open", "OBC", "SC", "ST", "EWS", "Open PwD", "OBC PwD", "SC PwD", "ST PwD", "EWS PwD"}
+
+
+def institute_name(text: str | None) -> str:
+    # Some institute names in the source end with a contact email, which isn't part of the name.
+    return re.sub(r",?\s*\S+@\S+", "", clean(text))
+
+
+def quota_name(text: str | None) -> str:
+    return re.sub(r"-\s+", "-", clean(text))
+
+
+def mcc_quota_key(path: Path) -> list[str]:
+    """Quota names as MCC's own key on page 1 prints them, each on one line."""
+    with pymupdf.open(path) as doc:
+        lines = [clean(line) for line in doc[0].get_text().splitlines() if clean(line)]
+    start = lines.index("Description") + 1
+    return [line for line in lines[start:] if not re.fullmatch(r"[A-Z]{2}( PwD)?", line)]
+
+
+def spellings(names: list[str], known: list[str] = ()) -> dict[str, str]:
+    """Map every spelling of a name to one. Names wrap across lines in the larger files, which adds stray spaces
+    ("Children/Wid ows", "AIIMS, New Delhi , ANSARI"). Spellings that match without spaces are the same name.
+    A spelling from MCC's own key wins, and otherwise the one with the fewest spaces."""
+    def key(name: str) -> str:
+        return re.sub(r"\s+", "", name).lower()
+
+    best: dict[str, str] = {key(name): name for name in known}
+    for name in names:
+        current = best.get(key(name))
+        if current is None or (current not in known and name.count(" ") < current.count(" ")):
+            best[key(name)] = name
+    return {name: best[key(name)] for name in names}
+
+
+def tidy_quotas(records: list[dict], known: list[str] = ()) -> list[dict]:
+    """Give each quota and institute one spelling, then merge records the variants had split."""
+    quotas = spellings([r["group"].rsplit(" · ", 1)[0] for r in records], known)
+    institutes = spellings([r["institute"] for r in records])
+    merged: dict[tuple, dict] = {}
+    for record in records:
+        quota, round_label = record["group"].rsplit(" · ", 1)
+        record = {**record, "group": f"{quotas[quota]} · {round_label}", "institute": institutes[record["institute"]]}
+        identity = (record["institute"], record["programme"], record["group"], record["category"])
+        if identity in merged:
+            seen = merged[identity]
+            seen["value"], seen["first_value"], seen["count"] = max(seen["value"], record["value"]), min(seen["first_value"], record["first_value"]), seen["count"] + record["count"]
+        else:
+            merged[identity] = record
+    return list(merged.values())
+
+
+# CLAT headings spell the same course several ways, and two run the course into the university name.
+CLAT_COURSE = re.compile(r"[\s-]*\b(B\.?\s?(?:A|B\.?\s?A|Com|Sc)\.?,?\s?LL\.?\s?B.*)$")
+CLAT_COURSES = [("B.Sc", "BSc LLB (Hons)"), ("BSc", "BSc LLB (Hons)"), ("B.Com", "BCom LLB (Hons)"), ("B.B.A", "BBA LLB (Hons)"), ("B.A", "BA LLB (Hons)")]
+
+
+def clat_heading(heading: str) -> tuple[str, str]:
+    """Split a CLAT heading into university and course, naming each course one way."""
+    match = CLAT_COURSE.search(heading)
+    if not match:
+        return heading, "5-Year Integrated Law (UG)"
+    course = match.group(1)
+    name = next(label for prefix, label in CLAT_COURSES if course.replace(" ", "").startswith(prefix.replace(" ", "")))
+    detail = re.search(r"\[(.+?)\]", course)
+    return heading[:match.start()].strip(" -"), f"{name}, {detail.group(1)}" if detail else name
+
+
+def last_ranks(groups: dict[tuple, list[int]], round_label: str) -> list[dict]:
+    """The last rank allotted per seat. Each record is our calculation, not an MCC figure."""
+    return [
+        {"institute": k[0], "programme": k[1], "group": f"{k[2]} · {round_label}", "category": k[3], "value": max(v), "first_value": min(v), "count": len(v)}
+        for k, v in groups.items()
+    ]
+
+
+def mcc_round_records(path: Path, round_label: str) -> tuple[list[dict], dict]:
+    """Seats allotted in one main round, from MCC's rank-wise table.
+
+    Each row is one candidate. The last seven cells are this round's allotment, the only round whose allotted
+    category the file gives. A "-" there means no seat in this round, for example a candidate who kept an
+    earlier seat, so that row is skipped.
+    """
+    groups: dict[tuple, list[int]] = defaultdict(list)
+    rows = skipped = bad = 0
+    with pymupdf.open(path) as doc:
+        for page in doc:
+            for table in page.find_tables().tables:
+                for row in table.extract():
+                    cells = [clean(c) for c in row]
+                    if not cells or not re.fullmatch(r"\d+", cells[0]):
+                        continue
+                    rows += 1
+                    # The layout leaves an empty spacer column in some rows.
+                    cells = [c for i, c in enumerate(cells) if c or i < 5]
+                    quota, institute, course, allotted, _candidate, _option, _remark = cells[-7:]
+                    if quota in ("-", ""):
+                        skipped += 1
+                        continue
+                    if course not in NEET_COURSES or allotted not in NEET_CATEGORIES:
+                        bad += 1
+                        continue
+                    groups[(institute_name(institute), course, quota_name(quota), allotted)].append(int(cells[0]))
+    return last_ranks(groups, round_label), {"source_rows": rows, "no_seat_this_round": skipped, "sequence_breaks": bad}
+
+
 def mcc_records(path: Path) -> tuple[list[dict], dict]:
-    """Group allotments into the last rank allotted. Each record is our calculation, not an MCC figure."""
+    """Stray round allotments, in MCC's narrower layout."""
     groups: dict[tuple, list[int]] = defaultdict(list)
     rows = breaks = last = 0
     with pymupdf.open(path) as doc:
@@ -41,21 +150,15 @@ def mcc_records(path: Path) -> tuple[list[dict], dict]:
                         breaks += 1
                     last = int(serial)
                     rows += 1
-                    # Some institute names in the source end with a contact email, which isn't part of the name.
-                    key = (re.sub(r",?\s*\S+@\S+", "", clean(row[3])), clean(row[4]), clean(row[2]), clean(row[5]))
-                    groups[key].append(int(rank))
-    records = [
-        {"institute": k[0], "programme": k[1], "group": k[2], "category": k[3], "value": max(v), "first_value": min(v), "count": len(v)}
-        for k, v in groups.items()
-    ]
-    return records, {"source_rows": rows, "sequence_breaks": breaks}
+                    groups[(institute_name(row[3]), clean(row[4]), quota_name(row[2]), clean(row[5]))].append(int(rank))
+    return last_ranks(groups, "Stray round"), {"source_rows": rows, "sequence_breaks": breaks}
 
 
 def clat_records(path: Path) -> tuple[list[dict], dict]:
     """Read only the Cut-Off Rank Table. Rows holding admit card numbers are never parsed."""
     with pymupdf.open(path) as doc:
         text = "\n".join(page.get_text() for page in doc)
-    institute = clean(re.search(r"Provisional 5th List.*?\n(.+?)\n", text).group(1))
+    institute, programme = clat_heading(clean(re.search(r"Provisional 5th List.*?\n(.+?)\n", text).group(1)))
     block = text[text.index("Cut-Off Rank Table"):]
     block = block[:block.index(CLAT_RESERVATION_END)]
     records = []
@@ -70,8 +173,8 @@ def clat_records(path: Path) -> tuple[list[dict], dict]:
         if len(values) == 3:
             seats, air, category_rank = values
             records.append({
-                "institute": institute, "programme": "5-Year Integrated Law (UG)", "group": f"{section} reservation",
-                "category": " ".join(words), "seats": int(seats),
+                "institute": institute, "programme": programme, "group": f"{section} reservation",
+                "category": " ".join(words), "seats": None if seats == "**" else int(seats),
                 "value": None if air == "**" else int(air), "second_value": None if category_rank == "**" else int(category_rank),
                 "note": "Deemed fulfilled, so no cut-off is given" if air == "**" else None,
             })
@@ -184,53 +287,95 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
     return records, {"source_rows": len(records), "sequence_breaks": bad, "unknown_institute": unknown_institute}
 
 
+def clat_all(paths: list[Path]) -> tuple[list[dict], dict]:
+    records: list[dict] = []
+    for path in sorted(paths):
+        found, _ = clat_records(path)
+        records += found
+    return records, {"source_rows": len(records), "files": len(paths), "sequence_breaks": 0}
+
+
 def document(title: str, url: str, year: str, round_label: str, status: str) -> dict:
     return {"title": title, "url": url, "year": year, "round": round_label, "retrieved": RETRIEVED, "status": status}
 
 
-def build(args: argparse.Namespace) -> dict:
-    mcc, mcc_check = mcc_records(args.mcc)
-    clat, clat_check = clat_records(args.clat)
-    maharashtra, mh_check = maharashtra_records(args.maharashtra)
-    ccmt = json.loads(args.ccmt.read_text())
-    return {"routes": [
+CLAT_LIST = "https://clat2026.consortiumofnlus.ac.in/clat-2026/fifth-list.html"
+MCC_SOURCES = [
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Round 2 (final result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/09/20260912351980769.pdf"},
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Round 3 (final allotment result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610011801857474.pdf"},
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Stray Round (final allotment result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610201457709919.pdf"},
+]
+
+
+def build(args: argparse.Namespace, existing: dict) -> dict:
+    kept = {route["code"]: route for route in existing.get("routes", [])}
+    neet, neet_check = [], {}
+    for label, path, reader in (("Round 2", args.mcc_round2, mcc_round_records), ("Round 3", args.mcc_round3, mcc_round_records), ("Stray round", args.mcc_stray, None)):
+        found, check = reader(path, label) if reader else mcc_records(path)
+        neet += found
+        neet_check[label] = check
+    neet = tidy_quotas(neet, mcc_quota_key(args.mcc_stray))
+    clat, clat_check = clat_all(args.clat)
+    routes = [
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
-            "document": document("NEET-UG Counselling Seats Allotment 2026, Stray Round (final allotment result)", "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610201457709919.pdf", "2026", "Stray vacancy round", "derived"),
-            "limits": ["Covers the stray vacancy round only, so these are not the closing ranks of the main rounds.", "Calculated by us from rank-wise allotments. MCC does not publish these as cutoffs in this document.", "Excludes the 85% state quota, which each state runs separately.", "Some quotas, such as NRI, ESI and minority quotas, have their own eligibility rules, so choose a quota you qualify for."],
-            "check": mcc_check, "records": mcc,
+            "document": document("NEET-UG Counselling Seats Allotment 2026, Rounds 2 and 3 and stray round", MCC_SOURCES[1]["url"], "2026", "Rounds 2 and 3, and stray round", "derived"),
+            "sources": MCC_SOURCES,
+            "limits": [
+                "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges are missing from these lists.",
+                "Calculated by us from MCC's rank-wise allotments: the last rank allotted to each seat in that round. MCC doesn't publish these as cutoffs.",
+                "Round 1 isn't included, because MCC labels its Round 1 file provisional.",
+                "Excludes the 85% state quota, which each state runs separately.",
+                "Some quotas, such as NRI, ESI and minority quotas, have their own eligibility rules, so choose a quota you qualify for.",
+            ],
+            "check": neet_check, "records": neet,
         },
         {
             "code": "clat", "stream": "Law", "level": "UG", "name": "CLAT UG (National Law Universities)", "authority": "Consortium of National Law Universities",
             "metric": {"label": "CLAT All India Rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "AIR cut-off", "second_label": "Category rank cut-off"},
-            "document": document("Provisional 5th List, CLAT 2026 UG, National Law School of India University, Bengaluru", "https://s3.ap-south-1.amazonaws.com/files2026.consortiumofnlus.ac.in/list5/UG-NationalLawSchoolofIndiaUniversityNLSIUBengaluru-2026.pdf", "2026", "Fifth provisional list", "official"),
-            "limits": ["One university only.", "The list is provisional, as labelled by the Consortium.", "Each category has its own cut-off, and Karnataka categories apply only to eligible candidates."],
+            "document": document("Provisional 5th List, CLAT 2026 UG, cut-off tables for each university", CLAT_LIST, "2026", "Fifth provisional list", "official"),
+            "limits": [
+                "The fifth provisional list of 2026, as labelled by the Consortium. Later changes aren't included.",
+                "Each category has its own cut-off, and state domicile categories apply only to eligible candidates.",
+            ],
             "check": clat_check, "records": clat,
         },
-        {
+    ]
+    if args.ccmt:
+        ccmt = json.loads(args.ccmt.read_text())
+        routes.append({
             "code": "gate-ccmt", "stream": "Engineering", "level": "PG", "name": "GATE to NIT M.Tech (CCMT)", "authority": "Centralized Counselling for M.Tech./M.Arch./M.Plan. Admissions",
             "metric": {"label": "GATE score", "unit": "score", "lower_is_better": False, "max": 1000, "value_label": "Minimum GATE score", "second_label": "Maximum GATE score"},
             "document": document("Maximum and Minimum GATE Score of CCMT 2025", "https://admissions.nic.in/admiss/admissions/orcrjacd/105012521", "2025", "All rounds", "official"),
             "limits": [ccmt["scope"], "For Special Round-I, Round-II and the National Spot Round, scores cover only candidates newly allotted or upgraded.", "Scores from different GATE papers and years may not compare directly. Check the group for your paper."],
             "check": {"source_rows": len(ccmt["records"]), "sequence_breaks": 0}, "records": ccmt["records"],
-        },
-        {
+        })
+    else:
+        routes.append(kept["gate-ccmt"])
+    if args.maharashtra:
+        maharashtra, mh_check = maharashtra_records(args.maharashtra)
+        routes.append({
             "code": "maharashtra-engineering", "stream": "Engineering", "level": "UG", "name": "Maharashtra Engineering (CAP)", "authority": "State CET Cell, Maharashtra",
             "metric": {"label": "MHT-CET percentile", "unit": "percentile", "lower_is_better": False, "max": 100, "value_label": "Closing percentile", "second_label": "State merit number"},
             "document": document("Cut Off List for Maharashtra and Minority Seats, CAP Round I, 2024-25", "http://fe2025.mahacet.org/2024/2024ENGG_CAP1_CutOff.pdf", "2024-25", "CAP Round I", "official"),
             "limits": ["Round I of 2024-25 only, with each stage shown as published. This sample has no later round or more recent year.", "Seat codes are shown as published: G means General, L means Ladies, and the last letter means S state level, H home university or O other than home university.", "Excludes All India seats, which have a separate list."],
             "check": mh_check, "records": maharashtra,
-        },
-    ]}
+        })
+    else:
+        routes.append(kept["maharashtra-engineering"])
+    return {"routes": routes}
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    for name in ("mcc", "clat", "maharashtra", "ccmt"):
+    for name in ("mcc-stray", "mcc-round2", "mcc-round3"):
         parser.add_argument(f"--{name}", type=Path, required=True)
-    data = build(parser.parse_args())
+    parser.add_argument("--clat", type=Path, nargs="+", required=True)
+    parser.add_argument("--maharashtra", type=Path)
+    parser.add_argument("--ccmt", type=Path)
+    data = build(parser.parse_args(), json.loads(OUT.read_text()) if OUT.exists() else {})
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data))
     for route in data["routes"]:

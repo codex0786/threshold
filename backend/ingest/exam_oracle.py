@@ -60,7 +60,7 @@ for code,rows in SHOW.items():
         for v in vals:
             p={"value":v,"category":cat,"limit":4}
             if s:p["search"]=s
-            if code=="neet-ug":p["group"]="All India"
+            if code=="neet-ug":p["group"]="All India · Round 3"
             res=c.get(f"/api/v1/exams/{code}",params=p).json()
             print(f" {code} {cat} {v}: {res['matched']}/{res['total']}", [f"{x['value']} {x['institute'][:26]}|{x['programme'][:18]}" for x in res['records'][:3]])
 print("\n--- edge inputs")

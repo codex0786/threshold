@@ -5,7 +5,7 @@
 # - IMS BHU Dental: NIRF lists both Banaras Hindu University (Dental 15) and "Faculty of Dental Sciences,
 #   Institute of Medical Sciences, Varanasi" (Dental 18), so it's unclear which applies.
 # - Amrita: NIRF lists the university at Coimbatore, but the medical and dental colleges here are at Kochi and Faridabad.
-# - Separate campuses of a ranked university: JIPMER Karaikal, Datta Meghe Nagpur, SOA campus II, ICT Jalna, DY Patil Kolhapur.
+# - Separate campuses of a ranked university: GNLU Silvassa, JIPMER Karaikal, Datta Meghe Nagpur, SOA campus II, ICT Jalna, DY Patil Kolhapur.
 year: 2025
 retrieved: "2026-11-08"
 lists:
@@ -13,6 +13,17 @@ lists:
     source: https://www.nirfindia.org/Rankings/2025/MedicalRanking.html
     programmes: [MBBS]
     ranks:
+      - {rank: 1, nirf_id: IR-D-N-15, name: "All India Institute of Medical Sciences, Delhi", match: "AIIMS, New Delhi"}
+      - {rank: 4, nirf_id: IR-D-U-0368, name: "Jawaharlal Institute of Post Graduate Medical Education & Research, Puducherry", match: "JIPMER PUDUCHERRY"}
+      - {rank: 6, nirf_id: IR-D-U-0500, name: "Banaras Hindu University", match: "Institute of Medical Sciences, BHU"}
+      - {rank: 19, nirf_id: IR-D-U-0689, name: "All India Institute of Medical Sciences Jodhpur", match: "AIIMS, Jodhpur"}
+      - {rank: 22, nirf_id: IR-D-C-32922, name: "Vardhman Mahavir Medical College & Safdarjung Hospital", match: "Vardhman Mahavir Medical College & Safdarjung Hospital"}
+      - {rank: 25, nirf_id: IR-D-U-0687, name: "All India Institute of Medical Sciences Bhopal", match: "AIIMS-Bhopal"}
+      - {rank: 26, nirf_id: IR-D-C-6414, name: "Maulana Azad Medical College", match: "Maulana Azad Medical College, New Delhi"}
+      - {rank: 31, nirf_id: IR-D-U-0690, name: "All India Institute of Medical Sciences Raipur", match: "AIIMS, Raipur"}
+      - {rank: 34, nirf_id: IR-D-C-29442, name: "Govt. Medical College & Hospital, Chandigarh", match: "Government Medical College, Chandigarh"}
+      - {rank: 39, nirf_id: IR-D-N-17, name: "Sawai Man Singh Medical College", match: "SMS Medical College, Jaipur"}
+      - {rank: 45, nirf_id: IR-D-C-6051, name: "B. J. Medical College, Ahmedabad", match: "B J Medical College, Ahmedabad"}
       - {rank: 8, nirf_id: IR-D-U-0523, name: "King George`s Medical University", match: "King George Medical University, Lucknow"}
       - {rank: 10, nirf_id: IR-D-C-7242, name: "Kasturba Medical College, Manipal", match: "Kasturba Medical College, Manipal"}
       - {rank: 11, nirf_id: IR-D-I-1441, name: "Saveetha Institute of Medical and Technical Sciences", match: "Saveetha Medical College and Hospital"}
@@ -42,6 +53,11 @@ lists:
     source: https://www.nirfindia.org/Rankings/2025/DentalRanking.html
     programmes: [BDS]
     ranks:
+      - {rank: 2, nirf_id: IR-N-I-1441, name: "Saveetha Institute of Medical and Technical Sciences", match: "Saveetha Dental College, Chennai"}
+      - {rank: 8, nirf_id: IR-N-N-352, name: "SRM Dental College", match: "SRM Dental College, Chennai"}
+      - {rank: 9, nirf_id: IR-N-U-0363, name: "Siksha `O` Anusandhan", match: "Institute of Dental Sciences, Bhubaneswar"}
+      - {rank: 13, nirf_id: IR-N-I-1486, name: "Sri Ramachandra Institute of Higher Education and Research", match: "Sri Ramachandra Dental and Hospt., Chennai"}
+      - {rank: 39, nirf_id: IR-N-N-353, name: "SRM Kattankulathur Dental College", match: "SRM Katt. Dental College and Hospt. Chennai"}
       - {rank: 3, nirf_id: IR-N-C-28507, name: "Maulana Azad Institute of Dental Sciences", match: "Maulana Azad Institute of Dental Sciences, New Delhi"}
       - {rank: 4, nirf_id: IR-N-I-1110, name: "Dr. D. Y. Patil Vidyapeeth, Pune", match: "Dr. DY Patil Dental College and Hosp. Pune"}
       - {rank: 6, nirf_id: IR-N-C-19320, name: "A.B.Shetty Memorial Institute of Dental Sciences", match: "AB Shetty Memorial Inst. of Dental Sce., Mangaluru"}
@@ -65,6 +81,17 @@ lists:
     source: https://www.nirfindia.org/Rankings/2025/LawRanking.html
     ranks:
       - {rank: 1, nirf_id: IR-L-U-0238, name: "National Law School of India University", match: "National Law School of India University (NLSIU), Bengaluru"}
+      - {rank: 3, nirf_id: IR-L-N-18, name: "Nalsar University of Law", match: "NALSAR University of Law (NALSAR), Hyderabad"}
+      - {rank: 4, nirf_id: IR-L-U-0585, name: "The West Bengal National University of Juridical Sciences", match: "The West Bengal National University of Juridical Sciences (WBNUJS), Kolkata"}
+      - {rank: 5, nirf_id: IR-L-U-0134, name: "Gujarat National Law University, Gandhinagar", match: "Gujarat National Law University (GNLU), Gandhinagar"}
+      - {rank: 15, nirf_id: IR-L-U-0358, name: "National Law University, Cuttack", match: "National Law University Odisha (NLUO)"}
+      - {rank: 17, nirf_id: IR-L-U-0063, name: "Chanakya National Law University", match: "Chanakya National Law University (CNLU), Patna"}
+      - {rank: 21, nirf_id: IR-L-U-0511, name: "Dr. Ram Manohar Lohiya National Law University, Lucknow", match: "Dr. Ram Manohar Lohiya National Law University (RMLNLU), Lucknow"}
+      - {rank: 27, nirf_id: IR-L-U-0285, name: "National Law Institute University, Bhopal", match: "The National Law Institute University (NLIU), Bhopal"}
+      - {rank: 28, nirf_id: IR-L-U-0880, name: "Maharashtra National Law University, Nagpur", match: "Maharashtra National Law University (MNLU), Nagpur"}
+      - {rank: 30, nirf_id: IR-L-U-0600, name: "National University of Study & Research in Law, Ranchi", match: "National University of Study and Research in Law (NUSRL), Ranchi"}
+      - {rank: 34, nirf_id: IR-L-U-1035, name: "Himachal Pradesh National Law University, Shimla", match: "Himachal Pradesh National Law University (HPNLU), Shimla"}
+      - {rank: 35, nirf_id: IR-L-U-0677, name: "National Law University and Judicial Academy, Kamrup", match: "National Law University and Judicial Academy (NLUJA), Assam"}
   Engineering:
     source: https://www.nirfindia.org/Rankings/2025/EngineeringRanking.html
     ranks:

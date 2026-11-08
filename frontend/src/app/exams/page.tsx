@@ -40,7 +40,8 @@ function defaultsFor(route: Route) {
     group: route.compare_requires_group
       ? (["All India · Round 3", "All India"].find((g) => route.groups.includes(g)) ?? route.groups.find((g) => g.startsWith("All India")) ?? route.groups[0] ?? "")
       : "",
-    programme: route.programmes.length > 1 ? (route.programmes.includes("MBBS") ? "MBBS" : route.programmes[0]) : "",
+    // MBBS, BDS and nursing are different degrees, so NEET opens on MBBS. Other routes show every course.
+    programme: route.programmes.includes("MBBS") ? "MBBS" : "",
   };
 }
 const ICONS: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };

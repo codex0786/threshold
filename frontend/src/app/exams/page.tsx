@@ -1,6 +1,6 @@
 "use client";
 import { Scale, Stethoscope, Wrench } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
 import { api, num } from "@/lib/api";
 
@@ -8,7 +8,7 @@ type Metric = { label: string; unit: string; lower_is_better: boolean; whole_num
 type Doc = { title: string; url: string; year: string; round: string; retrieved: string; status: "official" | "derived" };
 type Route = {
   code: string; stream: string; level: string; name: string; authority: string; metric: Metric; document: Doc; limits: string[];
-  record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[];
+  record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[]; compare_requires_group?: boolean;
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
 type DemoRecord = { ranking?: Ranking; standing?: number; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
@@ -30,6 +30,15 @@ const ORDERS: Record<ListOrder, { label: string; note: string }> = {
   top: { label: "Top colleges first", note: "Colleges with a better official NIRF 2025 rank in their field come first, then the most contested seats. Colleges NIRF doesn’t list count as neutral, which doesn’t mean they’re weaker. This isn’t a quality score." },
   closest: { label: "Closest to my figure", note: "Past figures nearest yours come first." },
 };
+// The first view shows one clear list (the open category, and for NEET the All India quota and MBBS), not every list mixed.
+const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS"];
+function defaultsFor(route: Route) {
+  return {
+    category: OPEN_CATEGORIES.find((c) => route.categories.includes(c)) ?? "",
+    group: route.compare_requires_group ? (route.groups.includes("All India") ? "All India" : route.groups[0] ?? "") : "",
+    programme: route.programmes.length > 1 ? (route.programmes.includes("MBBS") ? "MBBS" : route.programmes[0]) : "",
+  };
+}
 const ICONS: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };
 
 export default function ExamsPage() {
@@ -43,6 +52,7 @@ export default function ExamsPage() {
   const [order, setOrder] = useState<ListOrder>("top");
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder }) => {
     const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v));
@@ -51,11 +61,17 @@ export default function ExamsPage() {
   }, []);
 
   const choose = useCallback((route: Route) => {
+    const start = defaultsFor(route);
     setSelected(route);
-    setValue(""); setCategory(""); setGroup(""); setSearch(""); setProgramme(""); setOrder("top");
+    setValue(""); setCategory(start.category); setGroup(start.group); setSearch(""); setProgramme(start.programme); setOrder("top");
     setResult(null);
-    run(route, { value: "", category: "", group: "", search: "", programme: "", order: "top" });
+    run(route, { value: "", search: "", order: "top", ...start });
   }, [run]);
+  // The list sits below the exam cards, so bring it into view once the chosen exam has rendered.
+  useEffect(() => {
+    // "instant": the page scrolls smoothly by default, and that animation is cut short as the results load in.
+    if (selected) sectionRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, [selected]);
   useEffect(() => {
     api<{ routes: Route[] }>("/exams").then((d) => {
       setRoutes(d.routes);
@@ -97,17 +113,20 @@ export default function ExamsPage() {
       )}
 
       {selected && (
-        <section className="mt-8" aria-label={selected.name}>
+        <section ref={sectionRef} className="mt-8 scroll-mt-20" aria-label={selected.name}>
           <h2 className="text-2xl">{selected.name}</h2>
           <div className="card mt-3 p-4 text-sm">
             <p className="font-semibold" style={{ color: STATUS[selected.document.status].color }}>{STATUS[selected.document.status].label}</p>
             <p className="mt-1">{selected.authority}. {selected.document.round}, {selected.document.year}.</p>
             <p className="mt-1"><SourceLink href={selected.document.url} label={selected.document.title} /></p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">{selected.limits.map((l) => <li key={l}>{l}</li>)}</ul>
+            <details className="mt-2">
+              <summary className="cursor-pointer font-medium text-brand">What this covers, and what it doesn’t ({selected.limits.length})</summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">{selected.limits.map((l) => <li key={l}>{l}</li>)}</ul>
+            </details>
           </div>
 
-          <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value, category, group, search, programme, order }); }}>
-            <label className="block text-sm">Your {selected.metric.label}
+          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value, category, group, search, programme, order }); }}>
+            <label className="col-span-2 block text-sm lg:col-span-1">Your {selected.metric.label}
               <input className="input tnum mt-1" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={Boolean(problem)} />
             </label>
             <label className="block text-sm">Category, as published
@@ -127,11 +146,11 @@ export default function ExamsPage() {
                 </select>
               </label>
             )}
-            <label className="block text-sm">Institute or course
+            <label className="col-span-2 block text-sm lg:col-span-1">Institute or course
               <input className="input mt-1" value={search} onChange={(e) => setSearch(e.target.value)} />
             </label>
-            <div className="sm:col-span-2 lg:col-span-4"><button type="submit" className="btn btn-primary" disabled={Boolean(problem)}>Show past figures</button></div>
-            {problem && <p className="text-sm sm:col-span-2 lg:col-span-4" style={{ color: "var(--ambitious)" }} role="alert">{problem}</p>}
+            <div className="col-span-2 lg:col-span-4"><button type="submit" className="btn btn-primary" disabled={Boolean(problem)}>Show past figures</button></div>
+            {problem && <p className="col-span-2 text-sm lg:col-span-4" style={{ color: "var(--ambitious)" }} role="alert">{problem}</p>}
           </form>
 
           <div className="mt-5">
@@ -151,7 +170,7 @@ export default function ExamsPage() {
             <div className="mt-4" aria-live="polite">
               <p className="tnum text-sm text-ink-2">{result.compared
                 ? `${num(result.matched)} of ${num(result.total)} past figures in ${[group, category].filter(Boolean).join(", ")} closed at or ${selected.metric.lower_is_better ? "beyond" : "below"} your ${selected.metric.unit} of ${value}`
-                : `${num(result.total)} past figures`}{result.matched > result.records.length ? `. Showing the first ${result.records.length}.` : "."}</p>
+                : `${num(result.total)} past figures${[programme, group, category].some(Boolean) ? ` in ${[programme, group, category].filter(Boolean).join(", ")}` : ""}. Enter your ${selected.metric.unit} to compare`}{result.matched > result.records.length ? `. Showing the first ${result.records.length}.` : "."}</p>
               {value && !result.compared && <div className="mt-3"><Notice tone="warn">Choose your {result.missing.join(" and ")} to compare your {selected.metric.unit}. Categories have separate cut-offs and some quotas have their own eligibility, so we don’t compare across them.</Notice></div>}
               {result.records.length === 0 && <div className="mt-3"><Notice>No past figures match in this sample. That doesn’t mean no option exists, because the sample is small.</Notice></div>}
               <div className="mt-3 space-y-2">

@@ -106,3 +106,14 @@ def test_contest_compares_only_within_the_same_course_category_and_quota():
     ]}
     add_standing(route)
     assert route["records"][0]["standing"] == route["records"][1]["standing"]
+
+
+def test_an_empty_list_reports_how_far_it_went_and_which_quotas_reached_the_student():
+    route = {"compare_requires_group": True, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India", "category": "Open", "value": 28000},
+        {"institute": "B", "programme": "MBBS", "group": "Deemed", "category": "Open", "value": 90000},
+        {"institute": "C", "programme": "MBBS", "group": "Deemed", "category": "SC", "value": 95000},
+    ]}
+    result = query(route, value=50000, category="Open", group="All India", programme="MBBS")
+    assert result["matched"] == 0 and result["furthest"] == 28000
+    assert result["elsewhere"] == [{"group": "Deemed", "count": 1}]

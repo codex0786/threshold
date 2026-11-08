@@ -206,7 +206,7 @@ def build(args: argparse.Namespace) -> dict:
             "code": "clat", "stream": "Law", "level": "UG", "name": "CLAT UG (National Law Universities)", "authority": "Consortium of National Law Universities",
             "metric": {"label": "CLAT All India Rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "AIR cut-off", "second_label": "Category rank cut-off"},
             "document": document("Provisional 5th List, CLAT 2026 UG, National Law School of India University, Bengaluru", "https://s3.ap-south-1.amazonaws.com/files2026.consortiumofnlus.ac.in/list5/UG-NationalLawSchoolofIndiaUniversityNLSIUBengaluru-2026.pdf", "2026", "Fifth provisional list", "official"),
-            "limits": ["One university only in this demo.", "The list is provisional, as labelled by the Consortium.", "Each category has its own cut-off, and Karnataka categories apply only to eligible candidates."],
+            "limits": ["One university only.", "The list is provisional, as labelled by the Consortium.", "Each category has its own cut-off, and Karnataka categories apply only to eligible candidates."],
             "check": clat_check, "records": clat,
         },
         {

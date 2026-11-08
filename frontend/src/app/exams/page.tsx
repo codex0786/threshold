@@ -12,7 +12,7 @@ type Route = {
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
 type DemoRecord = { ranking?: Ranking; standing?: number; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
-type Result = { total: number; matched: number; compared: boolean; missing: string[]; no_figure: DemoRecord[]; records: DemoRecord[] };
+type Result = { total: number; matched: number; compared: boolean; missing: string[]; furthest: number | null; elsewhere: { group: string; count: number }[]; no_figure: DemoRecord[]; records: DemoRecord[] };
 
 const STATUS = {
   official: { label: "Official figure", color: "var(--safer)" },
@@ -80,9 +80,11 @@ export default function ExamsPage() {
     }).catch(() => setError("These figures aren't available right now. Please try again shortly."));
   }, [choose]);
 
+  // Students often type ranks with Indian digit grouping, such as 1,00,000.
+  const figure = value.replace(/[,\s]/g, "");
   const problem = (() => {
-    if (value === "" || !selected) return null;
-    const n = Number(value);
+    if (figure === "" || !selected) return null;
+    const n = Number(figure);
     if (!(n > 0)) return "Enter a number above 0.";
     if (selected.metric.whole_number && !Number.isInteger(n)) return `${selected.metric.label} must be a whole number.`;
     if (selected.metric.max != null && n > selected.metric.max) return `${selected.metric.label} can’t be above ${selected.metric.max}.`;
@@ -125,7 +127,7 @@ export default function ExamsPage() {
             </details>
           </div>
 
-          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value, category, group, search, programme, order }); }}>
+          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value: figure, category, group, search, programme, order }); }}>
             <label className="col-span-2 block text-sm lg:col-span-1">Your {selected.metric.label}
               <input className="input tnum mt-1" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={Boolean(problem)} />
             </label>
@@ -157,7 +159,7 @@ export default function ExamsPage() {
             <div className="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1" role="group" aria-label="Sort the list">
               {(Object.keys(ORDERS) as ListOrder[]).map((key) => (
                 <button key={key} type="button" aria-pressed={order === key}
-                  onClick={() => { setOrder(key); if (!problem) run(selected, { value, category, group, search, programme, order: key }); }}
+                  onClick={() => { setOrder(key); if (!problem) run(selected, { value: figure, category, group, search, programme, order: key }); }}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === key ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>
                   {ORDERS[key].label}
                 </button>
@@ -169,10 +171,28 @@ export default function ExamsPage() {
           {result && (
             <div className="mt-4" aria-live="polite">
               <p className="tnum text-sm text-ink-2">{result.compared
-                ? `${num(result.matched)} of ${num(result.total)} past figures in ${[group, category].filter(Boolean).join(", ")} closed at or ${selected.metric.lower_is_better ? "beyond" : "below"} your ${selected.metric.unit} of ${value}`
+                ? `${num(result.matched)} of ${num(result.total)} past figures in ${[group, category].filter(Boolean).join(", ")} closed at or ${selected.metric.lower_is_better ? "beyond" : "below"} your ${selected.metric.unit} of ${num(Number(figure))}`
                 : `${num(result.total)} past figures${[programme, group, category].some(Boolean) ? ` in ${[programme, group, category].filter(Boolean).join(", ")}` : ""}. Enter your ${selected.metric.unit} to compare`}{result.matched > result.records.length ? `. Showing the first ${result.records.length}.` : "."}</p>
               {value && !result.compared && <div className="mt-3"><Notice tone="warn">Choose your {result.missing.join(" and ")} to compare your {selected.metric.unit}. Categories have separate cut-offs and some quotas have their own eligibility, so we don’t compare across them.</Notice></div>}
-              {result.records.length === 0 && <div className="mt-3"><Notice>No past figures match in this sample. That doesn’t mean no option exists, because the sample is small.</Notice></div>}
+              {result.records.length === 0 && result.compared && (
+                <div className="mt-3"><Notice>
+                  <p>Nothing in this list closed at or {selected.metric.lower_is_better ? "beyond" : "below"} your {selected.metric.unit}.{result.furthest != null ? ` The furthest it reached was ${num(result.furthest)}.` : ""} {selected.limits[0]}</p>
+                  {result.elsewhere.length > 0 && (
+                    <div className="mt-2">
+                      <p>At your {selected.metric.unit}, seats in your category closed later in these quotas. Check you’re eligible for a quota before relying on it:</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {result.elsewhere.map((e) => (
+                          <button key={e.group} type="button" className="btn btn-secondary !py-1 text-sm"
+                            onClick={() => { setGroup(e.group); run(selected, { value: figure, category, group: e.group, search, programme, order }); }}>
+                            {e.group} ({num(e.count)})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Notice></div>
+              )}
+              {result.records.length === 0 && !result.compared && <div className="mt-3"><Notice>No past figures match in this sample. That doesn’t mean no option exists, because the sample is small.</Notice></div>}
               <div className="mt-3 space-y-2">
                 {result.records.map((r) => (
                   <article key={`${r.institute}|${r.programme_code ?? r.programme}|${r.group}|${r.category}`} className="card p-3">

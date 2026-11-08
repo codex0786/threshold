@@ -94,4 +94,19 @@ def query(
         matched.sort(key=lambda r: (-r.get("standing", NEUTRAL), closest(r), r["institute"], r["programme"]))
     else:
         matched.sort(key=lambda r: (closest(r), r["institute"], r["programme"]))
-    return {"total": len(usable), "matched": len(matched), "compared": compared, "missing": missing, "no_figure": no_figure[:limit], "records": matched[:limit]}
+    # When nothing in the chosen list reaches the student, say how far it went and which other quotas did.
+    furthest = (max if lower_is_better else min)((r["value"] for r in usable), default=None)
+    elsewhere: dict[str, int] = {}
+    if compared and route.get("compare_requires_group"):
+        for r in route["records"]:
+            if (
+                r["category"] == category and r.get("group") != group and r["value"] is not None and within(route, r, value)
+                and (not programme or r["programme"] == programme)
+                and (not needle or needle in r["institute"].casefold() or needle in r["programme"].casefold())
+            ):
+                elsewhere[r["group"]] = elsewhere.get(r["group"], 0) + 1
+    return {
+        "total": len(usable), "matched": len(matched), "compared": compared, "missing": missing, "furthest": furthest,
+        "elsewhere": [{"group": g, "count": n} for g, n in sorted(elsewhere.items(), key=lambda item: -item[1])],
+        "no_figure": no_figure[:limit], "records": matched[:limit],
+    }

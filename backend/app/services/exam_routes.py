@@ -88,13 +88,16 @@ def invalid_value(route: dict, value: float) -> str | None:
 
 def query(
     route: dict, value: float | None = None, category: str | None = None, group: str | None = None, search: str | None = None,
-    limit: int = 50, programme: str | None = None, order: str = "top",
+    limit: int = 50, programme: str | None = None, order: str = "top", gender: str | None = None,
 ) -> dict:
     needle = (search or "").casefold()
     lower_is_better = route["metric"]["lower_is_better"]
     in_group = combined_groups(route).get(group or "", {group})
+    # Seats only women may hold are hidden once a student says they're male or other, and labelled until then.
+    eligible = [r for r in route["records"] if not (gender in ("male", "other") and r.get("female_only"))]
+    hidden_female_only = len(route["records"]) - len(eligible)
     records = [
-        r for r in route["records"]
+        r for r in eligible
         if (not category or r["category"] == category) and (not group or r.get("group") in in_group) and (not programme or r["programme"] == programme)
         and (not needle or needle in r["institute"].casefold() or needle in r["programme"].casefold())
     ]
@@ -115,7 +118,7 @@ def query(
     furthest = (max if lower_is_better else min)((r["value"] for r in usable), default=None)
     elsewhere: dict[str, int] = {}
     if compared and route.get("compare_requires_group"):
-        for r in route["records"]:
+        for r in eligible:
             if (
                 r["category"] == category and r.get("group") not in in_group and r["value"] is not None and within(route, r, value)
                 and (not programme or r["programme"] == programme)
@@ -124,6 +127,7 @@ def query(
                 elsewhere[r["group"]] = elsewhere.get(r["group"], 0) + 1
     return {
         "total": len(usable), "matched": len(matched), "compared": compared, "missing": missing, "furthest": furthest,
+        "hidden_female_only": hidden_female_only,
         "elsewhere": [{"group": g, "count": n} for g, n in sorted(elsewhere.items(), key=lambda item: -item[1])],
         "no_figure": no_figure[:limit], "records": matched[:limit],
     }

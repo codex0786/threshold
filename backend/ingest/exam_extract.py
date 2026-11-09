@@ -96,10 +96,17 @@ def clat_heading(heading: str) -> tuple[str, str]:
     return heading[:match.start()].strip(" -"), f"{name}, {detail.group(1)}" if detail else name
 
 
+# MCC marks seats only women may hold by adding "(Female Seat only)" to the institute name.
+FEMALE_ONLY = re.compile(r"female\s*seat\s*only", re.I)
+
+
 def last_ranks(groups: dict[tuple, list[int]], round_label: str) -> list[dict]:
     """The last rank allotted per seat. Each record is our calculation, not an MCC figure."""
     return [
-        {"institute": k[0], "programme": k[1], "group": f"{k[2]} · {round_label}", "category": k[3], "value": max(v), "first_value": min(v), "count": len(v)}
+        {
+            "institute": k[0], "programme": k[1], "group": f"{k[2]} · {round_label}", "category": k[3], "value": max(v), "first_value": min(v), "count": len(v),
+            "female_only": bool(FEMALE_ONLY.search(k[0])),
+        }
         for k, v in groups.items()
     ]
 
@@ -320,6 +327,7 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
+            "asks_gender": True,
             # Both quotas are open to candidates from any state. MCC files AIIMS and JIPMER seats under Open Seat Quota.
             "combined_quotas": {"All India and Open Seat Quota (AIIMS, JIPMER)": ["All India", "Open Seat Quota"]},
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},

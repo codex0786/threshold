@@ -9,11 +9,11 @@ type Doc = { title: string; url: string; year: string; round: string; retrieved:
 type Route = {
   code: string; stream: string; level: string; name: string; authority: string; metric: Metric; document: Doc; limits: string[];
   record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[]; compare_requires_group?: boolean;
-  sources?: { title: string; url: string }[];
+  sources?: { title: string; url: string }[]; asks_gender?: boolean;
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
-type DemoRecord = { ranking?: Ranking; standing?: number; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
-type Result = { total: number; matched: number; compared: boolean; missing: string[]; furthest: number | null; elsewhere: { group: string; count: number }[]; no_figure: DemoRecord[]; records: DemoRecord[] };
+type DemoRecord = { ranking?: Ranking; standing?: number; female_only?: boolean; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
+type Result = { total: number; matched: number; compared: boolean; missing: string[]; furthest: number | null; elsewhere: { group: string; count: number }[]; hidden_female_only: number; no_figure: DemoRecord[]; records: DemoRecord[] };
 
 const STATUS = {
   official: { label: "Official figure", color: "var(--safer)" },
@@ -55,11 +55,15 @@ export default function ExamsPage() {
   const [search, setSearch] = useState("");
   const [programme, setProgramme] = useState("");
   const [order, setOrder] = useState<ListOrder>("top");
+  const [gender, setGender] = useState("");
+  // Read through a ref, so changing gender doesn't re-run the page's loading step and reset the form.
+  const genderRef = useRef("");
+  genderRef.current = gender;
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder }) => {
+  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder; gender: string }) => {
     const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v));
     setError(null);
     api<Result>(`/exams/${route.code}?${query}`).then(setResult).catch((e) => setError(e.message));
@@ -70,7 +74,7 @@ export default function ExamsPage() {
     setSelected(route);
     setValue(""); setCategory(start.category); setGroup(start.group); setSearch(""); setProgramme(start.programme); setOrder("top");
     setResult(null);
-    run(route, { value: "", search: "", order: "top", ...start });
+    run(route, { value: "", search: "", order: "top", gender: genderRef.current, ...start });
   }, [run]);
   // The list sits below the exam cards, so bring it into view once the chosen exam has rendered.
   useEffect(() => {
@@ -132,7 +136,7 @@ export default function ExamsPage() {
             </details>
           </div>
 
-          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value: figure, category, group, search, programme, order }); }}>
+          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value: figure, category, group, search, programme, order, gender }); }}>
             <label className="col-span-2 block text-sm lg:col-span-1">Your {selected.metric.label}
               <input className="input tnum mt-1" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={Boolean(problem)} />
             </label>
@@ -146,6 +150,13 @@ export default function ExamsPage() {
                 <option value="">All</option>{selected.groups.map((g) => <option key={g}>{g}</option>)}
               </select>
             </label>
+            {selected.asks_gender && (
+              <label className="block text-sm">Gender, for seat eligibility
+                <select className="input mt-1" value={gender} onChange={(e) => setGender(e.target.value)}>
+                  <option value="">Not chosen</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option>
+                </select>
+              </label>
+            )}
             {selected.programmes.length > 1 && (
               <label className="block text-sm">Course
                 <select className="input mt-1" value={programme} onChange={(e) => setProgramme(e.target.value)}>
@@ -164,7 +175,7 @@ export default function ExamsPage() {
             <div className="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1" role="group" aria-label="Sort the list">
               {(Object.keys(ORDERS) as ListOrder[]).map((key) => (
                 <button key={key} type="button" aria-pressed={order === key}
-                  onClick={() => { setOrder(key); if (!problem) run(selected, { value: figure, category, group, search, programme, order: key }); }}
+                  onClick={() => { setOrder(key); if (!problem) run(selected, { value: figure, category, group, search, programme, order: key, gender }); }}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === key ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>
                   {ORDERS[key].label}
                 </button>
@@ -178,6 +189,8 @@ export default function ExamsPage() {
               <p className="tnum text-sm text-ink-2">{result.compared
                 ? `${num(result.matched)} of ${num(result.total)} past figures in ${[group, category].filter(Boolean).join(", ")} closed at or ${selected.metric.lower_is_better ? "beyond" : "below"} your ${selected.metric.unit} of ${num(Number(figure))}`
                 : `${num(result.total)} past figures${[programme, group, category].some(Boolean) ? ` in ${[programme, group, category].filter(Boolean).join(", ")}` : ""}. Enter your ${selected.metric.unit} to compare`}{result.matched > result.records.length ? `. Showing the first ${result.records.length}.` : "."}</p>
+              {result.hidden_female_only > 0 && <p className="mt-1 text-xs text-ink-3">Seats only female candidates may hold are hidden, because you chose {gender}.</p>}
+              {!gender && selected.asks_gender && result.records.some((r) => r.female_only) && <p className="mt-1 text-xs text-ink-3">Some seats here are for female candidates only, and are labelled. Choose your gender to see only seats you can hold.</p>}
               {value && !result.compared && <div className="mt-3"><Notice tone="warn">Choose your {result.missing.join(" and ")} to compare your {selected.metric.unit}. Categories have separate cut-offs and some quotas have their own eligibility, so we don’t compare across them.</Notice></div>}
               {result.records.length === 0 && result.compared && (
                 <div className="mt-3"><Notice>
@@ -188,7 +201,7 @@ export default function ExamsPage() {
                       <div className="mt-2 flex flex-wrap gap-2">
                         {result.elsewhere.map((e) => (
                           <button key={e.group} type="button" className="btn btn-secondary !py-1 text-sm"
-                            onClick={() => { setGroup(e.group); run(selected, { value: figure, category, group: e.group, search, programme, order }); }}>
+                            onClick={() => { setGroup(e.group); run(selected, { value: figure, category, group: e.group, search, programme, order, gender }); }}>
                             {e.group} ({num(e.count)})
                           </button>
                         ))}
@@ -201,7 +214,7 @@ export default function ExamsPage() {
               <div className="mt-3 space-y-2">
                 {result.records.map((r) => (
                   <article key={`${r.institute}|${r.programme_code ?? r.programme}|${r.group}|${r.category}`} className="card p-3">
-                    <p className="font-semibold">{r.programme}</p>
+                    <p className="font-semibold">{r.programme}{r.female_only && <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--competitive-soft)", color: "var(--competitive)" }}>Female candidates only</span>}</p>
                     <p className="text-sm text-ink-2">{r.institute}{r.programme_code ? ` · course code ${r.programme_code}` : ""}</p>
                     <p className="text-xs text-ink-3">{[r.group, r.category].filter(Boolean).join(" · ")}</p>
                     {r.ranking && <p className="mt-1 text-xs"><span className="font-semibold">NIRF {r.ranking.year} {r.ranking.category} rank {r.ranking.rank}</span> <SourceLink href={r.ranking.source_url} label="Official NIRF list" /></p>}

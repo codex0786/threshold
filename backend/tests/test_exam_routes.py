@@ -143,3 +143,25 @@ def test_quotas_shown_together_are_scored_together():
     # Scored per quota, the Open Seat Quota seats would only be compared with each other and drop below KGMU.
     order = [r["institute"] for r in query(route, value=100, category="Open", group="All open · Round 3")["records"]]
     assert order.index("JIPMER") < order.index("KGMU") and order.index("AIIMS") < order.index("KGMU")
+
+
+def test_female_only_seats_are_hidden_for_male_and_other_students_only():
+    route = {"compare_requires_group": True, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "LHMC (Female Seat only )", "programme": "MBBS", "group": "All India", "category": "Open", "value": 900, "female_only": True},
+        {"institute": "MAMC", "programme": "MBBS", "group": "All India", "category": "Open", "value": 800},
+        {"institute": "Women's college (Female Seat only )", "programme": "MBBS", "group": "Deemed", "category": "Open", "value": 90000, "female_only": True},
+    ]}
+    def names(gender):
+        return [r["institute"] for r in query(route, value=500, category="Open", group="All India", gender=gender)["records"]]
+    assert set(names("female")) == set(names(None)) == {"MAMC", "LHMC (Female Seat only )"}
+    assert names("male") == names("other") == ["MAMC"]
+    assert query(route, value=50000, category="Open", group="All India", gender="male")["elsewhere"] == []
+    assert query(route, value=50000, category="Open", group="All India", gender="female")["elsewhere"] == [{"group": "Deemed", "count": 1}]
+    assert query(route, gender="male")["hidden_female_only"] == 2
+
+
+def test_extraction_flags_female_only_seats_from_mccs_marker():
+    from ingest.exam_extract import last_ranks
+    records = last_ranks({("Lady Hardinge Medical College, New Delhi (Female Seat only )", "MBBS", "All India", "Open"): [900],
+                          ("Government Medical College, Sircilla, near Kasturba Girls School", "MBBS", "All India", "Open"): [20000]}, "Round 3")
+    assert [r["female_only"] for r in records] == [True, False]

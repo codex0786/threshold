@@ -302,6 +302,66 @@ def clat_all(paths: list[Path]) -> tuple[list[dict], dict]:
     return records, {"source_rows": len(records), "files": len(paths), "sequence_breaks": 0}
 
 
+def short_names(names: list[str]) -> dict[str, str]:
+    """MCC prints an institute as its name then its address, joined by a comma with no space after it.
+    The name is the part before that comma, or the first two parts where the name alone isn't unique."""
+    def cut(name: str, parts: int) -> str:
+        pieces = re.split(r",(?=\S)", name)
+        return re.sub(r"\s*\(Female Seat only\s*\)", "", ",".join(pieces[:parts])).strip(" ,")
+
+    first = {name: cut(name, 1) for name in names}
+    counts: dict[str, int] = defaultdict(int)
+    for short in first.values():
+        counts[short] += 1
+    return {name: short if counts[short] == 1 else cut(name, 2) for name, short in first.items()}
+
+
+# Quotas only some candidates may use, named by what they require. Every other quota is open to all.
+# From MCC's quota key on page 1 of each allotment file. MCC's information bulletin has the full rules.
+NEET_QUOTA_REQUIREMENTS = {
+    "Non-Resident Indian": "NRI", "Non-Resident Indian(AMU) Quota": "NRI",
+    "Employees State Insurance Scheme(ESI)": "Ward of an ESI insured person",
+    "Employees State Insurance Scheme Nursing Quota (ESI-IP Quota Nursing)": "Ward of an ESI insured person",
+    "Muslim Minority Quota": "Muslim minority", "Muslim OBC Quota": "Muslim minority", "Muslim ST Quota": "Muslim minority",
+    "Muslim Women Quota": "Muslim minority", "Muslim Quota": "Muslim minority", "Jain Minority Quota": "Jain minority",
+    "Aligarh Muslim University (AMU) Quota": "AMU internal", "(AMU)Self finance internal": "AMU internal",
+    "Jamia Internal Quota": "Jamia internal", "Internal -Puducherry UT Domicile": "Puducherry domicile",
+    "Delhi University Quota": "Delhi University quota (Delhi NCR)", "IP University Quota": "IP University quota (Delhi NCR)",
+    "B.Sc Nursing Delhi NCR": "Delhi NCR domicile",
+    "Delhi NCR Children/Widows of Personnel of the Armed Forces (CW) DU Quota": "Child or widow of armed forces personnel (CW)",
+    "Delhi NCR Children/Widows of Personnel of the Armed Forces (CW) IP Quota": "Child or widow of armed forces personnel (CW)",
+    "B.Sc Nursing Delhi NCR CW Quota": "Child or widow of armed forces personnel (CW)",
+    "B.Sc Nursing IP CW Quota": "Child or widow of armed forces personnel (CW)",
+}
+
+INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Jammu and Kashmir", "Delhi",
+    "Dadra and Nagar Haveli and Daman and Diu", "Puducherry", "Chandigarh", "Ladakh",
+]
+STATE_SPELLINGS = {"Tamilnadu": "Tamil Nadu", "Uttarpradesh": "Uttar Pradesh", "J & K Residents": "Jammu and Kashmir", "of MH": "Maharashtra"}
+# State codes as they end the Consortium's category codes, for example (DV-KL) or (CDFP-MP-SC).
+STATE_CODES = {
+    "AP": "Andhra Pradesh", "AS": "Assam", "BH": "Bihar", "BR": "Bihar", "CHT": "Chhattisgarh", "DDN": "Dadra and Nagar Haveli and Daman and Diu",
+    "GA": "Goa", "GJ": "Gujarat", "HP": "Himachal Pradesh", "HR": "Haryana", "JD": "Jharkhand", "KA": "Karnataka", "KL": "Kerala",
+    "MH": "Maharashtra", "MP": "Madhya Pradesh", "OD": "Odisha", "PB": "Punjab", "RJ": "Rajasthan", "TL": "Telangana", "TN": "Tamil Nadu",
+    "TR": "Tripura", "UP": "Uttar Pradesh", "WB": "West Bengal",
+}
+
+
+def category_state(category: str) -> str | None:
+    """The state a CLAT category is reserved for, read from its official name or code, or None for an all-India category."""
+    for spelling, state in STATE_SPELLINGS.items():
+        if spelling in category:
+            return state
+    named = next((state for state in sorted(INDIAN_STATES, key=len, reverse=True) if state.lower() in category.lower()), None)
+    if named:
+        return named
+    code = re.search(r"\(([A-Z0-9 &-]+)\)\s*$", category)
+    return next((STATE_CODES[part] for part in re.split(r"[-\s]+", code.group(1)) if part in STATE_CODES), None) if code else None
+
+
 def document(title: str, url: str, year: str, round_label: str, status: str) -> dict:
     return {"title": title, "url": url, "year": year, "round": round_label, "retrieved": RETRIEVED, "status": status}
 
@@ -322,12 +382,16 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         neet += found
         neet_check[label] = check
     neet = tidy_quotas(neet, mcc_quota_key(args.mcc_stray))
+    shorts = short_names([r["institute"] for r in neet])
+    for record in neet:
+        record["institute_short"] = shorts[record["institute"]]
     clat, clat_check = clat_all(args.clat)
     routes = [
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
             "asks_gender": True,
+            "quota_requirements": NEET_QUOTA_REQUIREMENTS,
             # Both quotas are open to candidates from any state. MCC files AIIMS and JIPMER seats under Open Seat Quota.
             "combined_quotas": {"All India and Open Seat Quota (AIIMS, JIPMER)": ["All India", "Open Seat Quota"]},
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
@@ -350,6 +414,7 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
                 "The fifth provisional list of 2026, as labelled by the Consortium. Later changes aren't included.",
                 "Each category has its own cut-off, and state domicile categories apply only to eligible candidates.",
             ],
+            "category_states": {c: s for c in sorted({r["category"] for r in clat}) if (s := category_state(c))},
             "check": clat_check, "records": clat,
         },
     ]

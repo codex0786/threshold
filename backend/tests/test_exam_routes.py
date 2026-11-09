@@ -165,3 +165,39 @@ def test_extraction_flags_female_only_seats_from_mccs_marker():
     records = last_ranks({("Lady Hardinge Medical College, New Delhi (Female Seat only )", "MBBS", "All India", "Open"): [900],
                           ("Government Medical College, Sircilla, near Kasturba Girls School", "MBBS", "All India", "Open"): [20000]}, "Round 3")
     assert [r["female_only"] for r in records] == [True, False]
+
+
+def test_other_quotas_are_suggested_only_when_the_student_is_eligible():
+    route = {"compare_requires_group": True, "quota_requirements": {"Non-Resident Indian": "NRI"}, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India · Round 3", "category": "Open", "value": 20000},
+        {"institute": "B", "programme": "MBBS", "group": "Non-Resident Indian · Round 3", "category": "Open", "value": 90000},
+        {"institute": "C", "programme": "MBBS", "group": "Self-Financed Merit Seat · Round 3", "category": "Open", "value": 95000},
+    ]}
+    def elsewhere(eligible):
+        return [e["group"] for e in query(route, value=50000, category="Open", group="All India · Round 3", eligible=eligible)["elsewhere"]]
+    assert elsewhere(frozenset()) == ["Self-Financed Merit Seat · Round 3"]
+    assert set(elsewhere(frozenset({"NRI"}))) == {"Self-Financed Merit Seat · Round 3", "Non-Resident Indian · Round 3"}
+    assert summary(route)["group_requirements"] == {"Non-Resident Indian · Round 3": "NRI"}
+
+
+def test_quota_requirements_ignore_spacing_in_mccs_names():
+    from app.services.exam_routes import requirement
+    route = {"quota_requirements": {"Non-Resident Indian(AMU) Quota": "NRI"}}
+    assert requirement(route, "Non-Resident Indian(AMU)Quota") == "NRI" and requirement(route, "All India") is None
+
+
+def test_clat_categories_name_their_state_in_words_or_code():
+    from ingest.exam_extract import category_state
+    assert category_state("General Category of Telangana (GC-TL)") == "Telangana"
+    assert category_state("SEBC - Ezhava, Thiyya, Billava (EZ-KL)") == "Kerala"
+    assert category_state("Person With Disability of Uttarpradesh (PWD-UP)") == "Uttar Pradesh"
+    assert category_state("General (General)") is None and category_state("Scheduled Caste (SC)") is None
+
+
+def test_suggested_quotas_come_from_the_same_round():
+    route = {"compare_requires_group": True, "metric": {"lower_is_better": True}, "records": [
+        {"institute": "A", "programme": "MBBS", "group": "All India · Round 3", "category": "Open", "value": 20000},
+        {"institute": "B", "programme": "MBBS", "group": "Self-Financed Merit Seat · Round 3", "category": "Open", "value": 90000},
+        {"institute": "C", "programme": "MBBS", "group": "Self-Financed Merit Seat · Round 2", "category": "Open", "value": 90000},
+    ]}
+    assert query(route, value=50000, category="Open", group="All India · Round 3")["elsewhere"] == [{"group": "Self-Financed Merit Seat · Round 3", "count": 1}]

@@ -95,6 +95,14 @@
   access_method: Hand-entered from names and general reference.
   access_status: available
   terms_note: Marked manual_unverified until checked against official institute pages.
+- key: nirf_2025_official
+  name: NIRF India Rankings 2025, Engineering
+  publisher: National Institutional Ranking Framework, Ministry of Education
+  url: https://www.nirfindia.org/Rankings/2025/EngineeringRanking.html
+  tier: official
+  access_method: Ranks 1-100 read from the official page on 2026-11-08 and recorded in nirf_2025_engineering_official.yaml.
+  access_status: available
+  terms_note: A rank becomes official only when the institute matches NIRF's name and rank, or is a reviewed match.
 - key: nirf_2025_top100_copies
   name: NIRF 2025 Engineering ranks 51-100, secondary copies
   publisher: CorpReady, cross-checked against CollegeDekho

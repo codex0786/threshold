@@ -5,6 +5,7 @@ Reads backend/snapshot/exam_routes.json, which like the JEE snapshot is git-igno
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
@@ -57,6 +58,12 @@ def combined_groups(route: dict) -> dict[str, set[str]]:
     return combined
 
 
+def requirement(route: dict, quota: str) -> str | None:
+    """What a student needs to use a quota, or None when it's open to everyone. Spacing in MCC's names varies."""
+    wanted = re.sub(r"\s+", "", quota)
+    return next((need for name, need in (route.get("quota_requirements") or {}).items() if re.sub(r"\s+", "", name) == wanted), None)
+
+
 def summary(route: dict) -> dict:
     records = route["records"]
     return {
@@ -65,6 +72,7 @@ def summary(route: dict) -> dict:
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
         "groups": sorted(combined_groups(route)) + sorted({r["group"] for r in records if r.get("group")}),
+        "group_requirements": {g: need for g in {r["group"] for r in records if r.get("group")} if (need := requirement(route, g.rsplit(" · ", 1)[0]))},
         "programmes": sorted({r["programme"] for r in records}) if len({r["programme"] for r in records}) <= MAX_PROGRAMME_CHOICES else [],
     }
 
@@ -88,11 +96,12 @@ def invalid_value(route: dict, value: float) -> str | None:
 
 def query(
     route: dict, value: float | None = None, category: str | None = None, group: str | None = None, search: str | None = None,
-    limit: int = 50, programme: str | None = None, order: str = "top", gender: str | None = None,
+    limit: int = 50, programme: str | None = None, order: str = "top", gender: str | None = None, eligible: frozenset[str] = frozenset(),
 ) -> dict:
     needle = (search or "").casefold()
     lower_is_better = route["metric"]["lower_is_better"]
     in_group = combined_groups(route).get(group or "", {group})
+    eligible_for = eligible
     # Seats only women may hold are hidden once a student says they're male or other, and labelled until then.
     eligible = [r for r in route["records"] if not (gender in ("male", "other") and r.get("female_only"))]
     hidden_female_only = len(route["records"]) - len(eligible)
@@ -118,9 +127,13 @@ def query(
     furthest = (max if lower_is_better else min)((r["value"] for r in usable), default=None)
     elsewhere: dict[str, int] = {}
     if compared and route.get("compare_requires_group"):
+        # Suggest lists from the round the student is looking at, so rounds aren't mixed.
+        same_round = group.rsplit(" · ", 1)[1] if " · " in group else None
         for r in eligible:
+            need = requirement(route, r.get("group", "").rsplit(" · ", 1)[0])
             if (
-                r["category"] == category and r.get("group") not in in_group and r["value"] is not None and within(route, r, value)
+                (need is None or need in eligible_for) and (same_round is None or r.get("group", "").endswith(f" · {same_round}"))
+                and r["category"] == category and r.get("group") not in in_group and r["value"] is not None and within(route, r, value)
                 and (not programme or r["programme"] == programme)
                 and (not needle or needle in r["institute"].casefold() or needle in r["programme"].casefold())
             ):

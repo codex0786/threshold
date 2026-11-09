@@ -1,0 +1,26 @@
+name: Uptime
+
+# Checks the live site and API every hour. A failed run emails the repository owner.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: API answers and serves JEE data
+        run: curl -fsS --max-time 60 https://threshold-india-api.vercel.app/api/v1/meta > /dev/null
+      - name: Every exam route has data
+        run: |
+          curl -fsS --max-time 60 https://threshold-india-api.vercel.app/api/v1/exams -o exams.json
+          python3 -c "
+          import json, sys
+          routes = json.load(open('exams.json'))['routes']
+          empty = [r['code'] for r in routes if r['record_count'] == 0]
+          if len(routes) < 4 or empty:
+              sys.exit(f'Exam routes missing or empty: {len(routes)} routes, empty: {empty}')
+          "
+      - name: Site home page loads
+        run: curl -fsS --max-time 60 -o /dev/null https://threshold-india.vercel.app/

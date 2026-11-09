@@ -23,6 +23,7 @@ from app.models import (
 )
 from app.services.branches import branch_family, campus_of, required_paper
 from app.services.eligibility import exam_for, rank_list_name
+from ingest import nirf_official
 from ingest.csab_fetch import QUOTAS as CSAB_QUOTAS, SKIPPED_QUOTAS as CSAB_SKIPPED
 from ingest.josaa_parse import RawRow, clean, parse_file, parse_programme, parse_rank
 from ingest.seat_matrix import parse as parse_seat_matrix
@@ -91,14 +92,18 @@ def load_institutions(db: Session) -> tuple[dict[str, Institution], dict[str, In
 
 
 def load_rankings(db: Session, by_slug: dict[str, Institution], sources: dict[str, DataSource]) -> int:
+    """NIRF ranks from secondary copies. Each rank the official list confirms is stored as official instead."""
+    official = nirf_official.official_list()
     total = 0
     for filename, source_key in (("nirf_2025_engineering_secondary.yaml", "nirf_2025_careers360"), ("nirf_2025_engineering_top100_secondary.yaml", "nirf_2025_top100_copies")):
         rows = yaml.safe_load((REGISTRY / filename).read_text())
         for row in rows:
             stmt = insert(InstitutionRanking).values(
                 institution_id=by_slug[row["slug"]].id, framework="NIRF", category="Engineering", year=2025,
-                rank=row["rank"], score=row["score"], verification_status="secondary_unverified",
-                source_id=sources[source_key].id,
+                rank=row["rank"], score=row["score"],
+                **({"verification_status": "official", "source_id": sources[nirf_official.SOURCE_KEY].id}
+                   if nirf_official.confirm(official, row["slug"], by_slug[row["slug"]].official_name, row["rank"])
+                   else {"verification_status": "secondary_unverified", "source_id": sources[source_key].id}),
             ).on_conflict_do_nothing()
             db.execute(stmt)
         total += len(rows)

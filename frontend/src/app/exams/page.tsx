@@ -10,9 +10,10 @@ type Route = {
   code: string; stream: string; level: string; name: string; authority: string; metric: Metric; document: Doc; limits: string[];
   record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[]; compare_requires_group?: boolean;
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
+  group_requirements?: Record<string, string>; category_states?: Record<string, string>;
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
-type DemoRecord = { ranking?: Ranking; standing?: number; female_only?: boolean; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
+type DemoRecord = { ranking?: Ranking; standing?: number; female_only?: boolean; institute_short?: string; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
 type Result = { total: number; matched: number; compared: boolean; missing: string[]; furthest: number | null; elsewhere: { group: string; count: number }[]; hidden_female_only: number; no_figure: DemoRecord[]; records: DemoRecord[] };
 
 const STATUS = {
@@ -56,15 +57,21 @@ export default function ExamsPage() {
   const [programme, setProgramme] = useState("");
   const [order, setOrder] = useState<ListOrder>("top");
   const [gender, setGender] = useState("");
-  // Read through a ref, so changing gender doesn't re-run the page's loading step and reset the form.
+  const [eligible, setEligible] = useState<string[]>([]);
+  const [domicile, setDomicile] = useState("");
+  // Read through refs, so these answers don't re-run the page's loading step and reset the form.
   const genderRef = useRef("");
   genderRef.current = gender;
+  const eligibleRef = useRef<string[]>([]);
+  eligibleRef.current = eligible;
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder; gender: string }) => {
-    const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v));
+  const run = useCallback((route: Route, params: { value: string; category: string; group: string; search: string; programme: string; order: ListOrder; gender: string; eligible: string[] }) => {
+    const { eligible: needs, ...single } = params;
+    const query = new URLSearchParams(Object.entries(single).filter(([, v]) => v));
+    needs.forEach((need) => query.append("eligible", need));
     setError(null);
     api<Result>(`/exams/${route.code}?${query}`).then(setResult).catch((e) => setError(e.message));
   }, []);
@@ -74,7 +81,7 @@ export default function ExamsPage() {
     setSelected(route);
     setValue(""); setCategory(start.category); setGroup(start.group); setSearch(""); setProgramme(start.programme); setOrder("top");
     setResult(null);
-    run(route, { value: "", search: "", order: "top", gender: genderRef.current, ...start });
+    run(route, { value: "", search: "", order: "top", gender: genderRef.current, eligible: eligibleRef.current, ...start });
   }, [run]);
   // The list sits below the exam cards, so bring it into view once the chosen exam has rendered.
   useEffect(() => {
@@ -136,26 +143,46 @@ export default function ExamsPage() {
             </details>
           </div>
 
-          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value: figure, category, group, search, programme, order, gender }); }}>
+          <form className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" onSubmit={(e) => { e.preventDefault(); if (!problem) run(selected, { value: figure, category, group, search, programme, order, gender, eligible }); }}>
             <label className="col-span-2 block text-sm lg:col-span-1">Your {selected.metric.label}
               <input className="input tnum mt-1" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={Boolean(problem)} />
             </label>
             <label className="block text-sm">Category, as published
               <select className="input mt-1" value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">All</option>{selected.categories.map((c) => <option key={c}>{c}</option>)}
+                <option value="">All</option>{selected.categories.filter((c) => !selected.category_states?.[c] || selected.category_states[c] === domicile || c === category).map((c) => <option key={c}>{c}</option>)}
               </select>
             </label>
             <label className="block text-sm">Quota, section or round
               <select className="input mt-1" value={group} onChange={(e) => setGroup(e.target.value)}>
-                <option value="">All</option>{selected.groups.map((g) => <option key={g}>{g}</option>)}
+                <option value="">All</option>{selected.groups.filter((g) => !selected.group_requirements?.[g] || eligible.includes(selected.group_requirements[g]) || g === group).map((g) => <option key={g}>{g}</option>)}
               </select>
             </label>
+            {selected.category_states && (
+              <label className="block text-sm">Your domicile state
+                <select className="input mt-1" value={domicile} onChange={(e) => setDomicile(e.target.value)}>
+                  <option value="">Not chosen</option>{[...new Set(Object.values(selected.category_states))].sort().map((s) => <option key={s}>{s}</option>)}
+                </select>
+              </label>
+            )}
             {selected.asks_gender && (
               <label className="block text-sm">Gender, for seat eligibility
                 <select className="input mt-1" value={gender} onChange={(e) => setGender(e.target.value)}>
                   <option value="">Not chosen</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option>
                 </select>
               </label>
+            )}
+            {selected.group_requirements && Object.keys(selected.group_requirements).length > 0 && (
+              <fieldset className="col-span-2 text-sm lg:col-span-4">
+                <legend>Quotas with their own eligibility. Tick only those you qualify for under MCC’s rules:</legend>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                  {[...new Set(Object.values(selected.group_requirements))].sort().map((need) => (
+                    <label key={need} className="flex items-center gap-1.5">
+                      <input type="checkbox" checked={eligible.includes(need)} onChange={(e) => setEligible(e.target.checked ? [...eligible, need] : eligible.filter((n) => n !== need))} />
+                      {need}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             )}
             {selected.programmes.length > 1 && (
               <label className="block text-sm">Course
@@ -175,7 +202,7 @@ export default function ExamsPage() {
             <div className="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1" role="group" aria-label="Sort the list">
               {(Object.keys(ORDERS) as ListOrder[]).map((key) => (
                 <button key={key} type="button" aria-pressed={order === key}
-                  onClick={() => { setOrder(key); if (!problem) run(selected, { value: figure, category, group, search, programme, order: key, gender }); }}
+                  onClick={() => { setOrder(key); if (!problem) run(selected, { value: figure, category, group, search, programme, order: key, gender, eligible }); }}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === key ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>
                   {ORDERS[key].label}
                 </button>
@@ -201,7 +228,7 @@ export default function ExamsPage() {
                       <div className="mt-2 flex flex-wrap gap-2">
                         {result.elsewhere.map((e) => (
                           <button key={e.group} type="button" className="btn btn-secondary !py-1 text-sm"
-                            onClick={() => { setGroup(e.group); run(selected, { value: figure, category, group: e.group, search, programme, order, gender }); }}>
+                            onClick={() => { setGroup(e.group); run(selected, { value: figure, category, group: e.group, search, programme, order, gender, eligible }); }}>
                             {e.group} ({num(e.count)})
                           </button>
                         ))}
@@ -215,7 +242,8 @@ export default function ExamsPage() {
                 {result.records.map((r) => (
                   <article key={`${r.institute}|${r.programme_code ?? r.programme}|${r.group}|${r.category}`} className="card p-3">
                     <p className="font-semibold">{r.programme}{r.female_only && <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--competitive-soft)", color: "var(--competitive)" }}>Female candidates only</span>}</p>
-                    <p className="text-sm text-ink-2">{r.institute}{r.programme_code ? ` · course code ${r.programme_code}` : ""}</p>
+                    <p className="text-sm text-ink-2">{r.institute_short ?? r.institute}{r.programme_code ? ` · course code ${r.programme_code}` : ""}</p>
+                    {r.institute_short && r.institute_short !== r.institute && <p className="text-xs text-ink-3">{r.institute.replace(/\s*\(Female Seat only\s*\)/, "")}</p>}
                     <p className="text-xs text-ink-3">{[r.group, r.category].filter(Boolean).join(" · ")}</p>
                     {r.ranking && <p className="mt-1 text-xs"><span className="font-semibold">NIRF {r.ranking.year} {r.ranking.category} rank {r.ranking.rank}</span> <SourceLink href={r.ranking.source_url} label="Official NIRF list" /></p>}
                     <dl className="tnum mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">

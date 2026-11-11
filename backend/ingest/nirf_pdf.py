@@ -140,8 +140,11 @@ def sanity_problems(row: OutcomeRow) -> list[str]:
     return problems
 
 
-def extract(path: Path) -> Extraction:
-    """Return the UG 4-year outcomes. In the NIRF layout this is the first outcomes table in the document."""
+def extract(path: Path, title_mark: str | None = None) -> Extraction:
+    """Return the UG 4-year outcomes. In the NIRF layout this is the first outcomes table in the document.
+
+    With `title_mark`, such as "ug[5years", return the first outcomes table whose title contains it instead,
+    for Law and Medical submissions, which list several programmes."""
     result = Extraction()
     with pymupdf.open(path) as document:
         full = "\n".join(page.get_text() for page in document)
@@ -165,13 +168,16 @@ def extract(path: Path) -> Extraction:
                 if looks_like_outcomes_table(rows):
                     above = pymupdf.Rect(0, max(0, table.bbox[1] - 45), page.rect.width, table.bbox[1])
                     title = squash(page.get_text(clip=_unrotated(page, above))).lower()
-                    if title and "ug[4" not in title and "ug4" not in title:
+                    if title_mark is not None:
+                        if title_mark not in title:
+                            continue
+                    elif title and "ug[4" not in title and "ug4" not in title:
                         result.problems.append(f"Page {index + 1}: first outcomes table title is {title[:60]!r}, not UG 4-year")
                         return result
                     result.rows, problems = rows_from_table(rows, index + 1)
                     result.problems.extend(problems)
                     return result
-    result.problems.append("No outcomes table found")
+    result.problems.append(f"No outcomes table titled {title_mark!r} found" if title_mark else "No outcomes table found")
     return result
 
 

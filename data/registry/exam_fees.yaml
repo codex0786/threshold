@@ -1,0 +1,73 @@
+# Official fees for institutes in the routes beyond JEE, transcribed by hand from each university's own notice.
+# Values are as printed. `declared` items are shown word for word. Totals were checked against their parts where
+# the notice gives parts. Raw files and checksums are in data/raw/nlu_fees/manifest.jsonl.
+# Not found or left out (2026-11-11): NLU Jodhpur (its 2026-28 brochure and its programme page give different
+# figures), GNLU, RMLNLU, RGNUL, NUALS, NLUO (only a 3-year LL.B. notice), NUSRL, NLUJA, DSNLU, TNNLU, all three
+# MNLUs, HPNLU, DNLU, RPNLUP, IIULER and NALSAR's later years. NLUO's MBA and NUSRL's Ph.D. notices are other courses.
+year: "2026-27"
+fees:
+  clat:
+    - match: "National Law School of India University (NLSIU)"
+      title: "B.A., LL.B. (Hons.) fees, 2026-27"
+      url: https://www.nls.ac.in/programme/ba-llb-hons/
+      declared:
+        - {label: "Tuition and facilities fee, per year", value: "Rs. 3,18,200"}
+        - {label: "Housing fee, per year (includes meals)", value: "Rs. 1,32,800"}
+        - {label: "Total cost to student, per year", value: "Rs. 4,51,000"}
+        - {label: "One-time admission fee", value: "Rs 13,900"}
+        - {label: "Refundable security deposit", value: "Rs. 23,700 (Rs. 18,800 for SC/ST)"}
+    - match: "NALSAR University of Law (NALSAR)"
+      title: "B.A., LL.B. (Hons.) 1st year fees, 2026-27"
+      url: https://nalsar.ac.in/wp-content/uploads/2026/05/3-Fee-Structure-B.A-LLB-Hons.pdf
+      declared:
+        - {label: "Tuition fee", value: "1,65,000"}
+        - {label: "Other academic charges", value: "15,000"}
+        - {label: "User charges (room, utilities, sports)", value: "67,000"}
+        - {label: "One-time payments", value: "10,000"}
+        - {label: "Mess advance", value: "40,000"}
+        - {label: "Refundable deposits", value: "20,000 (Rs.14,000/- for SC/ST candidates)"}
+        - {label: "Total", value: "3,17,000 (Rs. 3,11,000 for SC/ST candidates)"}
+    - match: "The National Law Institute University (NLIU)"
+      title: "B.A.LL.B. (Hons.) 1st year annual fees, 2026-27"
+      url: https://nliu.ac.in/wp-content/uploads/2026/04/BALLB-1.pdf
+      note: "For General, ICCR, SC, ST and OBC candidates. Tuition rises by Rs. 5,000 each year, and other parts by 5%."
+      declared:
+        - {label: "Admission fee", value: "11500"}
+        - {label: "Tuition fee", value: "156000"}
+        - {label: "Exam and facilities fees", value: "61600"}
+        - {label: "Hostel charges, including mess", value: "75200"}
+        - {label: "Refundable charges (one time)", value: "15000"}
+        - {label: "Grand total", value: "319300"}
+    - match: "The West Bengal National University of Juridical Sciences (WBNUJS)"
+      title: "B.A. LL.B. fees, 2026 admission"
+      url: https://www.nujs.edu/wp-content/uploads/2026/03/BA-BSc-CLAT-Balance-Fee-Payment.pdf
+      note: "For General, SC, ST, OBC, PWD and J&K students. Charged by semester."
+      declared:
+        - {label: "1st semester (new admission)", value: "₹ 1,51,700.00"}
+        - {label: "2nd semester", value: "₹ 1,30,200.00"}
+        - {label: "Hostel and mess, each semester", value: "₹ 35,000.00"}
+        - {label: "Total for ten semesters, without hostel", value: "₹ 13,29,500.00"}
+    - match: "Chanakya National Law University (CNLU)"
+      title: "B.A., LL.B. (Hons.) / B.B.A., LL.B. (Hons.) fees, 2026-27"
+      url: https://www.cnlu.ac.in/wp-content/uploads/2026/05/UG-Admission-Notice-2026-27-for-Payment-Document-Verification.pdf
+      declared:
+        - {label: "Total annual fee", value: "Rs. 2,72,253/-"}
+    - match: "Hidayatullah National Law University (HNLU)"
+      title: "B.A.LL.B. (Hons.) fees for Indian nationals, 2026-27"
+      url: https://hnlu.ac.in/wp-content/uploads/2026/01/Fee-Structure-UG-PG.pdf
+      note: "Mess is charged separately each semester, at actual cost. The university says the fees may change."
+      declared:
+        - {label: "Tuition fee", value: "1,30,000.00"}
+        - {label: "Admission fee (one time)", value: "5,000.00"}
+        - {label: "Caution money (one time, refundable)", value: "25,000.00"}
+        - {label: "Total", value: "2,25,000.00"}
+    - match: "National Law University (DBRANLU)"
+      title: "B.A. LL.B. (Hons.) fees, 2026-27"
+      url: https://www.dbranlu.ac.in/pdf/Fee%20Notice%20New%20Admission%20(PG%20&%20UG)%202026-27%20(CLAT-26)%20190626.pdf
+      declared:
+        - {label: "Total fee (1st semester), General", value: "₹1,61,750, with an AC double-occupancy hostel room"}
+    - match: "National Law University Tripura (NLUT)"
+      title: "B.A.LL.B. (Hons.) fees, 2026-27"
+      url: https://nlutripura.ac.in/wp-content/uploads/2026/04/File-01-Fee-Payment-Guideline-for-UG-PG-Programmes-AY-2026-27.pdf
+      declared:
+        - {label: "One year's full fees (tuition and other fees), with hostel", value: "INR 1,91,000/-"}

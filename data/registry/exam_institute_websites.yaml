@@ -1,0 +1,47 @@
+# Official websites for institutes in the routes beyond JEE. Each entry says where the address came from.
+# `match` is the start of the institute name exactly as the counselling document prints it. A campus listed
+# separately (such as GNLU Silvassa) gets its university's website, with a note.
+sources:
+  consortium:
+    title: Consortium of National Law Universities, member universities
+    url: https://consortiumofnlus.ac.in/
+    retrieved: "2026-11-11"
+    status: official
+  confirmed:
+    title: Address listed on Wikidata, confirmed because the site publishes the institute's own NIRF submission
+    url: https://www.wikidata.org/
+    retrieved: "2026-11-11"
+    status: confirmed
+websites:
+  clat:
+    - {match: "National Law School of India University (NLSIU)", url: "https://www.nls.ac.in/", source: consortium}
+    - {match: "NALSAR University of Law (NALSAR)", url: "https://www.nalsar.ac.in/", source: consortium}
+    - {match: "The National Law Institute University (NLIU)", url: "https://www.nliu.ac.in/", source: consortium}
+    - {match: "The West Bengal National University of Juridical Sciences (WBNUJS)", url: "http://www.nujs.edu/", source: consortium}
+    - {match: "National Law University (NLU), Jodhpur", url: "http://www.nlujodhpur.ac.in/", source: consortium}
+    - {match: "Hidayatullah National Law University (HNLU)", url: "https://www.hnlu.ac.in/", source: consortium}
+    - {match: "Gujarat National Law University (GNLU), Gandhinagar", url: "https://www.gnlu.ac.in/", source: consortium}
+    - {match: "Gujarat National Law University (GNLU), Silvassa", url: "https://www.gnlu.ac.in/", source: consortium, note: "The university's website. The Consortium doesn't list the Silvassa campus separately."}
+    - {match: "Dr. Ram Manohar Lohiya National Law University (RMLNLU)", url: "http://www.rmlnlu.ac.in/", source: consortium}
+    - {match: "Rajiv Gandhi National University of Law (RGNUL)", url: "https://www.rgnul.ac.in/", source: consortium}
+    - {match: "Chanakya National Law University (CNLU)", url: "http://www.cnlu.ac.in/", source: consortium}
+    - {match: "The National University of Advanced Legal Studies (NUALS)", url: "http://www.nuals.ac.in/", source: consortium}
+    - {match: "National Law University Odisha (NLUO)", url: "http://www.nluo.ac.in/", source: consortium}
+    - {match: "National University of Study and Research in Law (NUSRL)", url: "http://www.nusrlranchi.ac.in/", source: consortium}
+    - {match: "National Law University and Judicial Academy (NLUJA)", url: "http://www.nluassam.ac.in/", source: consortium}
+    - {match: "Damodaram Sanjivayya National Law University (DSNLU)", url: "https://dsnlu.ac.in/", source: consortium}
+    - {match: "Tamil Nadu National Law University (TNNLU)", url: "https://tnnlu.ac.in/", source: consortium}
+    - {match: "Maharashtra National Law University (MNLU), Mumbai", url: "https://mnlumumbai.edu.in/", source: consortium}
+    - {match: "Maharashtra National Law University (MNLU), Nagpur", url: "http://www.nlunagpur.ac.in/", source: consortium}
+    - {match: "Maharashtra National Law University (MNLU), Chhatrapati Sambhajinagar", url: "https://www.mnlua.ac.in/", source: consortium}
+    - {match: "Himachal Pradesh National Law University (HPNLU)", url: "http://www.hpnlu.ac.in/", source: consortium}
+    - {match: "Dharmashastra National Law University (MPDNLU)", url: "https://www.mpdnlu.ac.in/", source: consortium}
+    - {match: "National Law University (DBRANLU)", url: "https://www.dbranlu.ac.in/", source: consortium}
+    - {match: "National Law University Tripura (NLUT)", url: "https://nlutripura.ac.in/", source: consortium}
+    - {match: "Dr. Rajendra Prasad National Law University (RPNLUP)", url: "https://rpnlup.ac.in/", source: consortium}
+    - {match: "India International University of Legal Education and Research", url: "https://www.iiuler.edu.in/", source: consortium}
+  neet-ug:
+    - {match: "AIIMS, Raipur", url: "http://www.aiimsraipur.edu.in", source: confirmed}
+    - {match: "Dr. D Y Patil Medical College, Hospital and Research Centre, Pimpri, Pune", url: "https://dpu.edu.in/", source: confirmed, note: "The website of Dr. D. Y. Patil Vidyapeeth, the university this college belongs to."}
+    - {match: "Dr. DY Patil Dental College and Hosp. Pune", url: "https://dpu.edu.in/", source: confirmed, note: "The website of Dr. D. Y. Patil Vidyapeeth, the university this college belongs to."}
+    - {match: "University College of Medical Sciences & GTB Hospital, New Delhi", url: "http://www.ucms.ac.in/", source: confirmed}

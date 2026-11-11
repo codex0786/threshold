@@ -170,11 +170,6 @@ POSITIONS = {
 NEAR_MARGIN = 1.20
 LEFTOVER = re.compile(r"stray|special|spot", re.I)
 POSITION_LIMIT = 100
-OUTCOMES = {
-    "Medical": "Graduate outcomes, such as postgraduate seats or jobs, aren't collected for this course.",
-    "Law": "Placement figures aren't collected for law schools yet.",
-    "Engineering": "Placement figures for this course aren't collected yet.",
-}
 
 
 def base_quota(group: str | None) -> str | None:
@@ -298,8 +293,7 @@ def shortlist(
         counts[option["position"]] += 1
         if counts[option["position"]] <= POSITION_LIMIT:
             shown.append(option)
-    gaps = [OUTCOMES.get(route["stream"], OUTCOMES["Engineering"])]
     return {
         "missing": [], "positions": labels, "counts": dict(counts), "options": shown, "beyond": beyond, "hidden_female_only": hidden,
-        "limit": POSITION_LIMIT, "route_gaps": gaps,
+        "limit": POSITION_LIMIT,
     }

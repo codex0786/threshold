@@ -1,12 +1,12 @@
 "use client";
-import { ArrowLeft, ChevronDown, Info } from "lucide-react";
+import { ArrowLeft, ChevronDown, ExternalLink, Info } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
-import { api, num } from "@/lib/api";
+import { api, inr, num } from "@/lib/api";
 import {
-  EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
+  EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
   loadExamAnswers, POSITION_ORDER, POSITION_STYLE, saveExamAnswers, shortRound,
 } from "@/lib/exams";
 
@@ -50,7 +50,79 @@ function headlineFee(option: ExamOption) {
   return first ? `${first.label}: ${first.value}` : null;
 }
 
-function OptionCard({ option, route, figure, labels, index, gaps }: { option: ExamOption; route: ExamRoute; figure: number; labels: ExamShortlist["positions"]; index: number; gaps: string[] }) {
+const lakh = (value: number) => `₹${(value / 100000).toLocaleString("en-IN", { maximumFractionDigits: 2 })} lakh`;
+
+// The latest year that has a median, so the card can show one line of evidence.
+function latestOutcome(profile: ExamProfile | null | undefined) {
+  return [...(profile?.outcomes?.years ?? [])].reverse().find((y) => y.median_salary_inr != null) ?? profile?.outcomes?.years.at(-1) ?? null;
+}
+
+function Outcomes({ outcomes }: { outcomes: NonNullable<ExamProfile["outcomes"]> }) {
+  return (
+    <div>
+      <h3 className="text-base font-medium">Placements and higher studies</h3>
+      <p className="mt-0.5 text-xs text-ink-3">{outcomes.note}</p>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[420px] text-left text-sm">
+          <thead><tr className="border-b border-line text-xs text-ink-3">
+            <th scope="col" className="py-1 pr-3 font-medium">Graduating year</th><th scope="col" className="py-1 pr-3 font-medium">Graduated</th>
+            <th scope="col" className="py-1 pr-3 font-medium">Placed</th><th scope="col" className="py-1 pr-3 font-medium">Median salary</th><th scope="col" className="py-1 font-medium">Higher studies</th>
+          </tr></thead>
+          <tbody className="tnum">
+            {outcomes.years.map((y) => (
+              <tr key={y.academic_year} className="border-b border-line last:border-0">
+                <td className="py-1 pr-3">{y.academic_year}</td><td className="py-1 pr-3">{num(y.graduating_students)}</td><td className="py-1 pr-3">{num(y.students_placed)}</td>
+                <td className="py-1 pr-3">{y.median_salary_inr != null ? inr(y.median_salary_inr) : "Not shown"}</td><td className="py-1">{num(y.higher_studies_students)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {outcomes.years.flatMap((y) => y.notes.map((n) => <p key={n} className="mt-1 text-xs text-ink-3">{y.academic_year}: {n}.</p>))}
+      {outcomes.excluded.map((e) => <p key={e.academic_year} className="mt-1 text-xs text-ink-3">{e.academic_year} left out: {e.reason}</p>)}
+      {outcomes.year_note && <p className="mt-1 text-xs text-ink-3">{outcomes.year_note}</p>}
+      <p className="mt-1"><SourceLink href={outcomes.source_url} label={outcomes.source_title} /></p>
+    </div>
+  );
+}
+
+function Faculty({ faculty, medical }: { faculty: NonNullable<ExamProfile["faculty"]>; medical: boolean }) {
+  const years = Object.entries(faculty.research_years).filter(([, v]) => v.sponsored_amount_inr != null || v.phd_graduated != null).slice(-3);
+  return (
+    <div>
+      <h3 className="text-base font-medium">Faculty and research</h3>
+      <p className="mt-0.5 text-xs text-ink-3">{faculty.note}</p>
+      <dl className="tnum mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        {faculty.regular != null && <div><dt className="text-xs text-ink-3">Regular faculty</dt><dd>{num(faculty.regular)}{faculty.current != null && faculty.current > faculty.regular ? ` of ${num(faculty.current)} working` : ""}</dd></div>}
+        {!medical && faculty.with_phd != null && faculty.regular ? <div><dt className="text-xs text-ink-3">With a doctorate</dt><dd>{num(faculty.with_phd)} ({Math.round((faculty.with_phd / faculty.regular) * 100)}%)</dd></div> : null}
+        {faculty.students_per_regular_faculty != null && <div><dt className="text-xs text-ink-3">Students per regular faculty member</dt><dd>{faculty.students_per_regular_faculty}</dd></div>}
+        {faculty.median_experience_years != null && <div><dt className="text-xs text-ink-3">Median experience</dt><dd>{faculty.median_experience_years} years</dd></div>}
+        {faculty.professors != null && <div><dt className="text-xs text-ink-3">Professors, associate, assistant</dt><dd>{num(faculty.professors)}, {num(faculty.associate)}, {num(faculty.assistant)}</dd></div>}
+        {faculty.phd_students != null && <div><dt className="text-xs text-ink-3">PhD scholars</dt><dd>{num(faculty.phd_students)}</dd></div>}
+      </dl>
+      {years.length > 0 && (
+        <ul className="tnum mt-2 space-y-0.5 text-sm text-ink-2">
+          {years.map(([year, v]) => <li key={year}>{year}: {[v.sponsored_amount_inr != null ? `${inr(v.sponsored_amount_inr)} in sponsored research` : null, v.phd_graduated != null ? `${num(v.phd_graduated)} PhDs awarded` : null].filter(Boolean).join(", ")}</li>)}
+        </ul>
+      )}
+      <p className="mt-1"><SourceLink href={faculty.source_url} label={faculty.source_title} /></p>
+    </div>
+  );
+}
+
+function Alumni({ alumni }: { alumni: NonNullable<ExamProfile["alumni"]> }) {
+  return (
+    <div>
+      <h3 className="text-base font-medium">Documented alumni (a sample)</h3>
+      <p className="mt-0.5 text-xs text-ink-3">{alumni.caveat}</p>
+      <p className="tnum mt-1 text-sm">{num(alumni.sample_size)} people in the sample.{alumni.occupations.length ? ` Commonest occupations: ${alumni.occupations.slice(0, 5).map((o) => `${o.label} (${o.people})`).join(", ")}.` : ""}</p>
+      {alumni.employers.length > 0 && <p className="tnum mt-1 text-sm">Employers named: {alumni.employers.slice(0, 5).map((o) => `${o.label} (${o.people})`).join(", ")}.</p>}
+      <p className="mt-1"><SourceLink href={alumni.source_url} label={alumni.source_title} /></p>
+    </div>
+  );
+}
+
+function OptionCard({ option, route, figure, labels, index }: { option: ExamOption; route: ExamRoute; figure: number; labels: ExamShortlist["positions"]; index: number }) {
   const [open, setOpen] = useState(false);
   const style = POSITION_STYLE[option.position] ?? POSITION_STYLE.near;
   const label = labels[option.position] ?? { label: option.position, hint: "" };
@@ -60,9 +132,14 @@ function OptionCard({ option, route, figure, labels, index, gaps }: { option: Ex
   const missing = [
     ...(option.ranking ? [] : [`Not in NIRF 2025’s ${route.stream} list, so ordered as neutral. That doesn’t mean it’s weaker.`]),
     ...(route.stream === "Medical" && !option.fee ? ["No fee document collected for this seat. Check the counselling authority’s fee list."] : []),
-    ...gaps,
   ];
   const lastCount = [...option.rounds].reverse().find((s) => s.count != null)?.count;
+  const profile = option.profile;
+  const outcome = latestOutcome(profile);
+  if (!profile?.outcomes) missing.push(route.stream === "Medical" ? "Graduate outcomes, such as postgraduate seats or jobs, aren’t collected for this college." : route.code === "gate-ccmt" ? "M.Tech placement figures aren’t collected yet." : "No placement figures found for this institute.");
+  if (!profile?.faculty && !academics) missing.push("No faculty or research figures found for this institute.");
+  if (!profile?.website) missing.push("No official website on record yet.");
+  if (!profile?.alumni) missing.push("No documented alumni sample of 30 or more people.");
   return (
     <article className="card card-hover band-card rise p-5 pl-6" style={{ "--band": style.color, "--i": Math.min(index, 10) } as CSSProperties}>
       <div className="flex flex-wrap items-center gap-2">
@@ -76,6 +153,11 @@ function OptionCard({ option, route, figure, labels, index, gaps }: { option: Ex
         {option.programme_code ? <span className="text-ink-3"> · course code {option.programme_code}</span> : null}
       </p>
       {name !== option.institute && <p className="text-xs text-ink-3">{option.institute.replace(/\s*\(Female Seat only\s*\)/, "")}</p>}
+      {profile?.website && (
+        <a href={profile.website.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-sm text-brand hover:underline" title={`Address from: ${profile.website.source_title}`}>
+          {profile.website.status === "official" ? "Official website" : "Website, confirmed"} <ExternalLink size={12} aria-hidden />
+        </a>
+      )}
 
       <div className="mt-4 grid gap-5 md:grid-cols-[1.6fr_1fr_1fr]">
         <div>
@@ -87,13 +169,22 @@ function OptionCard({ option, route, figure, labels, index, gaps }: { option: Ex
           {option.ranking
             ? <><p className="tnum mt-1 font-medium">NIRF {option.ranking.category} #{option.ranking.rank} <span className="font-normal text-ink-3">({option.ranking.year})</span></p><SourceLink href={option.ranking.source_url} label="Official NIRF list" /></>
             : <p className="mt-1 text-sm text-ink-3">Not ranked by NIRF {route.stream === "Engineering" ? "Engineering" : route.stream} 2025</p>}
+          {(profile?.other_rankings?.length ?? 0) > 0 && (
+            <p className="tnum mt-1 text-xs text-ink-2" title={`${profile?.other_rankings?.[0].name}. ${profile?.other_rankings?.[0].note}`}>
+              Also NIRF {profile?.other_rankings?.map((r) => `${r.category} #${r.rank}`).join(", ")}
+              <span className="text-ink-3"> ({profile?.other_rankings?.[0].name}, whole institution)</span>
+            </p>
+          )}
         </div>
         <div>
-          <p className="text-xs text-ink-3">{route.stream === "Medical" ? "Fees" : route.stream === "Law" ? "Seats" : "Faculty (whole institute)"}</p>
+          <p className="text-xs text-ink-3">{route.stream === "Medical" ? "Fees" : route.stream === "Law" ? (outcome ? `Placements, ${outcome.academic_year} graduates` : "Seats") : "Faculty (whole institute)"}</p>
           {route.stream === "Medical" && (fee
             ? <><p className="mt-1 text-sm font-medium break-words">{fee}</p><p className="text-xs" style={{ color: option.fee?.status === "official" ? "var(--safer)" : "var(--competitive)" }}>{option.fee?.status === "official" ? "Official, as printed" : "Declared by the college, unverified"}</p></>
             : <p className="mt-1 text-sm text-ink-3">Data not available</p>)}
-          {route.stream === "Law" && (option.seats != null ? <p className="tnum mt-1 text-sm font-medium">{num(option.seats)} in this category</p> : <p className="mt-1 text-sm text-ink-3">Data not available</p>)}
+          {route.stream === "Law" && (outcome
+            ? <><p className="tnum mt-1 text-sm font-medium">{outcome.median_salary_inr != null ? `Median ${lakh(outcome.median_salary_inr)}` : "Median not shown"}</p><p className="tnum text-xs text-ink-3">{num(outcome.students_placed)} of {num(outcome.graduating_students)} placed, {num(outcome.higher_studies_students)} to higher studies. Self-reported to NIRF</p></>
+            : option.seats != null ? <p className="tnum mt-1 text-sm font-medium">{num(option.seats)} seats in this category</p> : <p className="mt-1 text-sm text-ink-3">Data not available</p>)}
+          {route.stream === "Law" && outcome && option.seats != null && <p className="tnum mt-1 text-xs text-ink-3">{num(option.seats)} seats in this category</p>}
           {route.stream === "Engineering" && (academics?.students_per_regular_faculty != null
             ? <p className="tnum mt-1 text-sm">{academics.students_per_regular_faculty} students per regular faculty member{academics.phd_share != null ? `, ${Math.round(academics.phd_share * 100)}% with a doctorate` : ""}</p>
             : <p className="mt-1 text-sm text-ink-3">Data not available</p>)}
@@ -120,7 +211,10 @@ function OptionCard({ option, route, figure, labels, index, gaps }: { option: Ex
                 <p className="mt-1"><SourceLink href={option.fee.source_url} label={`Source document, ${option.fee.year}`} /></p>
               </div>
             )}
-            {academics && (
+            {profile?.outcomes && <Outcomes outcomes={profile.outcomes} />}
+            {profile?.faculty && <Faculty faculty={profile.faculty} medical={route.stream === "Medical"} />}
+            {profile?.alumni && <Alumni alumni={profile.alumni} />}
+            {!profile?.faculty && academics && (
               <div>
                 <h3 className="text-base font-medium">Faculty (whole institute)</h3>
                 <p className="mt-1 text-sm text-ink-2">
@@ -323,7 +417,7 @@ export default function ExamShortlistPage() {
               </p>
               {!answers.gender && route.asks_gender && result.options.some((o) => o.female_only) && <p className="mb-3 text-xs text-ink-3">Some seats are for female candidates only, and are labelled. Choose your gender to see only seats you can hold.</p>}
               <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}>
-                {shown.map((o, i) => <OptionCard key={`${o.institute}|${o.programme_code ?? o.programme}|${o.quota}`} option={o} route={route} figure={asked} labels={result.positions} index={i} gaps={result.route_gaps ?? []} />)}
+                {shown.map((o, i) => <OptionCard key={`${o.institute}|${o.programme_code ?? o.programme}|${o.quota}`} option={o} route={route} figure={asked} labels={result.positions} index={i} />)}
               </div>
               {total === 0 && (
                 <Notice>Nothing in this list reached or came within reach of your {route.metric.unit} in {route.document.year}. Try another quota or course, or check your figure. This covers one year and one counselling authority, so other options may still exist.</Notice>

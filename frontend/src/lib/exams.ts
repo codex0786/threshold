@@ -16,7 +16,23 @@ export type DeclaredFee = { title: string; note: string; declared: { label: stri
 
 export type RoundStep = { round: string | null; value: number | null; second_value: number | null; count: number | null; reached: boolean };
 export type ExamAcademics = { students_per_regular_faculty: number | null; phd_share: number | null; faculty_regular: number | null; source: { title: string; url: string; submission_year: number } | null } | null;
+type ProfileSource = { source_title: string; source_url: string; status: string; retrieved?: string; nirf_id?: string | null };
+export type OutcomeYear = { academic_year: string; graduating_students: number | null; students_placed: number | null; median_salary_inr: number | null; higher_studies_students: number | null; notes: string[] };
+export type ExamProfile = {
+  website?: { url: string; note: string | null } & ProfileSource;
+  outcomes?: { programme: string; years: OutcomeYear[]; excluded: { academic_year: string; reason: string }[]; note: string; year_note: string | null } & ProfileSource;
+  faculty?: {
+    regular: number | null; with_phd: number | null; listed: number | null; current: number | null; professors: number | null; associate: number | null; assistant: number | null;
+    median_experience_years: number | null; students_total: number | null; phd_students: number | null; students_per_regular_faculty: number | null;
+    research_years: Record<string, { sponsored_projects?: number | null; sponsored_amount_inr?: number | null; consultancy_amount_inr?: number | null; phd_graduated?: number | null }>;
+    note: string;
+  } & ProfileSource;
+  alumni?: { sample_size: number; occupations: { label: string; people: number }[]; employers: { label: string; people: number }[]; caveat: string } & ProfileSource;
+  fee?: DeclaredFee;
+  other_rankings?: { category: string; rank: number; year: number; name: string; source_url: string; note: string }[];
+};
 export type ExamOption = {
+  profile?: ExamProfile | null;
   institute: string; institute_short: string | null; programme: string; programme_code: string | null; quota: string | null; category: string;
   female_only: boolean; seats: number | null; note: string | null; position: string; rounds: RoundStep[]; furthest: number;
   ranking: ExamRanking | null; fee: DeclaredFee | null; standing: number; why: string[];
@@ -24,7 +40,7 @@ export type ExamOption = {
 };
 export type ExamShortlist = {
   missing: string[]; positions: Record<string, { label: string; hint: string }>; counts: Record<string, number>; options: ExamOption[];
-  beyond: number; hidden_female_only: number; limit?: number; route_gaps?: string[];
+  beyond: number; hidden_female_only: number; limit?: number;
 };
 
 // The first view shows one clear list: the open category, and the route's own default quota and course.

@@ -56,6 +56,13 @@ def shortlist(
     if problem:
         raise HTTPException(status_code=422, detail=problem)
     result = exam_routes.shortlist(route, value, category, quota, programme, gender, order, search)
+    profiles = exam_routes.load().get("profiles", {}).get(code, {})
+    for option in result["options"]:
+        profile = profiles.get(option["institute"])
+        option["profile"] = profile
+        # A seat's own fee comes first. Otherwise the university's published fee applies to the whole institute.
+        if not option.get("fee") and profile and profile.get("fee"):
+            option["fee"] = profile["fee"]
     if result["options"]:
         links = institute_links(db)
         profiles = academics.load(db)

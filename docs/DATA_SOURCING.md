@@ -187,3 +187,24 @@ Use only permitted access. Never bypass CAPTCHAs, logins or blocks. Don't collec
 By default each list puts top colleges first, as on the JEE shortlist: two parts official NIRF 2025 rank in the matching field (Medical for MBBS, Dental for BDS, Law, Engineering) to one part how contested the seat is within the same course, category and quota. Ranks come from `data/registry/nirf_2025_exam_routes.yaml`, read from nirfindia.org, and apply only where the counselling document names the same ranked institution. `python -m ingest.exam_rankings` attaches them and stops if any entry finds no institute. Students can switch to "Closest to my figure".
 
 The project owner reports written confirmation from these authorities. Candidate identifiers, such as CLAT admit card numbers, are never stored.
+
+### Institute profiles beyond JEE (2026-11-11)
+`python -m ingest.exam_profiles` adds a `profiles` section to `exam_routes.json`, after the extract, fee and ranking steps. It stops if a registry entry matches no institute, or a NIRF document doesn't print the expected institute name.
+
+| What | Coverage | Source | Status |
+|---|---|---|---|
+| Official websites | All 26 NLUs in the CLAT data | The Consortium of NLUs' member list (`exam_institute_websites.yaml`). GNLU Silvassa gets GNLU's site, with a note | Official |
+| Law placements and higher studies | 12 NLUs | Each NLU's NIRF Law submission, posted on its own website (`exam_nirf_documents.yaml`, raw files in `data/raw/nirf_law`) | Self-reported to NIRF, not audited |
+| Law faculty and research | The same 12 | The same submissions: faculty counts, doctorates, experience, PhD scholars, sponsored research | Self-reported to NIRF, not audited |
+| Law fees, 2026-27 | 8 NLUs: NLSIU, NALSAR, NLIU, NUJS, CNLU, HNLU, DBRANLU, NLU Tripura | Each university's own fee notice, transcribed by hand (`exam_fees.yaml`, raw files in `data/raw/nlu_fees`) | Official, as printed |
+| Other NIRF 2025 ranks | 27 NEET, 10 GATE and 1 MHT-CET institutes | NIRF's Overall, University and Research lists, read in the browser (`nirf_2025_other_lists.yaml`) | Official. These cover the whole university |
+
+**How the law submissions were read.** nirfindia.org blocks scripts and serves its PDFs as downloads, so each submission comes from the university's own site. Two independent readings are taken: the table reader, and a reading of the document's text (`ingest/nirf_programme.py`). A year is kept only when both agree, or when only the text has it. The table reader had dropped two of NLUO's three years where a blank row split the table. Every median must match its amount in words. Two did not: MNLU Mumbai 2023-24 (digits 1,00,000, words "Ten Lakh") and RMLNLU 2024-25 (words "thirty one"). Both medians are hidden. RMLNLU's 2024-25 year is left out entirely after review, because its 31 placed students also look like an entry error.
+
+**Joining other NIRF lists.** NIRF reuses one institution number across its lists, for example IR-L-U-0285 (Law) and IR-O-U-0285 (Overall) for NLIU. Ranks are joined on that number, never on names. A university's Overall, University or Research rank covers the whole university, and the page says so.
+
+**Medical colleges.** Websites for NIRF-ranked medical and dental colleges were looked up on Wikidata by NIRF's exact name, which matched 20 of 53. The others differ by a word or a city, and the match isn't loosened. Those addresses were used only to look for NIRF submissions. Three sites published one: AIIMS Raipur, Dr. D. Y. Patil Vidyapeeth (Medical and Dental) and UCMS Delhi. Their outcomes and faculty are read the same way as for law, and their websites are shown as confirmed, because each site publishes the institute's own submission. Other Wikidata addresses aren't shown. The share of medical faculty with a PhD isn't shown, because MD or MS, not a PhD, is the usual qualification.
+
+**Alumni samples.** `python -m ingest.exam_alumni` counts people on Wikidata who list an institute as where they studied, as for JEE: exact name matches only, aggregate counts only, and no sample under 30 people shown. Medical colleges are matched at college level only. A university's item, such as Banaras Hindu University, would count graduates of every faculty, so it isn't used for one of its colleges. GATE institutes reuse the JEE counts where their name exactly matches a JoSAA institute. This is a small public sample of notable people. It isn't the alumni network.
+
+**Not found yet:** law fees for the other 18 NLUs. NLU Jodhpur's brochure and its programme page disagree, so neither is shown. NIRF Law submissions for 14 NLUs, whose sites didn't show one or build their pages with scripts.

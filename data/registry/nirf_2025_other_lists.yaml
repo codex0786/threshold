@@ -1,0 +1,184 @@
+note: Other official NIRF 2025 lists, for institutes already ranked in their own field in nirf_2025_exam_routes.yaml. Read from nirfindia.org
+  in the browser on 2026-11-11, keeping only rows whose institution number (the part of the NIRF ID after the category letter) matches one already
+  listed. NIRF reuses that number across its lists for the same institution. A university's Overall, University or Research rank covers the whole
+  university, not one college or course.
+year: 2025
+retrieved: '2026-11-11'
+lists:
+  Overall:
+    source: https://www.nirfindia.org/Rankings/2025/OverallRanking.html
+    ranks:
+    - nirf_id: IR-O-N-15
+      name: All India Institute of Medical Sciences, Delhi
+      rank: 8
+    - nirf_id: IR-O-U-0500
+      name: Banaras Hindu University
+      rank: 10
+    - nirf_id: IR-O-U-0108
+      name: Jamia Millia Islamia
+      rank: 13
+    - nirf_id: IR-O-U-0496
+      name: Aligarh Muslim University
+      rank: 19
+    - nirf_id: IR-O-U-0473
+      name: S.R.M. Institute of Science and Technology
+      rank: 22
+    - nirf_id: IR-O-I-1441
+      name: Saveetha Institute of Medical and Technical Sciences
+      rank: 23
+    - nirf_id: IR-O-U-0363
+      name: Siksha `O` Anusandhan
+      rank: 25
+    - nirf_id: IR-O-U-0042
+      name: University of Hyderabad
+      rank: 26
+    - nirf_id: IR-O-U-0356
+      name: Kalinga Institute of Industrial Technology
+      rank: 27
+    - nirf_id: IR-O-U-0467
+      name: National Institute of Technology Tiruchirappalli
+      rank: 30
+    - nirf_id: IR-O-U-0357
+      name: National Institute of Technology Rourkela
+      rank: 34
+    - nirf_id: IR-O-U-0368
+      name: Jawaharlal Institute of Post Graduate Medical Education & Research
+      rank: 43
+    - nirf_id: IR-O-U-0263
+      name: National Institute of Technology Calicut
+      rank: 45
+    - nirf_id: IR-O-U-0237
+      name: National Institute of Technology Karnataka, Surathkal
+      rank: 54
+    - nirf_id: IR-O-U-0025
+      name: National Institute of Technology Warangal
+      rank: 63
+    - nirf_id: IR-O-U-0308
+      name: Institute of Chemical Technology
+      rank: 64
+    - nirf_id: IR-O-I-1110
+      name: Dr. D. Y. Patil Vidyapeeth
+      rank: 71
+    - nirf_id: IR-O-U-0107
+      name: Jamia Hamdard
+      rank: 74
+    - nirf_id: IR-O-U-0410
+      name: Malaviya National Institute of Technology
+      rank: 77
+    - nirf_id: IR-O-U-0691
+      name: All India Institute of Medical Sciences Rishikesh
+      rank: 78
+    - nirf_id: IR-O-U-0523
+      name: King George`s Medical University
+      rank: 83
+    - nirf_id: IR-O-U-0295
+      name: Datta Meghe Institute of Higher Education and Research
+      rank: 84
+    - nirf_id: IR-O-U-0334
+      name: Visvesvaraya National Institute of Technology, Nagpur
+      rank: 86
+    - nirf_id: IR-O-U-0055
+      name: National Institute of Technology Silchar
+      rank: 97
+    - nirf_id: IR-O-U-0688
+      name: All India Institute of Medical Sciences Bhubaneswar
+      rank: 100
+  University:
+    source: https://www.nirfindia.org/Rankings/2025/UniversityRanking.html
+    ranks:
+    - nirf_id: IR-O-U-0108
+      name: Jamia Millia Islamia
+      rank: 4
+    - nirf_id: IR-O-U-0500
+      name: Banaras Hindu University
+      rank: 6
+    - nirf_id: IR-O-U-0496
+      name: Aligarh Muslim University
+      rank: 10
+    - nirf_id: IR-O-U-0473
+      name: S.R.M. Institute of Science and Technology
+      rank: 11
+    - nirf_id: IR-O-I-1441
+      name: Saveetha Institute of Medical and Technical Sciences
+      rank: 13
+    - nirf_id: IR-O-U-0363
+      name: Siksha `O` Anusandhan
+      rank: 15
+    - nirf_id: IR-O-U-0356
+      name: Kalinga Institute of Industrial Technology
+      rank: 17
+    - nirf_id: IR-O-U-0042
+      name: University of Hyderabad
+      rank: 18
+    - nirf_id: IR-O-U-0308
+      name: Institute of Chemical Technology
+      rank: 40
+    - nirf_id: IR-O-I-1110
+      name: Dr. D. Y. Patil Vidyapeeth
+      rank: 41
+    - nirf_id: IR-O-U-0107
+      name: Jamia Hamdard
+      rank: 47
+    - nirf_id: IR-O-U-0295
+      name: Datta Meghe Institute of Higher Education and Research
+      rank: 49
+    - nirf_id: IR-O-U-0523
+      name: King George`s Medical University
+      rank: 50
+    - nirf_id: IR-O-I-1486
+      name: Sri Ramachandra Institute of Higher Education and Research
+      rank: 60
+    - nirf_id: IR-O-U-0451
+      name: Chettinad Academy of Research and Education
+      rank: 61
+    - nirf_id: IR-O-U-0168
+      name: Maharishi Markandeshwar
+      rank: 85
+    - nirf_id: IR-O-U-0384
+      name: Sant Longowal Institute of Engineering & Technology
+      rank: 90
+    - nirf_id: IR-O-U-0169
+      name: Manav Rachna International Institute of Research & Studies
+      rank: 96
+  Research:
+    source: https://www.nirfindia.org/Rankings/2025/ResearchRanking.html
+    ranks:
+    - nirf_id: IR-R-N-15
+      name: All India Institute of Medical Sciences, Delhi
+      rank: 11
+    - nirf_id: IR-R-I-1441
+      name: Saveetha Institute of Medical and Technical Sciences
+      rank: 13
+    - nirf_id: IR-R-U-0500
+      name: Banaras Hindu University
+      rank: 16
+    - nirf_id: IR-R-U-0108
+      name: Jamia Millia Islamia
+      rank: 20
+    - nirf_id: IR-R-U-0473
+      name: S.R.M. Institute of Science and Technology
+      rank: 25
+    - nirf_id: IR-R-U-0496
+      name: Aligarh Muslim University
+      rank: 28
+    - nirf_id: IR-R-U-0357
+      name: National Institute of Technology Rourkela
+      rank: 30
+    - nirf_id: IR-R-U-0042
+      name: University of Hyderabad
+      rank: 32
+    - nirf_id: IR-R-U-0467
+      name: National Institute of Technology Tiruchirappalli
+      rank: 33
+    - nirf_id: IR-R-U-0308
+      name: Institute of Chemical Technology
+      rank: 41
+    - nirf_id: IR-R-U-0356
+      name: Kalinga Institute of Industrial Technology
+      rank: 43
+    - nirf_id: IR-R-U-0363
+      name: Siksha `O` Anusandhan
+      rank: 49
+    - nirf_id: IR-R-U-0410
+      name: Malaviya National Institute of Technology
+      rank: 50

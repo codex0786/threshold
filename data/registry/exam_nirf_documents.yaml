@@ -1,0 +1,25 @@
+# NIRF submissions found on institutes' own websites, for routes beyond JEE. nirfindia.org blocks scripts, so
+# documents come from each institute's site. A document is used only if the institute name it prints matches.
+# Raw files and checksums: data/raw/nirf_law/manifest.jsonl. Readings: data/import/nlu_outcomes.json.
+# `exclude` lists reviewed years that are left out, with the reason.
+documents:
+  clat:
+    - {match: "National Law School of India University (NLSIU)", file: nlsiu.pdf, printed_name: "National Law School of India University"}
+    - {match: "NALSAR University of Law (NALSAR)", file: nalsar.pdf, printed_name: "Nalsar University of Law"}
+    - {match: "The National Law Institute University (NLIU)", file: nliu.pdf, printed_name: "National Law Institute University, Bhopal", year_note: "Overall submission. The year isn't printed. It covers graduates up to 2023-24."}
+    - {match: "The West Bengal National University of Juridical Sciences (WBNUJS)", file: wbnujs.pdf, printed_name: "The West Bengal National University of Juridical Sciences"}
+    - {match: "Gujarat National Law University (GNLU), Gandhinagar", file: gnlu.pdf, printed_name: "Gujarat National Law University"}
+    - {match: "Dr. Ram Manohar Lohiya National Law University (RMLNLU)", file: rmlnlu.pdf, printed_name: "Dr. Ram Manohar Lohiya National Law University, Lucknow",
+       exclude: {"2024-25": "The median is written as 'thirty one', the same as the placed count, which looks like an entry error. The 31 placed is far below the 148 and 158 of earlier years."}}
+    - {match: "Chanakya National Law University (CNLU)", file: cnlu.pdf, printed_name: "Chanakya National Law University"}
+    - {match: "National Law University Odisha (NLUO)", file: nluo.pdf, printed_name: "National Law University", note: "NIRF ID IR-L-U-0358, listed by NIRF at Cuttack."}
+    - {match: "National Law University and Judicial Academy (NLUJA)", file: nluja.pdf, printed_name: "National Law University and Judicial Academy"}
+    - {match: "Damodaram Sanjivayya National Law University (DSNLU)", file: dsnlu.pdf, printed_name: "Damodaram Sanjivayya National Law University"}
+    - {match: "Maharashtra National Law University (MNLU), Mumbai", file: mnlum.pdf, printed_name: "Maharashtra National Law University Mumbai"}
+    - {match: "Dharmashastra National Law University (MPDNLU)", file: mpdnlu.pdf, printed_name: "Dharmashastra National Law University"}
+  neet-ug:
+    # Found on sites listed on Wikidata for NIRF-ranked colleges. Raw files: data/raw/nirf_medical/manifest.jsonl.
+    - {match: "AIIMS, Raipur", file: aiims-raipur.pdf, printed_name: "ALL INDIA INSTITUTE OF MEDICAL SCIENCES, RAIPUR"}
+    - {match: "Dr. D Y Patil Medical College, Hospital and Research Centre, Pimpri, Pune", file: dpu-medical.pdf, printed_name: "Dr. D. Y. Patil Vidyapeeth", note: "The university's Medical submission, which covers this college."}
+    - {match: "Dr. DY Patil Dental College and Hosp. Pune", file: dpu-dental.pdf, printed_name: "Dr. D. Y. Patil Vidyapeeth", note: "The university's Dental submission, which covers this college."}
+    - {match: "University College of Medical Sciences & GTB Hospital, New Delhi", file: ucms.pdf, printed_name: "University College of Medical Sciences"}

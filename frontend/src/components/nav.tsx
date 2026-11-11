@@ -7,7 +7,7 @@ import { ResetData } from "@/components/reset-data";
 import { loadCompare } from "@/lib/store";
 
 const LINKS = [
-  { href: "/recommendations", label: "My shortlist" },
+  { href: "/recommendations", label: "JEE shortlist" },
   { href: "/colleges", label: "Colleges" },
   { href: "/exams", label: "Other exams" },
   { href: "/compare", label: "Compare" },
@@ -55,7 +55,7 @@ export function Nav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" aria-label="Threshold home"><Logo /></Link>
         <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Main">{items}
-          <Link href="/onboarding" className="btn btn-primary ml-2 !py-1.5 text-sm">Find my best fit</Link>
+          <Link href="/#start" className="btn btn-primary ml-2 !py-1.5 text-sm">Find my best fit</Link>
         </nav>
         <button className="btn btn-secondary !p-2 xl:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? <X size={18} /> : <Menu size={18} />}
@@ -63,7 +63,7 @@ export function Nav() {
       </div>
       {open && (
         <nav className="rise flex flex-col gap-1 border-t border-line px-4 py-3 xl:hidden" aria-label="Mobile">{items}
-          <Link href="/onboarding" className="btn btn-primary mt-1">Find my best fit</Link>
+          <Link href="/#start" className="btn btn-primary mt-1">Find my best fit</Link>
         </nav>
       )}
     </header>

@@ -80,6 +80,10 @@ def summary(route: dict) -> dict:
         "categories": sorted({r["category"] for r in records}),
         "groups": sorted(combined_groups(route), key=key) + sorted({r["group"] for r in records if r.get("group")}, key=key),
         "group_requirements": {g: need for g in {r["group"] for r in records if r.get("group")} if (need := requirement(route, g.rsplit(" · ", 1)[0]))},
+        "ranked_institute_count": len({r["institute"] for r in records if r.get("ranking")}),
+        "fee_institute_count": len({r["institute"] for r in records if r.get("fee")}),
+        "quotas": quotas(route),
+        "quota_requirements": {q: need for q in quotas(route) if (need := requirement(route, q))},
         "programmes": sorted({r["programme"] for r in records}) if len({r["programme"] for r in records}) <= MAX_PROGRAMME_CHOICES else [],
     }
 
@@ -150,4 +154,152 @@ def query(
         "hidden_female_only": hidden_female_only,
         "elsewhere": [{"group": g, "count": n} for g, n in sorted(elsewhere.items(), key=lambda item: -item[1])],
         "no_figure": no_figure[:limit], "records": matched[:limit],
+    }
+
+
+# Shortlist. Every route covers one year, and one year can't support the JEE bands, which need two or more
+# (see app/services/bands.py). So a seat is placed by the round of that year in which it first reached the
+# student, which is a fact about one year, not a forecast.
+POSITIONS = {
+    "first_round": ("Reached your {unit} in the first round", "In the first round, this seat's last allotment was at or beyond your {unit}."),
+    "later_round": ("Reached your {unit} in a later main round", "It reached your {unit} only after the first round, as seats were given up and filled again."),
+    "leftover_round": ("Only in a stray, special or spot round", "It reached your {unit} only in a round for seats still empty near the end. Check who may take part in that round before relying on it."),
+    "reached": ("Reached your {unit}", "The published cut-off was at or beyond your {unit}."),
+    "near": ("Just beyond your {unit}", "It never reached your {unit} that year, but its furthest figure was within 20% of it."),
+}
+NEAR_MARGIN = 1.20
+LEFTOVER = re.compile(r"stray|special|spot", re.I)
+POSITION_LIMIT = 100
+OUTCOMES = {
+    "Medical": "Graduate outcomes, such as postgraduate seats or jobs, aren't collected for this course.",
+    "Law": "Placement figures aren't collected for law schools yet.",
+    "Engineering": "Placement figures for this course aren't collected yet.",
+}
+
+
+def base_quota(group: str | None) -> str | None:
+    return group.rsplit(" · ", 1)[0] if group and " · " in group else group
+
+
+def round_of(group: str | None) -> str | None:
+    return group.rsplit(" · ", 1)[1] if group and " · " in group else None
+
+
+def quotas(route: dict) -> list[str]:
+    """Quotas a student chooses from, without the round. Joined quotas come first."""
+    bases = {base_quota(r.get("group")) for r in route["records"] if r.get("group")}
+    joined = [name for name, members in (route.get("combined_quotas") or {}).items() if len(set(members) & bases) > 1]
+    return joined + sorted(bases)
+
+
+def lower_first(label: str) -> str:
+    """Lowercases a label's first letter for use mid-sentence, unless it starts an acronym such as AIR."""
+    return label[0].lower() + label[1:] if len(label) > 1 and label[1].islower() else label
+
+
+def fmt(route: dict, value: float) -> str:
+    return f"{value:,.0f}" if route["metric"].get("whole_number") or value == int(value) else str(value)
+
+
+def _seat(route: dict, rows: list[dict], value: float) -> dict | None:
+    metric, rounds = route["metric"], route.get("rounds") or []
+    unit, lower = metric["unit"], metric["lower_is_better"]
+    index = {label: i for i, label in enumerate(rounds)}
+    rows = sorted(rows, key=lambda r: index.get(round_of(r.get("group")), len(rounds)))
+    ladder = [
+        {"round": round_of(r.get("group")), "value": r["value"], "second_value": r.get("second_value"), "count": r.get("count"),
+         "reached": r["value"] is not None and within(route, r, value)}
+        for r in rows
+    ]
+    figures = [step for step in ladder if step["value"] is not None]
+    if not figures:
+        return None
+    furthest = (max if lower else min)(step["value"] for step in figures)
+    first = next((step for step in ladder if step["reached"]), None)
+    why = []
+    if first is None:
+        if not lower or furthest * NEAR_MARGIN < value:
+            return None
+        position = "near"
+        where = next(step["round"] for step in figures if step["value"] == furthest)
+        why.append(f"Its furthest {lower_first(metric['value_label'])} was {fmt(route, furthest)}{f' in {where}' if where else ''}, and yours is {fmt(route, value)}.")
+    elif not rounds:
+        position = "reached"
+        why.append(f"{metric['value_label']}: {fmt(route, first['value'])}. Yours is {fmt(route, value)}.")
+    else:
+        position = "first_round" if first["round"] == rounds[0] else "leftover_round" if LEFTOVER.search(first["round"] or "") else "later_round"
+        why.append(f"In {first['round']}, the {lower_first(metric['value_label'])} was {fmt(route, first['value'])}. Yours is {fmt(route, value)}.")
+        if position == "later_round":
+            earlier = [step for step in ladder if step["value"] is not None and index.get(step["round"], 0) < index.get(first["round"], 0)]
+            if earlier:
+                why.append(f"Earlier, in {earlier[-1]['round']}, it stopped at {fmt(route, earlier[-1]['value'])}.")
+            elif index.get(first["round"], 0) > 0:
+                why.append(f"This seat has no figure for the rounds before {first['round']}.")
+    missed = [step["round"] for step in ladder if first is not None and step["value"] is not None and not step["reached"]
+              and index.get(step["round"], 0) > index.get(first["round"], 0) and not LEFTOVER.search(step["round"] or "")]
+    if missed:
+        why.append(f"It didn't reach your {unit} in {', '.join(missed)}.")
+    if rounds and "provisional" in (ladder[0]["round"] or "") and position == "first_round":
+        why.append(f"{ladder[0]['round']} figures were published as provisional.")
+    if not lower:
+        why.append(f"A higher {unit} is better on this exam.")
+    last = rows[-1]
+    with_fee = next((r["fee"] for r in reversed(rows) if r.get("fee")), None)
+    ranking = next((r["ranking"] for r in rows if r.get("ranking")), None)
+    return {
+        "institute": last["institute"], "institute_short": last.get("institute_short"), "programme": last["programme"],
+        "programme_code": last.get("programme_code"), "quota": base_quota(last.get("group")), "category": last["category"],
+        "female_only": any(r.get("female_only") for r in rows), "seats": last.get("seats"), "note": last.get("note"),
+        "position": position, "rounds": ladder, "furthest": furthest, "ranking": ranking, "fee": with_fee,
+        "standing": max(r.get("standing", NEUTRAL) for r in rows), "why": why,
+        "margin": abs((first or {"value": furthest})["value"] - value),
+    }
+
+
+def shortlist(
+    route: dict, value: float | None, category: str | None, quota: str | None, programme: str | None = None,
+    gender: str | None = None, order: str = "top", search: str | None = None,
+) -> dict:
+    """A student's seats in one route, each with every round of the year in which it was allotted."""
+    missing = [name for name, given in (("figure", value is not None), ("category", bool(category))) if not given]
+    if route.get("compare_requires_group") and not quota:
+        missing.append("quota")
+    unit = route["metric"]["unit"]
+    labels = {key: {"label": label.format(unit=unit), "hint": hint.format(unit=unit)} for key, (label, hint) in POSITIONS.items()}
+    if missing:
+        return {"missing": missing, "positions": labels, "counts": {}, "options": [], "beyond": 0, "hidden_female_only": 0}
+    members = set((route.get("combined_quotas") or {}).get(quota or "", [quota])) if quota else None
+    needle = (search or "").casefold()
+    seats: dict[tuple, list[dict]] = defaultdict(list)
+    hidden = 0
+    for r in route["records"]:
+        if r["category"] != category or (members and base_quota(r.get("group")) not in members) or (programme and r["programme"] != programme):
+            continue
+        if needle and needle not in r["institute"].casefold() and needle not in r["programme"].casefold():
+            continue
+        if gender in ("male", "other") and r.get("female_only"):
+            hidden += 1
+            continue
+        seats[(r["institute"], r.get("programme_code") or r["programme"], base_quota(r.get("group")))].append(r)
+    options, beyond = [], 0
+    for rows in seats.values():
+        seat = _seat(route, rows, value)
+        if seat is None:
+            beyond += 1
+        else:
+            options.append(seat)
+    if order == "closest":
+        options.sort(key=lambda o: (o["margin"], o["institute"], o["programme"]))
+    else:
+        options.sort(key=lambda o: (-o["standing"], o["margin"], o["institute"], o["programme"]))
+    counts: dict[str, int] = defaultdict(int)
+    shown = []
+    for option in options:
+        counts[option["position"]] += 1
+        if counts[option["position"]] <= POSITION_LIMIT:
+            shown.append(option)
+    gaps = [OUTCOMES.get(route["stream"], OUTCOMES["Engineering"])]
+    return {
+        "missing": [], "positions": labels, "counts": dict(counts), "options": shown, "beyond": beyond, "hidden_female_only": hidden,
+        "limit": POSITION_LIMIT, "route_gaps": gaps,
     }

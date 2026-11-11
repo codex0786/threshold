@@ -1,203 +1,215 @@
-import { ArrowRight, Check, ChevronDown, Clock, GraduationCap, HeartHandshake, Scale, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BadgeCheck, Ban, Check, ChevronDown, FileSearch, GraduationCap, HeartHandshake, Minus, Scale, Stethoscope, UserX, Wrench } from "lucide-react";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { CutoffTrace, type TracePoint } from "@/components/cutoff-trace";
 import { CountUp, Reveal } from "@/components/motion";
-import { SourceLink } from "@/components/ui";
-import { api, type Comparison, type Completeness, type CutoffPoint, type InstitutionDetail, num, post } from "@/lib/api";
+import { api, type Completeness, type CutoffPoint, type InstitutionDetail, num } from "@/lib/api";
+import type { ExamRoute } from "@/lib/exams";
 
 // Figures come from the API, so the page is rebuilt hourly rather than frozen at build time.
 export const revalidate = 3600;
 
-async function findProgramme(slug: string, name: string): Promise<number | null> {
-  const inst = await api<InstitutionDetail>(`/institutions/${slug}`);
-  return inst.programmes.find((p) => p.name === name && p.currently_offered && p.degree === "Bachelor of Technology")?.id ?? null;
-}
-
 type Trace = { points: TracePoint[]; rankList: string; sourceUrl: string };
 
-async function loadTrace(programmeId: number | null): Promise<Trace | null> {
-  if (programmeId == null) return null;
-  const { records } = await api<{ records: CutoffPoint[] }>(`/programmes/${programmeId}/cutoffs?seat_type=OPEN&gender_pool=neutral&quota=OS`);
-  const final = records.filter((r) => r.is_final_round && !r.is_preparatory && r.closing_rank != null).sort((a, b) => a.year - b.year);
-  if (final.length < 2) return null;
-  return {
-    points: final.map((r) => ({ year: r.year, closing: r.closing_rank as number })),
-    rankList: final[0].rank_list.replace("JEE_ADVANCED:", "JEE Advanced ").replace("JEE_MAIN:", "JEE Main "),
-    sourceUrl: final.at(-1)?.source_url ?? "https://josaa.nic.in/or-cr/",
-  };
-}
-
-type ExamRoute = { code: string; stream: string; level: string; name: string; authority: string; record_count: number; institute_count: number; document: { round: string; year: string } };
-
-async function loadExams(): Promise<ExamRoute[]> {
+async function loadTrace(): Promise<Trace | null> {
   try {
-    return (await api<{ routes: ExamRoute[] }>("/exams")).routes;
-  } catch {
-    return [];
-  }
-}
-
-async function loadPreview(): Promise<{ stats: Completeness; comparison: Comparison | null; trace: Trace | null } | null> {
-  try {
-    const stats = await api<Completeness>("/data/completeness");
-    const ids = await Promise.all([
-      findProgramme("iit-patna", "Civil Engineering"),
-      findProgramme("nit-tiruchirappalli", "Computer Science and Engineering"),
-      findProgramme("iiit-allahabad", "Electronics and Communication Engineering"),
-    ]);
-    const found = ids.filter((id): id is number => id != null);
-    const [comparison, trace] = await Promise.all([
-      found.length >= 2 ? post<Comparison>("/comparisons", { programme_ids: found }) : null,
-      loadTrace(ids[1]),
-    ]);
-    return { stats, comparison, trace };
+    const inst = await api<InstitutionDetail>("/institutions/nit-tiruchirappalli");
+    const id = inst.programmes.find((p) => p.name === "Computer Science and Engineering" && p.currently_offered && p.degree === "Bachelor of Technology")?.id;
+    if (id == null) return null;
+    const { records } = await api<{ records: CutoffPoint[] }>(`/programmes/${id}/cutoffs?seat_type=OPEN&gender_pool=neutral&quota=OS`);
+    const final = records.filter((r) => r.is_final_round && !r.is_preparatory && r.closing_rank != null).sort((a, b) => a.year - b.year);
+    if (final.length < 2) return null;
+    return {
+      points: final.map((r) => ({ year: r.year, closing: r.closing_rank as number })),
+      rankList: final[0].rank_list.replace("JEE_ADVANCED:", "JEE Advanced ").replace("JEE_MAIN:", "JEE Main "),
+      sourceUrl: final.at(-1)?.source_url ?? "https://josaa.nic.in/or-cr/",
+    };
   } catch {
     return null;
   }
 }
 
-const AUDIENCES = [
-  {
-    icon: GraduationCap, tone: "var(--brand)", soft: "var(--brand-soft)", title: "For students", intro: "You’ve worked for years for this rank. Use it on a choice you understand.",
-    items: [
-      { q: "Which seats does my rank line up with?", href: "/onboarding" },
-      { q: "Which branches lead where I want to go?", href: "/colleges" },
-      { q: "What order should my JoSAA list follow?", href: "/preferences" },
-    ],
-  },
-  {
-    icon: HeartHandshake, tone: "var(--competitive)", soft: "var(--accent-soft)", title: "For parents", intro: "It’s a big family decision. You should be able to see the facts behind it, in plain language.",
-    items: [
-      { q: "What might it really cost us, loan included?", href: "/finance" },
-      { q: "What do graduates do after college?", href: "/colleges" },
-      { q: "Can we get it all explained in one report?", href: "/report" },
-    ],
-  },
+async function safe<T>(load: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await load();
+  } catch {
+    return fallback;
+  }
+}
+
+const STREAM_ICON: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };
+const STREAM_TONE: Record<string, string> = { Medical: "var(--ambitious)", Law: "var(--competitive)", Engineering: "var(--teal)" };
+
+// Short exam names for the picker. Routes not listed here use their metric's name.
+const EXAM_NAMES: Record<string, string> = { "neet-ug": "NEET UG, All India", "karnataka-neet": "NEET UG, Karnataka", clat: "CLAT", "gate-ccmt": "GATE", "maharashtra-engineering": "MHT-CET" };
+
+type Pick = { href: string; icon: typeof Wrench; tone: string; exam: string; title: string; enter: string; facts: string[] };
+
+function picks(stats: Completeness | null, routes: ExamRoute[]): Pick[] {
+  const jee: Pick = {
+    href: "/onboarding", icon: GraduationCap, tone: "var(--brand)", exam: "JEE Main and Advanced", title: "IITs, NITs, IIITs and GFTIs (JoSAA)", enter: "Your JEE ranks",
+    facts: stats ? [`${stats.cutoff_years[0]}–${String(stats.cutoff_years.at(-1)).slice(2)} cutoffs`, "Admission bands", "Placements and fees"] : ["Admission bands", "Placements and fees"],
+  };
+  return [jee, ...routes.map((r) => ({
+    href: `/exams/${r.code}`, icon: STREAM_ICON[r.stream] ?? Wrench, tone: STREAM_TONE[r.stream] ?? "var(--brand)",
+    exam: EXAM_NAMES[r.code] ?? r.metric.label.replace(/ (rank|score|percentile|All India Rank)$/i, ""), title: r.name, enter: `Your ${r.metric.label}`,
+    facts: [`${r.document.year}${r.rounds?.length ? `, ${r.rounds.length} rounds` : ""}`, `${num(r.institute_count)} institutes`, ...(r.fee_institute_count ? [`Fees for ${num(r.fee_institute_count)}`] : [])],
+  }))];
+}
+
+const PRINCIPLES = [
+  { icon: FileSearch, title: "Every figure has a source", text: "Each number links to the official document it came from, with its year." },
+  { icon: Ban, title: "No made-up chances", text: "We show where past cutoffs fell, never a percentage chance of admission." },
+  { icon: BadgeCheck, title: "Gaps stay visible", text: "Where nothing reliable exists, you see “Data not available”, not a guess." },
+  { icon: UserX, title: "No sign-up", text: "No name, phone number or email. Your answers stay in this browser." },
 ];
 
 const STEPS = [
-  { title: "Tell us your ranks and goals", text: "Enter each rank on its own list, your Class XII state, and what you want from college. No name or phone number needed." },
-  { title: "See where past cutoffs place you", text: "Each seat is compared only with cutoffs from the same rank list, quota and seat pool." },
-  { title: "Weigh the options your way", text: "Change what matters to you, and watch the shortlist reorder with reasons you can check." },
+  { title: "Pick your exam", text: "JEE, NEET, CLAT, GATE or MHT-CET. Enter your rank or score, category and quota." },
+  { title: "See what your figure reached", text: "Every seat is compared only with figures from the same list, category and quota, round by round." },
+  { title: "Weigh it with your family", text: "NIRF rank, fees, faculty and placements where they exist, each with its source." },
 ];
 
-const ANSWERS = [
-  { icon: Target, q: "Can I get in?", a: "An admission band, from past cutoffs on your exact rank list.", tone: "var(--teal)" },
-  { icon: ShieldCheck, q: "Is it good?", a: "A quality score, withheld until enough evidence exists.", tone: "var(--brand)" },
-  { icon: Sparkles, q: "Is it right for me?", a: "A suitability score, driven by the priorities you set.", tone: "var(--accent)" },
-];
+type Cell = "yes" | "part" | "no" | string;
+const MARK: Record<string, { icon: typeof Check; color: string; label: string }> = {
+  yes: { icon: Check, color: "var(--safer)", label: "Yes" },
+  part: { icon: Check, color: "var(--competitive)", label: "Some institutes" },
+  no: { icon: Minus, color: "var(--ink-3)", label: "Not yet" },
+};
+function CellView({ value }: { value: Cell }) {
+  const mark = MARK[value];
+  if (!mark) return <span className="tnum text-sm">{value}</span>;
+  return <span className="inline-flex items-center gap-1.5 text-sm" style={{ color: mark.color }}><mark.icon size={15} aria-hidden />{mark.label}</span>;
+}
 
-const CAPABILITIES: { title: string; text: string; ready: boolean }[] = [
-  { title: "Admission bands", text: "Ambitious, competitive and safer ranges from official JoSAA cutoffs since 2021.", ready: true },
-  { title: "College and branch comparison", text: "Up to four options side by side, with trade-offs written out and gaps shown.", ready: true },
-  { title: "Personal shortlist", text: "Rule-based and repeatable, with a reason for every result.", ready: true },
-  { title: "Placement intelligence", text: "Self-reported, institute-wide outcomes from official NIRF submissions for 67 institutes, with sources. Branch-level data is still being collected.", ready: true },
-  { title: "Preference list and parent report", text: "Build a JoSAA list in your own order, with warnings but no automatic changes, and save a report for your family.", ready: true },
-  { title: "Faculty and academic information", text: "Faculty numbers, doctorates, funded research and resources for 67 institutes, each kept separate. Whole institutes only, and never a rating of teaching.", ready: true },
-  { title: "Alumni and career outcomes", text: "Recruiters, sectors and a labelled sample of documented alumni, where sources exist. It isn’t the full alumni network.", ready: true },
-  { title: "Financial ROI", text: "Low, base and high scenarios using median salaries, never the highest package.", ready: true },
-  { title: "Other exams and colleges", text: "Past official figures for NEET UG (All India and Karnataka), CLAT, GATE to NITs and Maharashtra engineering, with sources. No admission bands yet.", ready: true },
-  { title: "Counselling assistant", text: "Ask about colleges, branches and JoSAA rules, and get stored records with sources. It uses fixed lookups, not an AI model, and it never decides for you.", ready: true },
-];
+function coverageRows(stats: Completeness | null, routes: ExamRoute[]): { exam: string; cells: Cell[] }[] {
+  const jee = stats ? {
+    exam: "JEE (JoSAA)",
+    cells: [`${stats.cutoff_years[0]}–${stats.cutoff_years.at(-1)}`, "Bands", `${stats.coverage.nirf_rank} of ${stats.institutions}`, `${stats.coverage.fees} of ${stats.institutions}`, `${stats.coverage.placements} of ${stats.institutions}`],
+  } : null;
+  // Other evidence where placements aren't collected: faculty figures for GATE institutes found in the JoSAA data, and seats for law.
+  const outcome = (r: ExamRoute): Cell => r.code === "gate-ccmt" ? "Faculty figures" : r.stream === "Law" ? "Seat counts" : "no";
+  return [
+    ...(jee ? [jee] : []),
+    ...routes.map((r) => ({
+      exam: r.name,
+      cells: [
+        r.document.year,
+        r.rounds?.length ? `${r.rounds.length} rounds` : "One cut-off",
+        r.ranked_institute_count ? `${r.ranked_institute_count} of ${r.institute_count}` : "no",
+        r.fee_institute_count ? `${r.fee_institute_count} of ${r.institute_count}` : "no",
+        outcome(r),
+      ] as Cell[],
+    })),
+  ];
+}
 
 const FAQ = [
-  { q: "Is this a guarantee of admission?", a: "No. Bands describe how your rank compares with past closing ranks. Cutoffs change every year, and seats are allotted only by the counselling authority." },
-  { q: "Why is there no percentage chance?", a: "Results for individual applicants are not public, so a percentage could not be properly tested. We would rather show the past cutoffs than an unsupported number." },
-  { q: "Why do many options say “Data not available”?", a: "We only show placement and fee figures that have a source we can point to. So far that covers a small group of institutes, and a gap is more useful to you than a guess." },
-  { q: "Which state counts as my home state?", a: "For JoSAA, it is the state where you first appeared for Class XII, not where you live or were born." },
-  { q: "Can colleges pay to rank higher?", a: "No. Paid partnerships must never affect the order of results, and the scoring method is published." },
+  { q: "Is this a guarantee of admission?", a: "No. We show how your rank or score compares with past cutoffs. Cutoffs change every year, and only the counselling authority allots seats." },
+  { q: "Why is there no percentage chance?", a: "Results for individual applicants aren’t public, so a percentage couldn’t be properly tested. We’d rather show the past cutoffs than an unsupported number." },
+  { q: "Why does JEE have bands but NEET, CLAT and GATE don’t?", a: "Bands need at least two years of cutoffs for the same seat. For the other exams we have one recent year, so each seat shows the round in which it reached your figure instead." },
+  { q: "Why do some options say “Data not available”?", a: "We only show placement, fee and faculty figures that have a source we can point to. A gap is more useful to you than a guess." },
+  { q: "Can colleges pay to rank higher?", a: "No. Paid partnerships must never affect the order of results, and the method is published." },
 ];
 
+function SectionHead({ eyebrow, title, intro, id }: { eyebrow: string; title: string; intro?: ReactNode; id?: string }) {
+  return (
+    <Reveal>
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 id={id} className="mt-2 max-w-3xl text-3xl sm:text-4xl">{title}</h2>
+      {intro && <p className="mt-2 max-w-2xl text-ink-2">{intro}</p>}
+    </Reveal>
+  );
+}
+
 export default async function Home() {
-  const [preview, exams] = await Promise.all([loadPreview(), loadExams()]);
-  const stats = preview?.stats;
-  const coverage = stats ? [
-    { label: "Official JoSAA cutoffs", value: stats.coverage.cutoffs, color: "var(--teal)" },
-    { label: "Placement records, self-reported", value: stats.coverage.placements, color: "var(--brand)" },
-    { label: "NIRF rank, from a secondary source", value: stats.coverage.nirf_rank, color: "var(--accent)" },
-    { label: "Fee records, from official circulars", value: stats.coverage.fees, color: "var(--ambitious)" },
-  ] : [];
+  const [stats, routes, trace] = await Promise.all([
+    safe(() => api<Completeness>("/data/completeness"), null),
+    safe(async () => (await api<{ routes: ExamRoute[] }>("/exams")).routes, [] as ExamRoute[]),
+    loadTrace(),
+  ]);
+  const options = picks(stats, routes);
+  const rows = coverageRows(stats, routes);
+  const records = (stats?.cutoff_records ?? 0) + routes.reduce((sum, r) => sum + r.record_count, 0);
   return (
     <div>
       <section className="hero">
         <span className="orb" style={{ width: 420, height: 420, background: "#4f46e5", top: -140, left: -80 }} aria-hidden />
         <span className="orb" style={{ width: 360, height: 360, background: "#0d9488", bottom: -160, right: "8%", animationDelay: "-6s" }} aria-hidden />
         <span className="orb" style={{ width: 240, height: 240, background: "#d97706", top: 40, right: -60, animationDelay: "-11s", opacity: 0.35 }} aria-hidden />
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-14 sm:pt-20 lg:grid-cols-[1.1fr_1fr]">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-12 sm:pt-16 lg:grid-cols-[1.1fr_1fr]">
           <div>
-            <p className="rise text-sm font-semibold text-ink-2" style={{ "--i": 0 } as CSSProperties}>For JEE aspirants and their families</p>
+            <p className="rise text-sm font-semibold text-ink-2" style={{ "--i": 0 } as CSSProperties}>For JEE, NEET, CLAT, GATE and MHT-CET aspirants, and their families</p>
             <h1 className="rise mt-3 text-4xl font-bold leading-[1.05] sm:text-6xl" style={{ "--i": 1 } as CSSProperties}>Your Rank Opens Doors. Make Sure You Choose the <span className="gradient-text">Right One.</span></h1>
-            <p className="rise mt-5 max-w-xl text-lg text-ink-2" style={{ "--i": 2 } as CSSProperties}>Compare colleges, branches, placements, costs and career outcomes. Make your admission decision with evidence, not guesswork.</p>
+            <p className="rise mt-5 max-w-xl text-lg text-ink-2" style={{ "--i": 2 } as CSSProperties}>Enter your rank or score and see which seats it reached in past counselling, with the official source beside every figure.</p>
             <div className="rise mt-7 flex flex-wrap gap-3" style={{ "--i": 3 } as CSSProperties}>
-              <Link href="/onboarding" className="btn btn-glow !px-5 !py-3">Find My Best-Fit Colleges <ArrowRight size={17} aria-hidden /></Link>
-              <Link href="/colleges" className="btn btn-ghost !px-5 !py-3">Explore Colleges</Link>
+              <a href="#start" className="btn btn-glow !px-5 !py-3">Choose your exam <ArrowRight size={17} aria-hidden /></a>
+              <Link href="/colleges" className="btn btn-ghost !px-5 !py-3">Explore colleges</Link>
             </div>
-            {stats && (
+            {records > 0 && (
               <dl className="rise mt-10 grid max-w-xl grid-cols-3 gap-5 border-t border-line pt-6" style={{ "--i": 4 } as CSSProperties}>
-                <div><dt className="text-sm text-ink-3">Official cutoff records</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={stats.cutoff_records} /></dd></div>
-                <div><dt className="text-sm text-ink-3">Institutes in JoSAA data</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={stats.institutions} /></dd></div>
-                <div><dt className="text-sm text-ink-3">Admission years</dt><dd className="tnum mt-1 whitespace-nowrap font-display text-xl font-semibold sm:text-3xl">{stats.cutoff_years[0]}–{String(stats.cutoff_years.at(-1)).slice(2)}</dd></div>
+                <div><dt className="text-sm text-ink-3">Cutoff records from official documents</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={records} /></dd></div>
+                <div><dt className="text-sm text-ink-3">Exams covered</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl"><CountUp value={options.length} /></dd></div>
+                <div><dt className="text-sm text-ink-3">Sign-up needed</dt><dd className="mt-1 font-display text-2xl font-semibold sm:text-3xl">None</dd></div>
               </dl>
             )}
           </div>
-          {preview?.trace && (
+          {trace && (
             <div className="rise" style={{ "--i": 3 } as CSSProperties}>
-              <CutoffTrace points={preview.trace.points} institute="NIT Tiruchirappalli" programme="Computer Science and Engineering" rankList={preview.trace.rankList} quota="Other State, OPEN" sourceUrl={preview.trace.sourceUrl} />
+              <CutoffTrace points={trace.points} institute="NIT Tiruchirappalli" programme="Computer Science and Engineering" rankList={trace.rankList} quota="Other State, OPEN" sourceUrl={trace.sourceUrl} />
             </div>
           )}
         </div>
       </section>
 
-      {exams.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pt-16" aria-labelledby="other-exams">
-          <Reveal>
-            <p className="eyebrow">Beyond JEE</p>
-            <h2 id="other-exams" className="mt-2 text-3xl sm:text-4xl">NEET, law, GATE and state colleges</h2>
-            <p className="mt-2 max-w-2xl text-ink-2">See past official figures for your exam, with the source beside each one. This is early coverage, so each exam lists what it does and doesn’t include.</p>
-          </Reveal>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {exams.map((exam, i) => (
-              <Reveal key={exam.code} delay={i * 80} className="h-full">
-                <Link href={`/exams?route=${exam.code}`} className="card card-hover group flex h-full flex-col p-5">
-                  <span className="text-sm text-ink-3">{exam.stream} · {exam.level}</span>
-                  <span className="mt-1 font-display text-lg font-semibold group-hover:text-brand">{exam.name}</span>
-                  <span className="tnum mt-2 text-sm text-ink-2">{num(exam.record_count)} records, {num(exam.institute_count)} {exam.institute_count === 1 ? "institute" : "institutes"}</span>
-                  <span className="mt-1 text-xs text-ink-3">{exam.document.round}, {exam.document.year}</span>
+      <section id="start" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-14" aria-labelledby="start-title">
+        <SectionHead id="start-title" eyebrow="Start here" title="Which exam did you take?" intro="Pick one to build your shortlist. It takes about a minute, and you can switch exams any time." />
+        <ul className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {options.map((o, i) => (
+            <li key={o.href}>
+              <Reveal delay={i * 70} className="h-full">
+                <Link href={o.href} className="card card-hover group flex h-full flex-col p-5" style={{ borderTop: `3px solid ${o.tone}` }}>
+                  <span className="flex items-center gap-3">
+                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${o.tone} 14%, transparent)`, color: o.tone }}><o.icon size={20} aria-hidden /></span>
+                    <span className="min-w-0">
+                      <span className="block font-display text-lg font-semibold leading-tight group-hover:text-brand">{o.exam}</span>
+                      <span className="block text-sm text-ink-2">{o.title}</span>
+                    </span>
+                  </span>
+                  <span className="mt-4 flex flex-wrap gap-1.5">
+                    {o.facts.map((f) => <span key={f} className="tnum rounded-full bg-surface-2 px-2.5 py-0.5 text-xs text-ink-2">{f}</span>)}
+                  </span>
+                  <span className="mt-auto flex items-center justify-between pt-5 text-sm">
+                    <span className="text-ink-3">{o.enter}</span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-brand">Start <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" aria-hidden /></span>
+                  </span>
                 </Link>
               </Reveal>
-            ))}
-          </div>
-          <p className="mt-4"><Link href="/exams" className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">See all exams <ArrowRight size={15} aria-hidden /></Link></p>
-        </section>
-      )}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-sm text-ink-3">Not listed? CAT, AILET, other state quotas and PG exams aren’t covered yet. <Link href="/exams" className="underline underline-offset-2 hover:text-brand">See what’s missing and why</Link>.</p>
+      </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <Reveal>
-          <p className="eyebrow">Made for the whole family</p>
-          <h2 className="mt-2 max-w-2xl text-3xl sm:text-4xl">The questions you’re already asking at the dinner table</h2>
-        </Reveal>
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          {AUDIENCES.map((a, i) => (
-            <Reveal key={a.title} delay={i * 120}>
-              <div className="card card-hover h-full p-6">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: a.soft, color: a.tone }}><a.icon size={22} aria-hidden /></span>
-                <h3 className="mt-4 text-2xl">{a.title}</h3>
-                <p className="mt-1 text-ink-2">{a.intro}</p>
-                <ul className="mt-4 divide-y divide-line">
-                  {a.items.map((item) => (
-                    <li key={item.q}><Link href={item.href} className="group flex items-center justify-between gap-3 py-3 font-medium hover:text-brand">{item.q}<ArrowRight size={16} className="shrink-0 transition-transform group-hover:translate-x-1" aria-hidden /></Link></li>
-                  ))}
-                </ul>
-              </div>
-            </Reveal>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PRINCIPLES.map((p, i) => (
+            <li key={p.title}>
+              <Reveal delay={i * 80} className="h-full">
+                <div className="h-full rounded-2xl border border-line p-5">
+                  <p.icon size={22} className="text-brand" aria-hidden />
+                  <h3 className="mt-3 text-lg">{p.title}</h3>
+                  <p className="mt-1 text-sm text-ink-2">{p.text}</p>
+                </div>
+              </Reveal>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <section className="border-y border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <Reveal><p className="eyebrow">How it works</p><h2 className="mt-2 text-3xl sm:text-4xl">From a rank to a decision, in three steps</h2></Reveal>
+          <SectionHead eyebrow="How it works" title="From a rank to a decision, in three steps" />
           <ol className="relative mt-10 grid gap-8 md:grid-cols-3">
             <span className="grow-x absolute left-5 right-[30%] top-5 hidden h-0.5 md:block" style={{ background: "linear-gradient(90deg, var(--brand), var(--teal), var(--accent))" }} aria-hidden />
             {STEPS.map((s, i) => (
@@ -213,98 +225,51 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <Reveal><p className="eyebrow">What makes it different</p><h2 className="mt-2 text-3xl sm:text-4xl">Three separate answers, never one blended score</h2></Reveal>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {ANSWERS.map((a, i) => (
-            <Reveal key={a.q} delay={i * 110}>
-              <div className="card card-hover h-full p-6" style={{ borderTop: `3px solid ${a.tone}` }}>
-                <a.icon size={24} style={{ color: a.tone }} aria-hidden />
-                <h3 className="mt-3 text-xl">{a.q}</h3>
-                <p className="mt-2 text-ink-2">{a.a}</p>
+      {rows.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-16" aria-labelledby="coverage">
+          <SectionHead id="coverage" eyebrow="Honest coverage" title="What we have for each exam, and what we don’t" intro="Placements matter for engineering, but not every course publishes comparable outcomes. Where they don’t, we show other evidence, and say so." />
+          <Reveal delay={80}>
+            <div className="card mt-6 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left">
+                <thead>
+                  <tr className="border-b border-line text-sm text-ink-3">
+                    {["Exam", "Cutoff years", "Detail", "NIRF rank", "Fees", "Placements or other evidence"].map((h) => <th key={h} scope="col" className="p-4 font-medium">{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.exam} className="border-b border-line last:border-0">
+                      <th scope="row" className="p-4 text-sm font-semibold">{row.exam}</th>
+                      {row.cells.map((c, i) => <td key={i} className="p-4"><CellView value={c} /></td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-sm text-ink-3">Counts are institutes with a figure we can source. NIRF ranks are from official NIRF lists. MCC’s fees are as the colleges declared them and aren’t verified. Karnataka’s are KEA’s, as printed. <Link href="/methodology" className="underline underline-offset-2 hover:text-brand">Read the methodology</Link></p>
+          </Reveal>
+        </section>
+      )}
+
+      <section className="border-y border-line bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-16 md:grid-cols-2">
+          {[
+            { icon: GraduationCap, tone: "var(--brand)", title: "For students", text: "You’ve worked for years for this rank. See every seat it reached, sorted the way you choose, and why each one is there.", href: "#start", cta: "Build my shortlist" },
+            { icon: HeartHandshake, tone: "var(--competitive)", title: "For parents", text: "Fees, costs with a loan, and a plain-language report you can read together. For JEE today, with more exams to follow.", href: "/report", cta: "See the parent report" },
+          ].map((a, i) => (
+            <Reveal key={a.title} delay={i * 120}>
+              <div className="card h-full p-6">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${a.tone} 14%, transparent)`, color: a.tone }}><a.icon size={22} aria-hidden /></span>
+                <h3 className="mt-4 text-2xl">{a.title}</h3>
+                <p className="mt-1 text-ink-2">{a.text}</p>
+                <Link href={a.href} className="mt-4 inline-flex items-center gap-1 font-semibold text-brand hover:underline">{a.cta} <ArrowRight size={15} aria-hidden /></Link>
               </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {stats && (
-        <section className="mx-auto max-w-6xl px-4 pb-16">
-          <Reveal>
-            <div className="card grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_1.4fr]">
-              <div>
-                <p className="eyebrow">Honest coverage</p>
-                <h2 className="mt-2 text-3xl">What we have, and what we don’t</h2>
-                <p className="mt-3 text-ink-2">Every institute has official cutoffs. The rest is still patchy, and we’d rather show you the gap than fill it with a guess.</p>
-                <p className="mt-3 text-sm text-ink-3">Not collected yet: {stats.not_yet_collected.join(", ")}.</p>
-              </div>
-              <ul className="space-y-4 self-center">
-                {coverage.map((c, i) => (
-                  <li key={c.label}>
-                    <div className="flex justify-between gap-3 text-sm"><span>{c.label}</span><span className="tnum shrink-0 font-semibold">{c.value} of {stats.institutions} institutes</span></div>
-                    <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-surface-2" role="img" aria-label={`${c.value} of ${stats.institutions} institutes`}>
-                      <div className="grow-x h-full rounded-full" style={{ width: `${(c.value / stats.institutions) * 100}%`, background: c.color, "--delay": `${200 + i * 130}ms` } as CSSProperties} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
-        </section>
-      )}
-
-      {preview?.comparison && (
-        <section className="border-y border-line bg-surface">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <Reveal>
-              <p className="eyebrow"><Scale size={14} className="mr-1 inline" aria-hidden />Side by side</p>
-              <h2 className="mt-2 text-3xl sm:text-4xl">An IIT, an NIT and an IIIT, compared</h2>
-              <p className="mt-2 max-w-2xl text-ink-2">Real records from our database. The most prestigious name is not automatically the right decision, so the differences are set out for you to weigh.</p>
-              <div className="card mt-6 overflow-x-auto">
-                <table className="w-full min-w-[640px] text-left text-sm">
-                  <thead><tr className="border-b border-line text-ink-3">
-                    <th scope="col" className="p-4 font-medium">Option</th>
-                    <th scope="col" className="p-4 font-medium">Final-round closing rank (OPEN, gender-neutral)</th>
-                    <th scope="col" className="p-4 font-medium">Rank list</th>
-                    <th scope="col" className="p-4 font-medium">Placements</th>
-                  </tr></thead>
-                  <tbody>
-                    {preview.comparison.items.map((item) => (
-                      <tr key={item.programme_id} className="border-b border-line transition-colors last:border-0 hover:bg-surface-2">
-                        <td className="p-4"><Link href={`/programmes/${item.programme_id}`} className="font-semibold hover:text-brand">{item.institution.short_name}</Link><p className="text-ink-2">{item.programme}</p></td>
-                        <td className="tnum p-4">{item.reference_cutoff ? <><span className="font-semibold">{num(item.reference_cutoff.closing_rank)}</span> <span className="text-ink-3">({item.reference_cutoff.quota}, {item.reference_cutoff.year})</span></> : "Data not available"}</td>
-                        <td className="p-4 text-ink-2">{item.reference_cutoff?.rank_list.replace("JEE_ADVANCED:", "JEE Advanced ").replace("JEE_MAIN:", "JEE Main ") ?? "—"}</td>
-                        <td className="p-4 text-ink-3">{item.placements.length ? "See comparison" : "Data not available"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-3 text-sm text-ink-3">JEE Advanced and JEE Main ranks are on different lists, so these numbers cannot be compared directly. <SourceLink href="https://josaa.nic.in/or-cr/" label="Source: JoSAA" /></p>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <Reveal><p className="eyebrow">Where it stands</p><h2 className="mt-2 text-3xl sm:text-4xl">What works today, and what doesn’t yet</h2></Reveal>
-        <ul className="mt-8 grid gap-4 md:grid-cols-2">
-          {CAPABILITIES.map((c, i) => (
-            <li key={c.title}>
-              <Reveal delay={(i % 2) * 90} className="h-full">
-                <div className="card flex h-full gap-3 p-4">
-                  <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: c.ready ? "var(--safer-soft)" : "var(--neutral-soft)", color: c.ready ? "var(--safer)" : "var(--ink-3)" }}>
-                    {c.ready ? <Check size={15} aria-label="Available" /> : <Clock size={15} aria-label="In development" />}
-                  </span>
-                  <div><h3 className="text-lg">{c.title}</h3><p className="text-sm text-ink-2">{c.text}</p></div>
-                </div>
-              </Reveal>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mx-auto max-w-3xl px-4 pb-16">
+      <section className="mx-auto max-w-3xl px-4 py-16">
         <Reveal><h2 className="text-3xl sm:text-4xl">Questions</h2></Reveal>
         <Reveal delay={80}>
           <div className="card mt-5 divide-y divide-line px-5">
@@ -316,7 +281,6 @@ export default async function Home() {
             ))}
           </div>
         </Reveal>
-        <p className="mt-5 text-sm text-ink-3"><Link href="/methodology" className="underline underline-offset-2 hover:text-brand">Read the full methodology and source list</Link></p>
       </section>
 
       <section className="hero no-print">
@@ -325,7 +289,7 @@ export default async function Home() {
           <Reveal>
             <h2 className="text-3xl font-bold sm:text-4xl">Sit down together. See the evidence. Decide with confidence.</h2>
             <p className="mt-3 text-ink-2">It takes a few minutes. We don’t ask for your name or contact details.</p>
-            <Link href="/onboarding" className="btn btn-glow mt-6 !px-6 !py-3">Find My Best-Fit Colleges <ArrowRight size={17} aria-hidden /></Link>
+            <a href="#start" className="btn btn-glow mt-6 !px-6 !py-3">Choose your exam <ArrowRight size={17} aria-hidden /></a>
           </Reveal>
         </div>
       </section>

@@ -1,5 +1,6 @@
 "use client";
 import { Scale, Stethoscope, Wrench } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
 import { api, num } from "@/lib/api";
@@ -147,7 +148,10 @@ export default function ExamsPage() {
 
       {selected && (
         <section ref={sectionRef} className="mt-8 scroll-mt-20" aria-label={selected.name}>
-          <h2 className="text-2xl">{selected.name}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl">{selected.name}</h2>
+            <Link href={`/exams/${selected.code}`} className="btn btn-primary">Build my shortlist</Link>
+          </div>
           <div className="card mt-3 p-4 text-sm">
             <p className="font-semibold" style={{ color: STATUS[selected.document.status].color }}>{STATUS[selected.document.status].label}</p>
             <p className="mt-1">{selected.authority}. {selected.document.round}, {selected.document.year}.</p>

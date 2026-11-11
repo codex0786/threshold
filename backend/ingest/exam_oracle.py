@@ -19,14 +19,20 @@ def fail(k,info):
     if len(ex[k])<4: ex[k].append(info)
 # ---------- demo routes
 data=json.load(open("snapshot/exam_routes.json"))
-LEVELS={"neet-ug":[1,50,100,500,1000,5000,10000,20000,50000,100000,300000,1000000,2000000],"clat":[1,50,100,120,121,500,1000,3142,5000,10000,30000],"gate-ccmt":[100,250,300,345,400,500,577,600,700,1000],"maharashtra-engineering":[0.01,10,30,50,60,70,80,88.5013511,90,95,99,99.9,100]}
+LEVELS={"neet-ug":[1,50,100,500,1000,5000,10000,20000,50000,100000,300000,1000000,2000000],"clat":[1,50,100,120,121,500,1000,3142,5000,10000,30000],"gate-ccmt":[100,250,300,345,400,500,577,600,700,1000],"maharashtra-engineering":[0.01,10,30,50,60,70,80,88.5013511,90,95,99,99.9,100],"karnataka-neet":[1,1000,5000,20000,20732,50000,100000,500000,2000000]}
 n=0
 print("=== DEMO ROUTES")
+def pairs(r,cats):
+    """Every category and group, or for a large route every group of its five commonest categories and every category on its default group."""
+    if not r.get("compare_requires_group"): return [(cat,None) for cat in cats]
+    every={(x["category"],x["group"]) for x in r["records"]}
+    if len(r["records"])<=20000: return sorted(every)
+    top={cat for cat,_ in collections.Counter(x["category"] for x in r["records"]).most_common(5)}
+    return sorted(p for p in every if p[0] in top or p[1]==r.get("default_group"))
 for r in data["routes"]:
     code=r["code"]; low=r["metric"]["lower_is_better"]; cats=sorted({x["category"] for x in r["records"]})
-    for cat in cats:
-      needs_group=r.get("compare_requires_group")
-      for grp in (sorted({x["group"] for x in r["records"] if x["category"]==cat}) if needs_group else [None]):
+    for cat,grp in pairs(r,cats):
+      if True:
         prev=None
         for v in LEVELS[code]:
             q={"value":v,"category":cat,"limit":200}

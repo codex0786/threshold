@@ -12,7 +12,7 @@ from pathlib import Path
 
 from app.services.scoring import NEUTRAL, contest_scores, reputation_score
 
-MAX_PROGRAMME_CHOICES = 6
+MAX_PROGRAMME_CHOICES = 8
 DATA = Path(__file__).resolve().parents[2] / "snapshot" / "exam_routes.json"
 
 
@@ -64,14 +64,21 @@ def requirement(route: dict, quota: str) -> str | None:
     return next((need for name, need in (route.get("quota_requirements") or {}).items() if re.sub(r"\s+", "", name) == wanted), None)
 
 
+def group_order(route: dict):
+    """Sort key that keeps each round's groups together, in the route's round order, when the route lists its rounds."""
+    rounds = {label: index for index, label in enumerate(route.get("rounds") or [])}
+    return lambda g: (rounds.get(g.rsplit(" · ", 1)[-1], len(rounds)), g) if " · " in g else (len(rounds), g)
+
+
 def summary(route: dict) -> dict:
     records = route["records"]
+    key = group_order(route)
     return {
         **{k: v for k, v in route.items() if k != "records"},
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
-        "groups": sorted(combined_groups(route)) + sorted({r["group"] for r in records if r.get("group")}),
+        "groups": sorted(combined_groups(route), key=key) + sorted({r["group"] for r in records if r.get("group")}, key=key),
         "group_requirements": {g: need for g in {r["group"] for r in records if r.get("group")} if (need := requirement(route, g.rsplit(" · ", 1)[0]))},
         "programmes": sorted({r["programme"] for r in records}) if len({r["programme"] for r in records}) <= MAX_PROGRAMME_CHOICES else [],
     }

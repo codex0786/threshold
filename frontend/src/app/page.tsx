@@ -97,7 +97,7 @@ const CAPABILITIES: { title: string; text: string; ready: boolean }[] = [
   { title: "Faculty and academic information", text: "Faculty numbers, doctorates, funded research and resources for 67 institutes, each kept separate. Whole institutes only, and never a rating of teaching.", ready: true },
   { title: "Alumni and career outcomes", text: "Recruiters, sectors and a labelled sample of documented alumni, where sources exist. It isn’t the full alumni network.", ready: true },
   { title: "Financial ROI", text: "Low, base and high scenarios using median salaries, never the highest package.", ready: true },
-  { title: "Other exams and colleges", text: "Past official figures for NEET UG, CLAT, GATE to NITs and Maharashtra engineering, with sources. Early coverage, with no admission bands yet.", ready: true },
+  { title: "Other exams and colleges", text: "Past official figures for NEET UG (All India and Karnataka), CLAT, GATE to NITs and Maharashtra engineering, with sources. No admission bands yet.", ready: true },
   { title: "Counselling assistant", text: "Ask about colleges, branches and JoSAA rules, and get stored records with sources. It uses fixed lookups, not an AI model, and it never decides for you.", ready: true },
 ];
 

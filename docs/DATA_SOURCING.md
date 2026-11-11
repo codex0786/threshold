@@ -170,10 +170,19 @@ Use only permitted access. Never bypass CAPTCHAs, logins or blocks. Don't collec
 
 | Route | Source | Status |
 |---|---|---|
-| NEET UG | MCC stray round allotment result, 2026 | Last rank allotted, calculated by us |
-| CLAT UG | Consortium of NLUs, NLSIU fifth provisional list, 2026 | Official cut-off table, one university |
-| GATE to NITs | CCMT 2025 score report | Official, 20 records for NIT Warangal |
-| Maharashtra engineering | State CET Cell, CAP Round I, 2024-25 | Official, all institutes in that document |
+| NEET UG | MCC allotment results, 2026: Round 1 (revised provisional result II, labelled provisional), Rounds 2 and 3, stray round | Last rank allotted, calculated by us |
+| NEET UG fees | Each deemed university's own fee proforma (Annexure C) on MCC's Participating Institute Details page, 2026 | Declared by the college, shown word for word and linked. Not checked by us |
+| NEET UG, Karnataka state quota | KEA UGNEET 2026 final allotment lists, medical and dental, Rounds 1 to 3 and stray round | Last rank allotted, calculated by us. Course fees as KEA prints them |
+| CLAT UG | Consortium of NLUs, fifth provisional list, 2026, every university | Official cut-off tables |
+| GATE to NITs | CCMT 2025 maximum and minimum GATE scores, all 78 institutes and six rounds | Official |
+| Maharashtra engineering | State CET Cell, CAP Rounds I to IV, 2025-26 | Official, every stage as published |
+
+**How each source was collected and checked (November 2026):**
+- **CCMT.** The public page loads the whole table into the browser. Its data API needs the page's own token, which we didn't use or bypass. We paged through the table in the browser, with no extra server calls, and saved all 10,906 rows. 891 rows repeat another row exactly, so each is kept once. Round 1 prints groups as G1, later rounds as Group 1. Both read as Group N.
+- **Maharashtra.** Each round's PDF is reconciled against its own text: every merit number and percentile pair, course code and institute code must appear exactly once in the records. All four rounds match exactly. Later rounds add stages such as VII, I-Non PWD, I-Non Defence and MH (minority seats), and minority tables have their own heading. Both are kept as published.
+- **KEA.** Every row must sit under KEA's header, and serial numbers must run from 1 with no gap. Each course and category has a single fee in every list.
+- **MCC fee forms.** Downloaded one at a time, a second apart, from MCC's public profile link for each of 102 deemed institutes. One returns no document. Contact names and phone numbers in the forms are never stored. A field the college left as 0 shows nothing.
+- **State quota audit.** Karnataka (KEA) publishes clean final allotment lists, so it is added. Tamil Nadu labels every 2026 allotment list provisional, so it isn't added yet. Maharashtra's medical portal showed no public list.
 
 By default each list puts top colleges first, as on the JEE shortlist: two parts official NIRF 2025 rank in the matching field (Medical for MBBS, Dental for BDS, Law, Engineering) to one part how contested the seat is within the same course, category and quota. Ranks come from `data/registry/nirf_2025_exam_routes.yaml`, read from nirfindia.org, and apply only where the counselling document names the same ranked institution. `python -m ingest.exam_rankings` attaches them and stops if any entry finds no institute. Students can switch to "Closest to my figure".
 

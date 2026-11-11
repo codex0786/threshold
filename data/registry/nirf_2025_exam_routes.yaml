@@ -95,9 +95,37 @@ lists:
   Engineering:
     source: https://www.nirfindia.org/Rankings/2025/EngineeringRanking.html
     ranks:
-      - {rank: 28, nirf_id: IR-E-U-0025, name: "National Institute of Technology Warangal", match: "NIT Warangal"}
+      # CCMT institutes in NIRF 2025 Engineering ranks 1-100, matched by name and city on 2026-11-11.
+      - {rank: 9, nirf_id: IR-E-U-0467, name: "National Institute of Technology Tiruchirappalli", match: "National Institute of Technology, Tiruchirappalli"}
+      - {rank: 13, nirf_id: IR-E-U-0357, name: "National Institute of Technology Rourkela", match: "National Institute of Technology, Rourkela"}
+      - {rank: 17, nirf_id: IR-E-U-0237, name: "National Institute of Technology Karnataka, Surathkal", match: "National Institute of Technology Karnataka, Surathkal"}
+      - {rank: 21, nirf_id: IR-E-U-0263, name: "National Institute of Technology Calicut", match: "National Institute of Technology Calicut"}
+      - {rank: 28, nirf_id: IR-E-U-0025, name: "National Institute of Technology Warangal", match: "National Institute of Technology, Warangal"}
       - {rank: 41, nirf_id: IR-E-U-0308, name: "Institute of Chemical Technology, Mumbai", match: "Institute of Chemical Technology, Matunga, Mumbai"}
+      - {rank: 42, nirf_id: IR-E-U-0410, name: "Malaviya National Institute of Technology", match: "Malaviya National Institute of Technology Jaipur"}
+      - {rank: 44, nirf_id: IR-E-U-0334, name: "Visvesvaraya National Institute of Technology, Nagpur", match: "Visvesvaraya National Institute of Technology, Nagpur"}
+      - {rank: 49, nirf_id: IR-E-U-0577, name: "National Institute of Technology Durgapur", match: "National Institute of Technology Durgapur"}
+      - {rank: 50, nirf_id: IR-E-U-0055, name: "National Institute of Technology Silchar", match: "National Institute of Technology, Silchar"}
+      - {rank: 53, nirf_id: IR-E-U-0072, name: "National Institute of Technology Patna", match: "National Institute of Technology Patna"}
+      - {rank: 54, nirf_id: IR-E-U-0584, name: "Indian Institute of Engineering Science and Technology, Shibpur", match: "Indian Institute of Engineering Science and Technology, Shibpur"}
+      - {rank: 55, nirf_id: IR-E-U-0374, name: "Dr. B R Ambedkar National Institute of Technology, Jalandhar", match: "Dr. B R Ambedkar National Institute of Technology, Jalandhar"}
+      - {rank: 61, nirf_id: IR-E-U-0255, name: "Indian Institute of Space Science and Technology", match: "Indian Institute of Space Science and Technology"}
+      - {rank: 62, nirf_id: IR-E-U-0530, name: "Motilal Nehru National Institute of Technology", match: "Motilal Nehru National Institute of Technology Allahabad"}
+      - {rank: 65, nirf_id: IR-E-U-0622, name: "National Institute of Technology Delhi", match: "National Institute of Technology Delhi"}
+      - {rank: 66, nirf_id: IR-E-U-0149, name: "Sardar Vallabhbhai National Institute of Technology", match: "Sardar Vallabhbhai National Institute of Technology, Surat"}
+      - {rank: 73, nirf_id: IR-E-U-0197, name: "National Institute of Technology Srinagar", match: "National Institute of Technology, Srinagar"}
+      - {rank: 74, nirf_id: IR-E-U-0042, name: "University of Hyderabad", match: "University of Hyderabad"}
+      - {rank: 79, nirf_id: IR-E-U-0384, name: "Sant Longowal Institute of Engineering & Technology", match: "Sant Longowal Institute of Engineering and Technology"}
+      - {rank: 81, nirf_id: IR-E-U-0284, name: "Maulana Azad National Institute of Technology", match: "Maulana Azad National Institute of Technology Bhopal"}
+      - {rank: 82, nirf_id: IR-E-U-0207, name: "National Institute of Technology, Jamshedpur", match: "National Institute of Technology, Jamshedpur"}
+      - {rank: 83, nirf_id: IR-E-U-0619, name: "National Institute of Technology Meghalaya", match: "National Institute of Technology Meghalaya"}
+      - {rank: 85, nirf_id: IR-E-U-0172, name: "National Institute of Technology Kurukshetra", match: "National Institute of Technology, Kurukshetra"}
+      - {rank: 86, nirf_id: IR-E-U-0092, name: "National Institute of Technology, Raipur", match: "National Institute of Technology Raipur"}
       - {rank: 90, nirf_id: IR-E-U-1257, name: "COEP Technological University", match: "COEP Technological University"}
+      - {rank: 92, nirf_id: IR-E-U-0297, name: "Defence Institute of Advanced Technology", match: "Defence Institute of Advanced Technology"}
+      - {rank: 96, nirf_id: IR-E-U-0267, name: "Atal Bihari Vajpayee Indian Institute of Information Technology and Management", match: "Atal Bihari Vajpayee Indian Institute of Information Technology & Management Gwalior"}
+      - {rank: 97, nirf_id: IR-E-U-0189, name: "National Institute of Technology Hamirpur", match: "National Institute of Technology Hamirpur"}
+      - {rank: 99, nirf_id: IR-E-U-0621, name: "National Institute of Technology Puducherry", match: "National Institute of Technology Puducherry"}
 routes:
   neet-ug: [Medical, Dental]
   clat: [Law]

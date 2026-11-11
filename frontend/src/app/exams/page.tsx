@@ -11,9 +11,11 @@ type Route = {
   record_count: number; institute_count: number; categories: string[]; groups: string[]; programmes: string[]; compare_requires_group?: boolean;
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
+  rounds?: string[]; default_group?: string; default_programme?: string;
 };
 type Ranking = { category: string; rank: number; year: number; source_url: string };
-type DemoRecord = { ranking?: Ranking; standing?: number; female_only?: boolean; institute_short?: string; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
+type DeclaredFee = { title: string; note: string; declared: { label: string; value: string }[]; source_url: string; year: string; status: string };
+type DemoRecord = { fee?: DeclaredFee; ranking?: Ranking; standing?: number; female_only?: boolean; institute_short?: string; institute: string; programme: string; programme_code?: string; group: string | null; category: string; value: number | null; second_value?: number | null; first_value?: number; count?: number; seats?: number; note?: string | null };
 type Result = { total: number; matched: number; compared: boolean; missing: string[]; furthest: number | null; elsewhere: { group: string; count: number }[]; hidden_female_only: number; no_figure: DemoRecord[]; records: DemoRecord[] };
 
 const STATUS = {
@@ -25,6 +27,7 @@ const NOT_COVERED: [string, string][] = [
   ["UGC-NET, JRF and PhD", "A qualification, not college counselling. Rules are not yet confirmed from UGC or NTA."],
   ["AILET", "120 BA LL.B. seats confirmed, but we found no published cut-off to show."],
   ["Maharashtra law and medical", "No public cutoff document found. Medical portals open at a login page."],
+  ["Tamil Nadu state quota", "Every 2026 allotment list is labelled provisional, so none is shown yet."],
   ["Other states and PG exams", "Not yet audited."],
 ];
 type ListOrder = "top" | "closest";
@@ -33,16 +36,28 @@ const ORDERS: Record<ListOrder, { label: string; note: string }> = {
   closest: { label: "Closest to my figure", note: "Past figures nearest yours come first." },
 };
 // The first view shows one clear list (the open category, and for NEET the All India quota and MBBS), not every list mixed.
-const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS"];
+// KEA's general merit category is GM.
+const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS", "GM"];
+// Groups end in " · <round>" on routes with rounds. Each round becomes its own option group, in the route's round order.
+function groupsByRound(route: Route, groups: string[]): [string, string[]][] {
+  if (!route.rounds?.length) return [["", groups]];
+  const byRound = new Map<string, string[]>();
+  for (const g of groups) {
+    const round = route.rounds.find((r) => g.endsWith(` · ${r}`)) ?? "";
+    byRound.set(round, [...(byRound.get(round) ?? []), g]);
+  }
+  return [...byRound.entries()];
+}
+
 function defaultsFor(route: Route) {
   return {
     category: OPEN_CATEGORIES.find((c) => route.categories.includes(c)) ?? "",
-    // The latest main round's All India list, when the route has rounds.
+    // The list the data names as its default, such as NEET's latest main All India round, when the route has rounds.
     group: route.compare_requires_group
-      ? (["All India and Open Seat Quota (AIIMS, JIPMER) · Round 3", "All India · Round 3", "All India"].find((g) => route.groups.includes(g)) ?? route.groups.find((g) => g.startsWith("All India")) ?? route.groups[0] ?? "")
+      ? ([route.default_group, "All India · Round 3", "All India"].find((g) => g && route.groups.includes(g)) ?? route.groups[0] ?? "")
       : "",
     // MBBS, BDS and nursing are different degrees, so NEET opens on MBBS. Other routes show every course.
-    programme: route.programmes.includes("MBBS") ? "MBBS" : "",
+    programme: [route.default_programme, "MBBS"].find((p) => p && route.programmes.includes(p)) ?? "",
   };
 }
 const ICONS: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };
@@ -110,7 +125,7 @@ export default function ExamsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <PageHeader title="Other exams and colleges" intro="Figures from official documents, each shown with its source. This shows what happened in past admissions. It doesn’t predict admission." />
-      <div className="mb-6"><Notice tone="warn">Early coverage. Most routes cover one document, one round or one institute, so this isn’t a full list of options. Check the limits shown for each exam.</Notice></div>
+      <div className="mb-6"><Notice tone="warn">Each route covers one recent year of counselling, round by round. Many exams and states aren’t covered yet, so this isn’t a full list of options. Check the limits shown for each exam.</Notice></div>
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
       {!routes && !error && <Skeleton />}
 
@@ -154,7 +169,11 @@ export default function ExamsPage() {
             </label>
             <label className="block text-sm">Quota, section or round
               <select className="input mt-1" value={group} onChange={(e) => setGroup(e.target.value)}>
-                <option value="">All</option>{selected.groups.filter((g) => !selected.group_requirements?.[g] || eligible.includes(selected.group_requirements[g]) || g === group).map((g) => <option key={g}>{g}</option>)}
+                <option value="">All</option>
+                {groupsByRound(selected, selected.groups.filter((g) => !selected.group_requirements?.[g] || eligible.includes(selected.group_requirements[g]) || g === group)).map(([round, groups]) =>
+                  round
+                    ? <optgroup key={round} label={round}>{groups.map((g) => <option key={g} value={g}>{g.slice(0, -round.length - 3)}</option>)}</optgroup>
+                    : groups.map((g) => <option key={g}>{g}</option>))}
               </select>
             </label>
             {selected.category_states && (
@@ -246,6 +265,14 @@ export default function ExamsPage() {
                     {r.institute_short && r.institute_short !== r.institute && <p className="text-xs text-ink-3">{r.institute.replace(/\s*\(Female Seat only\s*\)/, "")}</p>}
                     <p className="text-xs text-ink-3">{[r.group, r.category].filter(Boolean).join(" · ")}</p>
                     {r.ranking && <p className="mt-1 text-xs"><span className="font-semibold">NIRF {r.ranking.year} {r.ranking.category} rank {r.ranking.rank}</span> <SourceLink href={r.ranking.source_url} label="Official NIRF list" /></p>}
+                    {r.fee && (
+                      <details className="mt-1 text-xs">
+                        <summary className="cursor-pointer font-semibold">{r.fee.title}</summary>
+                        <p className="mt-1 opacity-80">{r.fee.note}</p>
+                        <dl className="mt-1 space-y-0.5">{r.fee.declared.map((f) => <div key={f.label}><dt className="inline font-semibold">{f.label}: </dt><dd className="inline break-words">{f.value}</dd></div>)}</dl>
+                        <p className="mt-1"><SourceLink href={r.fee.source_url} label={`Source document, ${r.fee.year}`} /></p>
+                      </details>
+                    )}
                     <dl className="tnum mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                       <div><dt className="inline text-ink-3">{selected.metric.value_label}: </dt><dd className="inline font-semibold">{r.value === null ? "Data not available" : num(r.value)}</dd></div>
                       {selected.metric.second_label && <div><dt className="inline text-ink-3">{selected.metric.second_label}: </dt><dd className="inline">{r.second_value == null ? "Data not available" : num(r.second_value)}</dd></div>}

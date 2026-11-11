@@ -4,16 +4,17 @@ Writes the git-ignored backend/snapshot/exam_routes.json. This repository is pub
 Candidate-level identifiers (such as CLAT admit card numbers) are never read
 into the output.
 
-Usage: python -m ingest.exam_extract --mcc-stray a.pdf --mcc-round2 b.pdf --mcc-round3 c.pdf --clat d/*.pdf \
-           [--maharashtra e.pdf] [--ccmt f.json]
+Usage: python -m ingest.exam_extract --mcc-stray a.pdf --mcc-round2 b.pdf --mcc-round3 c.pdf [--mcc-round1 r1.pdf] --clat d/*.pdf \
+           [--maharashtra round-I.pdf round-II.pdf ...] [--ccmt f.json] [--kea data/raw/kea]
 Routes whose inputs aren't given are kept from the existing file, so a slow source needn't be re-read.
+Then run `python -m ingest.mcc_fees` and `python -m ingest.exam_rankings`, in that order.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import pymupdf
@@ -141,8 +142,8 @@ def mcc_round_records(path: Path, round_label: str) -> tuple[list[dict], dict]:
     return last_ranks(groups, round_label), {"source_rows": rows, "no_seat_this_round": skipped, "sequence_breaks": bad}
 
 
-def mcc_records(path: Path) -> tuple[list[dict], dict]:
-    """Stray round allotments, in MCC's narrower layout."""
+def mcc_records(path: Path, round_label: str = "Stray round") -> tuple[list[dict], dict]:
+    """Allotments in MCC's narrower layout, used for Round 1 and the stray round."""
     groups: dict[tuple, list[int]] = defaultdict(list)
     rows = breaks = last = 0
     with pymupdf.open(path) as doc:
@@ -158,7 +159,7 @@ def mcc_records(path: Path) -> tuple[list[dict], dict]:
                     last = int(serial)
                     rows += 1
                     groups[(institute_name(row[3]), clean(row[4]), quota_name(row[2]), clean(row[5]))].append(int(rank))
-    return last_ranks(groups, "Stray round"), {"source_rows": rows, "sequence_breaks": breaks}
+    return last_ranks(groups, round_label), {"source_rows": rows, "sequence_breaks": breaks}
 
 
 def clat_records(path: Path) -> tuple[list[dict], dict]:
@@ -190,7 +191,16 @@ def clat_records(path: Path) -> tuple[list[dict], dict]:
 
 
 MH_CELL = re.compile(r"^(\d+)\s*\((\d+(?:\.\d+)?)\)$")
-MH_SECTION = re.compile(r"^(State Level|(Home University|Other Than Home University) Seats Allotted to .+)$")
+MH_SECTION = re.compile(r"^(State Level|(Home University|Other Than Home University|Minority|Maharashtra State) Seats Allotted to .+)$")
+# Stages as the CET Cell prints them. Later rounds add stages such as VII, I-Non PWD, I-Non Defence and MH (minority seats).
+MH_STAGE = re.compile(r"^(?:(?:I|II|III|IV|V|VI|VII|VIII|IX|X)(?:-Non (?:PWD|Defence))?|MH)$")
+MH_ROUND_ORDER = ["I", "II", "III", "IV", "V"]
+# The CET Cell's public document pages for each round's Maharashtra and minority cut-off list, 2025-26.
+MH_SOURCES = [
+    {"title": f"Cut Off List for Maharashtra & Minority Seats, CAP Round {r}, 2025-26", "url": f"https://fe2025.mahacet.org/ViewPublicDocument.aspx?MenuId={menu}"}
+    for r, menu in (("I", 2449), ("II", 3475), ("III", 3483), ("IV", 9822))
+]
+MH_TITLE = re.compile(r"CAP Round\s*-?\s*([IVX]+)\b.*?(?:A\.Y\.|for the Year)\s*(\d{4}-\d{2})", re.S)
 
 
 def page_lines(page: pymupdf.Page) -> list[tuple[float, str]]:
@@ -204,7 +214,7 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
     A course code starts with its institute's code, so the institute comes from the code, not page position.
     """
     records: list[dict] = []
-    bad = unknown_institute = 0
+    bad = unknown_institute = inferred_later_stage = spilled = 0
     programme = programme_code = section = None
     in_programme_name = False
 
@@ -250,6 +260,8 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
                 codes = [clean(c).replace(" ", "") for c in rows[0]]
                 # The detector sometimes leaves the Stage column out of the table, so the row order gives the stage.
                 has_stage_column = codes[0] in ("", "Stage")
+                if not has_stage_column and len(rows) > 2:
+                    inferred_later_stage += len(rows) - 2
                 for index, row in enumerate(rows[1:], start=1):
                     stage = clean(row[0]) if has_stage_column else "I" * index
                     cells = zip(codes[1:], row[1:]) if has_stage_column else zip(codes, row)
@@ -258,7 +270,7 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
                         if not cell:
                             continue
                         match = MH_CELL.match(cell)
-                        if not match or stage not in ("I", "II") or not table_section or not code:
+                        if not match or not MH_STAGE.match(stage) or not table_section or not code:
                             bad += 1
                             continue
                         institute = institutes.get(table_code[:5])
@@ -286,12 +298,22 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
                 if parent is None or not match:
                     bad += 1
                     continue
+                spilled += 1
                 records.append({
                     "institute": institutes[parent[1][:5]], "programme": parent[2], "programme_code": parent[1],
                     "group": f"{parent[3]}, Stage I", "category": code,
                     "value": float(match.group(2)) or None, "second_value": int(match.group(1)), "note": None,
                 })
-    return records, {"source_rows": len(records), "sequence_breaks": bad, "unknown_institute": unknown_institute}
+        title = MH_TITLE.search(doc[0].get_text())
+    if title is None:
+        raise SystemExit(f"No CAP round in the title of {path}")
+    round_label = f"CAP Round {title.group(1)}, {title.group(2)}"
+    for record in records:
+        record["group"] = f"{record['group']} · {round_label}"
+    return records, {
+        "round": round_label, "source_rows": len(records), "sequence_breaks": bad, "unknown_institute": unknown_institute,
+        "inferred_later_stage": inferred_later_stage, "spilled_columns": spilled,
+    }
 
 
 def clat_all(paths: list[Path]) -> tuple[list[dict], dict]:
@@ -362,12 +384,139 @@ def category_state(category: str) -> str | None:
     return next((STATE_CODES[part] for part in re.split(r"[-\s]+", code.group(1)) if part in STATE_CODES), None) if code else None
 
 
+KEA_HEADER = ["SL.NO", "All India Rank", "Course Code", "Name of the College Allotted.", "Course Name", "Allotted Category", "Course fees _", "Status"]
+
+
+def kea_records(path: Path, round_label: str, url: str) -> tuple[list[dict], dict]:
+    """The highest All India rank KEA allotted in each course and category in one round's final list, with KEA's course fee.
+
+    Every row must sit in a table under KEA's header, and serial numbers must run from 1 with no gap.
+    """
+    last: dict[tuple[str, str], dict] = {}
+    serials: list[int] = []
+    blank = fee_conflicts = 0
+    with pymupdf.open(path) as doc:
+        for page in doc:
+            for table in page.find_tables().tables:
+                for row, cell_boxes in zip(table.extract(), table.rows):
+                    cells = [clean(c) for c in row]
+                    if cells[0] == "SL.NO":
+                        if cells != KEA_HEADER:
+                            raise SystemExit(f"Unexpected KEA header in {path}: {cells}")
+                        continue
+                    if not any(cells):
+                        blank += 1
+                        continue
+                    serial, rank, code, college, course, category, fee, _status = cells
+                    if not (serial.isdigit() and rank.isdigit() and re.fullmatch(r"[A-Z]\d{3}[A-Z]{2}", code) and fee.isdigit()):
+                        raise SystemExit(f"Unexpected KEA row in {path}: {cells}")
+                    serials.append(int(serial))
+                    key = (code, category)
+                    if key in last and last[key]["fee"]["declared"][0]["value"] != fee:
+                        fee_conflicts += 1
+                    if key not in last or int(rank) > last[key]["value"]:
+                        # KEA wraps long names mid-word, as in "Bang" then "alore". The page text keeps the space before
+                        # a wrap between words, so joining its lines with nothing restores both kinds of wrap.
+                        box = cell_boxes.cells[3]
+                        college = clean(page.get_textbox(box).replace("\n", "")) if box else college
+                        last[key] = {
+                            # KEA joins a college's name and address with a comma, and empty address parts with two.
+                            "institute": re.sub(r",(?=\S)", ", ", re.sub(r",{2,}", ",", college)).strip(" ,"),
+                            "programme": course, "programme_code": code, "group": f"Karnataka quota · {round_label}",
+                            "category": category, "value": int(rank), "count": last.get(key, {}).get("count", 0),
+                            "fee": {
+                                "title": "Course fee listed by KEA", "note": "As printed in KEA's allotment list for this round, in rupees.",
+                                "declared": [{"label": "Course fee (₹)", "value": fee}], "source_url": url, "year": "2026", "status": "official",
+                            },
+                        }
+                    last[key]["count"] += 1
+    if serials != list(range(1, len(serials) + 1)):
+        raise SystemExit(f"KEA serial numbers in {path} skip or repeat")
+    return list(last.values()), {"source_rows": len(serials), "blank_rows": blank, "fee_conflicts": fee_conflicts, "sequence_breaks": 0}
+
+
+KEA_BASE = "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/"
+# KEA's final allotment list for each round, by the name we save it under in --kea's folder, and KEA's own file name.
+KEA_LISTS = [
+    ("Round 1", "r1-med-final", "UGNEET_ALLOT_2026_2nd_M_Fin_28082026kannada.pdf", "Medical, first round final allotment list, 28-08-2026"),
+    ("Round 1", "r1-den-final", "UGNEET_ALLOT_2026_2nd_D_Fin_28082026kannada.pdf", "Dental, first round final allotment list, 28-08-2026"),
+    ("Round 2", "r2-med-final", "UGNEET_ALLOT_2026_2nd_MFINAL_16092026_R2_SECONDkannada.pdf", "Medical, second round final allotment list, 16-09-2026"),
+    ("Round 2", "r2-den-final", "UGNEET_ALLOT_2026_2nd_DFINAL_16092026_R2_SECONDkannada.pdf", "Dental, second round final allotment list, 16-09-2026"),
+    ("Round 3", "r3-med-final", "UGNEET_ALLOT_2026_3rd_MFINAL_06102026_R3kannada.pdf", "Medical, third round final allotment list, 06-10-2026"),
+    ("Round 3", "r3-den-final", "UGNEET_ALLOT_2026_3rd_DFINAL_06102026_R3kannada.pdf", "Dental, third round final allotment list, 06-10-2026"),
+    ("Stray round", "stray-med-final", "UGNEET_ALLOT_2026_MED_STRAYkannada.pdf", "Medical, stray vacancy round final allotment list, 22-10-2026"),
+    ("Stray round", "stray-den-final", "UGNEET_ALLOT_2026_DEN_STRAYkannada.pdf", "Dental, stray vacancy round final allotment list, 22-10-2026"),
+]
+
+
+def kea_route(folder: Path) -> dict:
+    records, check = [], {}
+    for round_label, name, source, _ in KEA_LISTS:
+        found, file_check = kea_records(folder / f"{name}.pdf", round_label, KEA_BASE + source)
+        records += found
+        check[name] = file_check
+    # A college's course codes share their first four characters. Use the name KEA prints most often for each college.
+    names: dict[str, Counter] = defaultdict(Counter)
+    for record in records:
+        names[record["programme_code"][:4]][record["institute"]] += 1
+    for record in records:
+        record["institute"] = names[record["programme_code"][:4]].most_common(1)[0][0]
+    return {
+        "code": "karnataka-neet", "stream": "Medical", "level": "UG", "name": "NEET UG Karnataka state quota (KEA)", "authority": "Karnataka Examinations Authority",
+        "compare_requires_group": True, "rounds": ["Round 1", "Round 2", "Round 3", "Stray round"], "default_group": "Karnataka quota · Round 3", "default_programme": "MBBS-GOVT.",
+        "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
+        "document": document("UGNEET 2026 final allotment lists, rounds 1 to 3 and stray round", KEA_BASE + KEA_LISTS[4][2], "2026", "Rounds 1, 2 and 3, and stray round", "derived"),
+        "sources": [{"title": f"KEA UGNEET 2026, {title}", "url": KEA_BASE + source} for _, _, source, title in KEA_LISTS],
+        "limits": [
+            "Karnataka's state quota is only for candidates eligible under KEA's rules. Check the KEA information bulletin before relying on these figures.",
+            "Calculated by us from KEA's final allotment lists: the highest All India rank allotted in each course and category in that round. KEA doesn't publish these as cutoffs.",
+            "Category codes are shown as KEA prints them. KEA's information bulletin explains each one.",
+            "Course fees are shown as KEA prints them in each list.",
+            "NIRF ranks aren't matched for this route yet, so the list orders colleges by how contested their seats were.",
+        ],
+        "check": check, "records": records,
+    }
+
+
+CCMT_ROUNDS = ["Round 1", "Round 2", "Round 3", "Special Round 1", "Special Round 2", "National Spot Round"]
+
+
+def ccmt_records(path: Path) -> tuple[list[dict], dict]:
+    """Every row of CCMT's 2025 maximum and minimum GATE score table, as saved from its public page.
+
+    The page lists rows in its own order. Round 1 prints groups as G1, later rounds as Group 1, so both read as Group N.
+    The page repeats some rows exactly, and a repeat adds nothing, so each is kept once.
+    """
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    if saved["header"] != ["SNo.", "Round", "Institute", "PG Program", "Group", "Category", "Max GATE Score", "Min GATE Score"]:
+        raise SystemExit(f"Unexpected CCMT header: {saved['header']}")
+    records, seen = [], set()
+    for round_label, institute, programme, group, category, highest, lowest in saved["rows"]:
+        if round_label not in CCMT_ROUNDS or not re.fullmatch(r"(G|Group )\d", group):
+            raise SystemExit(f"Unexpected CCMT row: {round_label}, {group}")
+        key = (round_label, institute, programme, group, category, highest, lowest)
+        if key in seen:
+            continue
+        seen.add(key)
+        records.append({
+            "institute": institute.strip(), "programme": programme.strip(),
+            "group": f"Group {group[-1]} · {round_label}", "category": category.strip(),
+            "value": int(lowest), "second_value": int(highest),
+        })
+    order = {label: i for i, label in enumerate(CCMT_ROUNDS)}
+    records.sort(key=lambda r: (order[r["group"].rsplit(" · ", 1)[1]], r["group"], r["institute"], r["programme"], r["category"]))
+    return records, {"source_rows": len(saved["rows"]), "repeated_rows": len(saved["rows"]) - len(records), "sequence_breaks": 0}
+
+
 def document(title: str, url: str, year: str, round_label: str, status: str) -> dict:
     return {"title": title, "url": url, "year": year, "round": round_label, "retrieved": RETRIEVED, "status": status}
 
 
+# MCC labels its Round 1 file "Revised Provisional Result II", so the round says so wherever it's shown.
+ROUND_1 = "Round 1 (provisional)"
 CLAT_LIST = "https://clat2026.consortiumofnlus.ac.in/clat-2026/fifth-list.html"
 MCC_SOURCES = [
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Round 1 (revised provisional result II)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/08/20260824777992744.pdf"},
     {"title": "NEET-UG Counselling Seats Allotment 2026, Round 2 (final result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/09/20260912351980769.pdf"},
     {"title": "NEET-UG Counselling Seats Allotment 2026, Round 3 (final allotment result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610011801857474.pdf"},
     {"title": "NEET-UG Counselling Seats Allotment 2026, Stray Round (final allotment result)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610201457709919.pdf"},
@@ -377,8 +526,11 @@ MCC_SOURCES = [
 def build(args: argparse.Namespace, existing: dict) -> dict:
     kept = {route["code"]: route for route in existing.get("routes", [])}
     neet, neet_check = [], {}
-    for label, path, reader in (("Round 2", args.mcc_round2, mcc_round_records), ("Round 3", args.mcc_round3, mcc_round_records), ("Stray round", args.mcc_stray, None)):
-        found, check = reader(path, label) if reader else mcc_records(path)
+    rounds = [("Round 2", args.mcc_round2, mcc_round_records), ("Round 3", args.mcc_round3, mcc_round_records), ("Stray round", args.mcc_stray, mcc_records)]
+    if args.mcc_round1:
+        rounds.insert(0, (ROUND_1, args.mcc_round1, mcc_records))
+    for label, path, reader in rounds:
+        found, check = reader(path, label)
         neet += found
         neet_check[label] = check
     neet = tidy_quotas(neet, mcc_quota_key(args.mcc_stray))
@@ -390,17 +542,19 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
+            "rounds": [label for label, _, _ in rounds],
+            "default_group": "All India and Open Seat Quota (AIIMS, JIPMER) · Round 3",
             "asks_gender": True,
             "quota_requirements": NEET_QUOTA_REQUIREMENTS,
             # Both quotas are open to candidates from any state. MCC files AIIMS and JIPMER seats under Open Seat Quota.
             "combined_quotas": {"All India and Open Seat Quota (AIIMS, JIPMER)": ["All India", "Open Seat Quota"]},
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
-            "document": document("NEET-UG Counselling Seats Allotment 2026, Rounds 2 and 3 and stray round", MCC_SOURCES[1]["url"], "2026", "Rounds 2 and 3, and stray round", "derived"),
+            "document": document("NEET-UG Counselling Seats Allotment 2026, Rounds 1 to 3 and stray round", MCC_SOURCES[2]["url"], "2026", "Rounds 1 (provisional), 2 and 3, and stray round", "derived"),
             "sources": MCC_SOURCES,
             "limits": [
-                "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges are missing from these lists. AIIMS New Delhi is one: all its Open MBBS seats were filled in Round 1.",
+                "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges, such as AIIMS New Delhi, appear only in Round 1.",
                 "Calculated by us from MCC's rank-wise allotments: the last rank allotted to each seat in that round. MCC doesn't publish these as cutoffs.",
-                "Round 1 isn't included, because MCC labels its Round 1 file provisional.",
+                "Round 1 is from MCC's revised provisional result, the latest Round 1 file MCC published, so it's labelled provisional.",
                 "Excludes the 85% state quota, which each state runs separately.",
                 "Some quotas, such as NRI, ESI and minority quotas, have their own eligibility rules, so choose a quota you qualify for.",
             ],
@@ -419,27 +573,50 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         },
     ]
     if args.ccmt:
-        ccmt = json.loads(args.ccmt.read_text())
+        ccmt, ccmt_check = ccmt_records(args.ccmt)
         routes.append({
             "code": "gate-ccmt", "stream": "Engineering", "level": "PG", "name": "GATE to NIT M.Tech (CCMT)", "authority": "Centralized Counselling for M.Tech./M.Arch./M.Plan. Admissions",
-            "metric": {"label": "GATE score", "unit": "score", "lower_is_better": False, "max": 1000, "value_label": "Minimum GATE score", "second_label": "Maximum GATE score"},
-            "document": document("Maximum and Minimum GATE Score of CCMT 2025", "https://admissions.nic.in/admiss/admissions/orcrjacd/105012521", "2025", "All rounds", "official"),
-            "limits": [ccmt["scope"], "For Special Round-I, Round-II and the National Spot Round, scores cover only candidates newly allotted or upgraded.", "Scores from different GATE papers and years may not compare directly. Check the group for your paper."],
-            "check": {"source_rows": len(ccmt["records"]), "sequence_breaks": 0}, "records": ccmt["records"],
+            # Round 1 is the only round whose scores cover every allotted candidate, so the page opens on it.
+            "compare_requires_group": True, "rounds": CCMT_ROUNDS, "default_group": "Group 1 · Round 1",
+            "metric": {"label": "GATE score", "unit": "score", "lower_is_better": False, "max": 1000, "whole_number": True, "value_label": "Minimum GATE score", "second_label": "Maximum GATE score"},
+            "document": document("Maximum and Minimum GATE Score of CCMT 2025", "https://admissions.nic.in/admiss/admissions/orcrjacd/105012521", "2025", "All six rounds", "official"),
+            "limits": [
+                f"All {len({r['institute'] for r in ccmt})} institutes and six rounds of CCMT 2025, as CCMT publishes them. Each round is shown separately.",
+                "For Special Round-I, Round-II and the National Spot Round, scores cover only candidates newly allotted or upgraded.",
+                "Scores from different GATE papers and years may not compare directly. Check the group for your paper.",
+            ],
+            "check": ccmt_check, "records": ccmt,
         })
     else:
         routes.append(kept["gate-ccmt"])
     if args.maharashtra:
-        maharashtra, mh_check = maharashtra_records(args.maharashtra)
+        maharashtra, mh_check, mh_rounds = [], {}, []
+        for path in args.maharashtra:
+            found, check = maharashtra_records(path)
+            maharashtra += found
+            mh_check[check["round"]] = check
+            mh_rounds.append(check["round"])
+        if mh_rounds != sorted(mh_rounds, key=lambda label: MH_ROUND_ORDER.index(label.split()[2].rstrip(",")) ):
+            raise SystemExit(f"Give the Maharashtra files in round order, not {mh_rounds}")
         routes.append({
             "code": "maharashtra-engineering", "stream": "Engineering", "level": "UG", "name": "Maharashtra Engineering (CAP)", "authority": "State CET Cell, Maharashtra",
+            "compare_requires_group": True, "rounds": mh_rounds, "default_group": f"State Level, Stage I · {mh_rounds[-1]}",
             "metric": {"label": "MHT-CET percentile", "unit": "percentile", "lower_is_better": False, "max": 100, "value_label": "Closing percentile", "second_label": "State merit number"},
-            "document": document("Cut Off List for Maharashtra and Minority Seats, CAP Round I, 2024-25", "http://fe2025.mahacet.org/2024/2024ENGG_CAP1_CutOff.pdf", "2024-25", "CAP Round I", "official"),
-            "limits": ["Round I of 2024-25 only, with each stage shown as published. This sample has no later round or more recent year.", "Seat codes are shown as published: G means General, L means Ladies, and the last letter means S state level, H home university or O other than home university.", "Excludes All India seats, which have a separate list."],
+            "document": document(f"Cut Off List for Maharashtra and Minority Seats, CAP Rounds {mh_rounds[0].split()[2].rstrip(',')} to {mh_rounds[-1].split()[2].rstrip(',')}, 2025-26", MH_SOURCES[-1]["url"], "2025-26", ", ".join(r.split(",")[0] for r in mh_rounds), "official"),
+            "sources": MH_SOURCES[: len(mh_rounds)],
+            "limits": [
+                "Every CAP round of 2025-26, each shown separately with every stage as published.",
+                "Seat codes are shown as published: G means General, L means Ladies, and the last letter means S state level, H home university or O other than home university.",
+                "Excludes All India seats, which have a separate list.",
+            ],
             "check": mh_check, "records": maharashtra,
         })
     else:
         routes.append(kept["maharashtra-engineering"])
+    if args.kea:
+        routes.append(kea_route(args.kea))
+    elif "karnataka-neet" in kept:
+        routes.append(kept["karnataka-neet"])
     return {"routes": routes}
 
 
@@ -447,9 +624,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     for name in ("mcc-stray", "mcc-round2", "mcc-round3"):
         parser.add_argument(f"--{name}", type=Path, required=True)
+    parser.add_argument("--mcc-round1", type=Path)
     parser.add_argument("--clat", type=Path, nargs="+", required=True)
-    parser.add_argument("--maharashtra", type=Path)
+    parser.add_argument("--maharashtra", type=Path, nargs="+", help="One cut-off PDF per CAP round, in round order")
     parser.add_argument("--ccmt", type=Path)
+    parser.add_argument("--kea", type=Path, help="Folder holding KEA's final allotment lists, named as in KEA_LISTS")
     data = build(parser.parse_args(), json.loads(OUT.read_text()) if OUT.exists() else {})
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data))

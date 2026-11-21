@@ -34,7 +34,15 @@ Not built: student dashboard, admin dashboard.
 - Whole-course cost on the compare page, marked "at least" when hostel or mess charges aren't published.
 - Ingest keeps every JoSAA round, and `--season-in-progress` keeps the current year out of the bands until its last round is published. Methodology shows the newest round on record.
 
+## Product decisions without interviews (November 2026)
+Family interviews weren't possible, so the four open questions were settled from public JoSAA behaviour (closing-rank patterns, counselling guides) and are checked against anonymous usage instead.
+- **Default order:** guides and closing ranks show both habits are common: CSE anywhere over core at a top institute, and lower branches of top IITs over core at newer ones. So no single default is right. Onboarding now asks one question (branch first, balanced, institute first; balanced stays the default), and `onboarding_completed` counts the answers. If more than half pick branch first after 200 completions, make it the default.
+- **List builder:** kept as is. A "check my list" mode (paste your own order, get flagged gaps and risky orderings) goes in the backlog after state counselling.
+- **Round companion:** kept. Its advice already gives the reason in plain words. Revisit if `round_advice_viewed` shows mostly Float but families still ask what it means.
+- **State counselling:** moved to the top of the backlog. A general-category student above CRL 1.5 lakh gets almost no JoSAA options, and those students are the majority of JEE Main takers.
+
 ## Backlog in recommended order
+0. **First state counselling adapter** (one large state, cutoffs plus home-state rules), so students above CRL 1.5 lakh get a real list.
 1. **Authentication and role-based access**, then saving profiles and lists on the server.
 2. **Admin:** review queue, verification, audit trail. This also unlocks marking data `verified`.
 3. **More branch-level reports and fees**, starting with MNNIT and PEC. Fee coverage (6 of 20 pilots) limits the calculator most.

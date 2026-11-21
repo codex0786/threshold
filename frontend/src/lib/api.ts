@@ -73,6 +73,7 @@ export type Profile = {
   main: Record<string, number | null>; advanced: Record<string, number | null>; advanced_qualified: boolean;
   preferred_branches: string[]; acceptable_branches: string[]; avoid_branches: string[]; preferred_types: string[];
   preferred_states: string[]; career_goals: string[]; annual_budget_inr: number | null; priorities: Record<string, number>;
+  branch_vs_institute?: "balanced" | "branch" | "institute";
 };
 export type InstitutionListItem = {
   slug: string; short_name: string; official_name: string; type: string; city: string | null; state: string; is_pilot: boolean;

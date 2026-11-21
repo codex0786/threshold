@@ -546,6 +546,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
             "standing": standing_score(
                 ranking.rank if ranking else None, contest.get(programme_id, (None,))[0],
                 programme.branch_family in profile.preferred_branches, programme.branch_family in profile.acceptable_branches,
+                profile.branch_vs_institute,
             ),
             "ranking": ranking_json(ranking), "placements": placement_json(placement_records), "fee": fee_json(fee), "academics": academics.summary(academic_profile),
             "strengths": strengths, "weaknesses": weaknesses,

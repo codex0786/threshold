@@ -4,7 +4,7 @@
 import { track as vercelTrack } from "@vercel/analytics";
 
 type Events = {
-  onboarding_completed: Record<string, never>;
+  onboarding_completed: { first: "balanced" | "branch" | "institute" };
   shortlist_generated: { order: "top" | "fit" };
   list_item_added: Record<string, never>;
   bands_explainer_opened: { page: "shortlist" | "preferences" };

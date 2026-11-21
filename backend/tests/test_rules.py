@@ -461,3 +461,19 @@ def test_a_preferred_branch_at_a_good_institute_leads_a_core_branch_at_the_best_
     assert standing_score(40, 70, preferred=True) > standing_score(9, 45)
     # A preferred branch at an unranked, barely contested institute doesn't jump a strong institute's acceptable branch.
     assert standing_score(None, 10, preferred=True) < standing_score(5, 80, acceptable=True)
+
+
+def test_branch_first_puts_every_preferred_branch_above_every_acceptable_one_and_those_above_the_rest():
+    weakest = [standing_score(None, 0, preferred=True, first="branch"), standing_score(200, 0, preferred=True, first="branch")]
+    strongest_acceptable = standing_score(1, 100, acceptable=True, first="branch")
+    weakest_acceptable = standing_score(200, 0, acceptable=True, first="branch")
+    assert min(weakest) > strongest_acceptable
+    assert weakest_acceptable > standing_score(1, 100, first="branch")
+    # Within a tier the institute order still holds.
+    assert standing_score(3, 60, preferred=True, first="branch") > standing_score(40, 60, preferred=True, first="branch")
+
+
+def test_institute_first_lets_a_much_stronger_institute_lead_a_preferred_branch():
+    assert standing_score(40, 70, preferred=True, first="institute") < standing_score(9, 70)
+    assert standing_score(40, 70, preferred=True, first="balanced") > standing_score(9, 45)
+    assert standing_score(20, 60, preferred=True, first="unknown") == standing_score(20, 60, preferred=True)

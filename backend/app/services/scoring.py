@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.5.2"
+ENGINE_VERSION = "0.5.3"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -87,9 +87,16 @@ def reputation_score(nirf_rank: int | None) -> float | None:
 # branches, and a 45,000 rank still keeps a mix of strong institutes. Higher lifts pushed weak institutes up.
 PREFERRED_BRANCH_LIFT = 20
 ACCEPTABLE_BRANCH_LIFT = 10
+# What the student said comes first when a branch and an institute pull different ways.
+# "balanced" is the tested default above. "institute" is the earlier +10/+5, where strong institutes lead.
+# "branch" lifts by more than the whole 33-100 range of the base score, so every preferred branch sits above
+# every acceptable one, and every acceptable one above the rest; within each tier the institute order holds.
+BRANCH_LIFTS: dict[str, tuple[float, float]] = {
+    "balanced": (PREFERRED_BRANCH_LIFT, ACCEPTABLE_BRANCH_LIFT), "institute": (10, 5), "branch": (140, 70),
+}
 
 
-def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool = False, acceptable: bool = False) -> float:
+def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool = False, acceptable: bool = False, first: str = "balanced") -> float:
     """Default list position: two parts institute rank to one part how contested the programme is.
 
     Only orders the list. It isn't a quality score and never affects a band. A missing rank or closing
@@ -98,7 +105,8 @@ def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool 
     institute = reputation_score(nirf_rank)
     institute = NEUTRAL if institute is None else institute
     contested = NEUTRAL if demand is None else demand
-    return round((2 * institute + contested) / 3 + (PREFERRED_BRANCH_LIFT if preferred else ACCEPTABLE_BRANCH_LIFT if acceptable else 0), 1)
+    lift_preferred, lift_acceptable = BRANCH_LIFTS.get(first, BRANCH_LIFTS["balanced"])
+    return round((2 * institute + contested) / 3 + (lift_preferred if preferred else lift_acceptable if acceptable else 0), 1)
 
 
 def contest_scores(closing_ranks: Mapping[int, float]) -> dict[int, float]:

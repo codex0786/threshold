@@ -43,7 +43,8 @@ Base path `/api/v1`. Interactive schema at `/docs` when the backend is running. 
     "preferred_branches": ["CS"],
     "avoid_branches": ["CIVIL"],
     "career_goals": ["software"],
-    "priorities": { "branch_fit": 30, "reputation": 20 }
+    "priorities": { "branch_fit": 30, "reputation": 20 },
+    "branch_vs_institute": "balanced"
   },
   "per_band_limit": 25
 }
@@ -76,3 +77,5 @@ Returns `tool`, `summary`, `facts` (each with `text`, `source_title`, `source_ur
 | GET | `/api/v1/meta` | Now also returns `latest_round`: the newest JoSAA year and round on record |
 
 `/api/v1/comparisons` items now include `course_cost`: one year's published charges times the course length plus one-time fees, `status` `complete` or `at_least`.
+
+`branch_vs_institute` is `balanced` (default), `branch` or `institute`. It only changes the default (`order: "top"`) list order through standing, never a band. See SCORING_METHODOLOGY.md.

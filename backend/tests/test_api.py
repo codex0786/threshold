@@ -461,3 +461,16 @@ def test_assistant_value_answer_never_uses_a_branch_median_for_an_institute(clie
 def test_assistant_rejects_an_oversized_question(client):
     assert client.post("/api/v1/ai/counselling", json={"question": "x" * 501}).status_code == 422
 
+
+
+def test_a_reserved_category_student_without_a_category_rank_is_told(client):
+    without = generate(client, category="OBC-NCL")
+    assert without["missing_ranks"] and "OBC-NCL category rank" in without["missing_ranks"][0]
+    with_rank = generate(client, category="OBC-NCL", main={"crl": 12000, "category_rank": 3000})
+    assert with_rank["missing_ranks"] == []
+    assert generate(client)["missing_ranks"] == []
+
+
+def test_empty_priorities_fall_back_to_the_defaults(client):
+    result = generate(client, priorities={})
+    assert all(o["suitability"]["score"] is not None for o in result["options"])

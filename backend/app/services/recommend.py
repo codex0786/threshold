@@ -390,6 +390,20 @@ def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -
     }
 
 
+def missing_rank_notices(profile: StudentProfile) -> list[str]:
+    """Reserved-category seats need the category rank. Without it only OPEN seats are checked, and many options go missing."""
+    notices = []
+    if profile.category == "GEN":
+        return notices
+    for exam, ranks, needed in (("JEE Main", profile.main, True), ("JEE Advanced", profile.advanced, profile.advanced_qualified)):
+        if not needed or ranks is None:
+            continue
+        has_any = any(getattr(ranks, k, None) for k in ("crl", "category_rank", "crl_pwd", "category_pwd_rank"))
+        if has_any and not ranks.category_rank:
+            notices.append(f"You haven't entered your {exam} {profile.category} category rank, so only OPEN seats are checked. {profile.category} seats usually close at much higher ranks, so add it to see them.")
+    return notices
+
+
 def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True, order: str = "top") -> dict:
     student = profile.to_student()
     warnings: list[str] = [
@@ -408,6 +422,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     if student.is_pwd:
         warnings.append("PwD seats depend on verified certificates. Institute-specific restrictions may also apply.")
     warnings.append("Some programmes have medical or other special restrictions. Check the JoSAA annexure for your programme.")
+    missing_ranks = missing_rank_notices(profile)
 
     data_year = latest_year(db)
     window_start = data_year - LOOKBACK_YEARS + 1
@@ -553,7 +568,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
 
     payload = {
         "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year], "order": order,
-        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "options": limited,
+        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "missing_ranks": missing_ranks, "options": limited,
         "csab": csab_leads(db, profile, student, quota_map),
     }
     if record_run:

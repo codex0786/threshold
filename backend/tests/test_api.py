@@ -474,3 +474,44 @@ def test_a_reserved_category_student_without_a_category_rank_is_told(client):
 def test_empty_priorities_fall_back_to_the_defaults(client):
     result = generate(client, priorities={})
     assert all(o["suitability"]["score"] is not None for o in result["options"])
+
+
+def _limited_app(per_minute):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.rate_limit import RateLimitMiddleware
+
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware, per_minute=per_minute)
+    app.get("/x")(lambda: {"ok": True})
+    app.post("/api/v1/preference-lists/build")(lambda: {"ok": True})
+    return TestClient(app)
+
+
+def test_a_spoofed_forwarded_for_header_does_not_dodge_the_limit():
+    client = _limited_app(2)
+    codes = [client.get("/x", headers={"x-real-ip": "9.9.9.9", "x-forwarded-for": f"{i}.0.0.1"}).status_code for i in range(3)]
+    assert codes == [200, 200, 429]
+
+
+def test_costly_endpoints_count_for_more():
+    client = _limited_app(10)
+    codes = [client.post("/api/v1/preference-lists/build", headers={"x-real-ip": "8.8.8.8"}).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+
+
+def test_oversized_bodies_are_refused():
+    client = _limited_app(0)
+    big = client.post("/api/v1/preference-lists/build", content=b"x" * (65 * 1024), headers={"content-type": "application/json"})
+    assert big.status_code == 413
+
+
+def test_profiles_are_bounded_and_old_priorities_are_dropped(client):
+    too_many = client.post("/api/v1/recommendations/generate", json={"profile": profile(preferred_branches=["CS"] * 41)})
+    assert too_many.status_code == 422
+    huge_weight = client.post("/api/v1/recommendations/generate", json={"profile": profile(priorities={"branch_fit": 5000})})
+    assert huge_weight.status_code == 422
+    old = client.post("/api/v1/recommendations/generate", json={"profile": profile(priorities={"retired_factor": 10})})
+    assert old.status_code == 200
+    assert all(o["suitability"]["score"] is not None for o in old.json()["options"])

@@ -16,10 +16,22 @@ const DETAIL: [string, string][] = [
   ["official_rankings", "NIRF ranks entered from the official site"],
 ];
 
+async function load() {
+  try {
+    return await Promise.all([api<Meta>("/meta"), api<Completeness>("/data/completeness"), api<{ sources: DataSource[] }>("/data/sources")]);
+  } catch (error) {
+    // CI builds have no API. Only there may the page build without figures; a real deployment must fail loudly instead.
+    if (process.env.THRESHOLD_OFFLINE_BUILD === "1") return null;
+    throw error;
+  }
+}
+
 export default async function Methodology() {
-  const [meta, completeness, sources] = await Promise.all([
-    api<Meta>("/meta"), api<Completeness>("/data/completeness"), api<{ sources: DataSource[] }>("/data/sources"),
-  ]);
+  const loaded = await load();
+  if (!loaded) {
+    return <div className="mx-auto max-w-4xl px-4 py-10"><PageHeader title="Data and methodology" /><Notice>Figures are loading. Please try again shortly.</Notice></div>;
+  }
+  const [meta, completeness, sources] = loaded;
   const coverage: [string, number][] = [
     ["Official cutoffs", completeness.coverage.cutoffs], ["NIRF rank (secondary source)", completeness.coverage.nirf_rank],
     ["Placement records (self-reported, institute-wide)", completeness.coverage.placements], ["Fee records (official circulars)", completeness.coverage.fees],

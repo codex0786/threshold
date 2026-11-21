@@ -40,3 +40,7 @@ Collected now: Class XII state, category, seat pool, PwD status, Class XII crite
 Not collected yet: exam year, preferred cities, total budget, hostel, scholarship and loan preferences. These have no effect until fee and financial features exist, so asking now would mislead students.
 
 Student data stays in the browser. Each shortlist request sends the profile to the API, and the profile is stored with the run for reproducibility. No name or contact details are collected.
+
+**Share links.** A student can send their profile and one preference list as a link (`/share#d=…`). The data is compressed into the URL fragment, which browsers never send to a server, and is validated before it's opened. Opening it replaces the recipient's saved profile, after a warning, and adds the list beside their own. There's no account and nothing is stored on the server.
+
+**Usage counts.** Vercel Web Analytics counts page views and a fixed set of events (`frontend/src/lib/analytics.ts`). It sets no cookies. Events carry only coarse properties, never ranks, category, state, gender or list contents, and URLs are reduced to their path before sending. Custom events need a Vercel Pro plan; page views work on Hobby.

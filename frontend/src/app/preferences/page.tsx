@@ -2,6 +2,8 @@
 import { ArrowDown, ArrowUp, GripVertical, Plus, Printer, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BandsExplainer } from "@/components/bands-explainer";
+import { ShareButton } from "@/components/share-button";
 import { BandBadge, Notice, PageHeader, Skeleton } from "@/components/ui";
 import { num, post, type PreferenceAnalysis, type PreferenceItem, type Profile } from "@/lib/api";
 import { loadLists, loadProfile, type SavedList, saveLists } from "@/lib/store";
@@ -18,7 +20,15 @@ export default function PreferencesPage() {
   const [dragging, setDragging] = useState<number | null>(null);
   const [filter, setFilter] = useState("All");
 
-  useEffect(() => { setProfile(loadProfile()); setLists(loadLists()); }, []);
+  useEffect(() => {
+    const stored = loadLists();
+    setProfile(loadProfile());
+    setLists(stored);
+    // A shared list opens on its own tab.
+    const wanted = new URLSearchParams(window.location.search).get("list");
+    const index = wanted ? stored.findIndex((l) => l.id === wanted) : -1;
+    if (index >= 0) setActive(index);
+  }, []);
   const list = lists[active];
   const ids = list?.items.map((i) => i.id).join(",") ?? "";
 
@@ -62,7 +72,10 @@ export default function PreferencesPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <PageHeader title="JoSAA preference list" intro="Put choices in the order you actually want them. We flag problems, but we never change your order.">
-        <button className="btn btn-secondary no-print" onClick={() => window.print()} disabled={!list?.items.length}><Printer size={15} aria-hidden /> Save as PDF</button>
+        <div className="flex flex-wrap gap-2">
+          <ShareButton list={list} />
+          <button className="btn btn-secondary no-print" onClick={() => window.print()} disabled={!list?.items.length}><Printer size={15} aria-hidden /> Save as PDF</button>
+        </div>
       </PageHeader>
       <div className="no-print mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Saved lists">
         {lists.map((l, i) => <button key={l.id} aria-pressed={i === active} onClick={() => setActive(i)} className={`rounded-full border px-3 py-1.5 text-sm ${i === active ? "border-brand bg-brand text-brand-ink" : "border-line bg-surface text-ink-2"}`}>{l.name} ({l.items.length})</button>)}
@@ -78,6 +91,7 @@ export default function PreferencesPage() {
             <div className="mb-4 space-y-2">
               <p className="tnum text-sm text-ink-3">{num(analysis.counts.safer)} safer, {num(analysis.counts.competitive)} competitive, {num(analysis.counts.ambitious)} ambitious. Based on past cutoffs to {analysis.data_year}.</p>
               {analysis.advice.map((a) => <Notice key={a} tone="warn">{a}</Notice>)}
+              <div className="no-print"><BandsExplainer page="preferences" /></div>
             </div>
           )}
           <div className="no-print mb-3 flex flex-wrap gap-2" role="group" aria-label="Show institution type">

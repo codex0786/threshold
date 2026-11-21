@@ -6,6 +6,7 @@ import { CareerSummary } from "@/components/careers";
 import { Notice, Skeleton, SourceLink } from "@/components/ui";
 import { inr, num, type ParentReport, post, type Profile } from "@/lib/api";
 import { loadLists, loadProfile } from "@/lib/store";
+import { track } from "@/lib/analytics";
 
 const MAX_OPTIONS = 8;
 
@@ -23,6 +24,7 @@ export default function ReportPage() {
     const items = loadLists()[0].items;
     if (!items.length) { setEmpty(true); return; }
     setTrimmed(Math.max(0, items.length - MAX_OPTIONS));
+    track("report_opened");
     post<ParentReport>("/reports/parent", { profile: stored as Profile, programme_ids: items.slice(0, MAX_OPTIONS).map((i) => i.id) }).then(setReport).catch((e) => setError(e.message));
   }, []);
 

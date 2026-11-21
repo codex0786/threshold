@@ -8,6 +8,9 @@ import { BandBadge, bandMeta, ComponentList, Notice, PageHeader, PlacementBlock,
 import { api, type CsabLeads, type Meta, num, type Option, post, type Profile, type Recommendations, type Route } from "@/lib/api";
 import { RankEditor } from "@/components/rank-editor";
 import { ResetData } from "@/components/reset-data";
+import { BandsExplainer } from "@/components/bands-explainer";
+import { ShareButton } from "@/components/share-button";
+import { track } from "@/lib/analytics";
 import { loadProfile, saveProfile } from "@/lib/store";
 
 const BANDS = ["all", "safer", "competitive", "ambitious", "limited_history"] as const;
@@ -154,7 +157,7 @@ export default function RecommendationsPage() {
     setError(null);
     try {
       const next = await post<Recommendations>("/recommendations/generate", { profile: p, order: listOrder });
-      if (request === latest.current) setResult(next);
+      if (request === latest.current) { setResult(next); track("shortlist_generated", { order: listOrder }); }
     } catch (e) {
       if (request === latest.current) setError((e as Error).message);
     } finally {
@@ -214,6 +217,7 @@ export default function RecommendationsPage() {
       <PageHeader title="Your shortlist" intro={result?.data_year ? `Compared with official JoSAA final-round closing ranks from ${result.history_window?.[0]} to ${result.history_window?.[1]}.` : undefined}>
         <div className="flex flex-wrap gap-2">
           <Link href="/onboarding" className="btn btn-secondary">Edit my answers</Link>
+          <ShareButton />
           <ResetData />
         </div>
       </PageHeader>
@@ -270,6 +274,7 @@ export default function RecommendationsPage() {
             </div>
           )}
           {result && <BandMix counts={result.counts} />}
+          {result && <div className="mb-5"><BandsExplainer page="shortlist" /></div>}
           {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0 || result.excluded.no_latest_cutoff > 0) && (
             <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} missing from the {result.data_year} seat matrix, so not offered this year{(result.excluded.no_seat_in_category ?? 0) > 0 ? `, and ${num(result.excluded.no_seat_in_category)} with no ${result.data_year} seat in your category` : ""}. Each band shows its first 25 in this order, and options with limited history come last.</p>
           )}

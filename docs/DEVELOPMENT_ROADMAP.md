@@ -22,6 +22,11 @@ Rule-based assistant built at `/assistant`.
 
 Not built: student dashboard, admin dashboard.
 
+## Done in the first prioritised slice (November 2026)
+- Anonymous usage counts (Vercel Web Analytics) with key events.
+- "What the bands mean" card on the shortlist and preference list, with the backtest figures in plain words.
+- Share links for the profile and a preference list, with no account.
+
 ## Backlog in recommended order
 1. **Authentication and role-based access**, then saving profiles and lists on the server.
 2. **Admin:** review queue, verification, audit trail. This also unlocks marking data `verified`.

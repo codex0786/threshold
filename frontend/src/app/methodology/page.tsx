@@ -77,6 +77,13 @@ export default async function Methodology() {
           )}
           <p className="mt-3 text-sm text-ink-3">Not yet collected: {completeness.not_yet_collected.join(", ")}.</p>
         </Section>
+        <Section title="Your privacy">
+          <ul className="list-disc space-y-1.5 pl-5 text-ink-2">
+            <li>Your answers, ranks and lists are kept in this browser. They are sent to our server only to work out your results, with no name or contact details.</li>
+            <li>We count visits and a few actions, such as creating a shortlist or a share link, with Vercel Web Analytics. It sets no cookies, and we never send it your ranks, category, state, gender or choices. Addresses are counted without anything after the page name.</li>
+            <li>A share link carries your answers and one list inside the link itself, after the # sign. Browsers don’t send that part to any server, so we never see it. Anyone who has the link can read it, so share it only with people you trust.</li>
+          </ul>
+        </Section>
         <Section title="Sources">
           <ul className="divide-y divide-line">
             {sources.sources.map((s) => (

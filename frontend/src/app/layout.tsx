@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { UsageCounts } from "@/components/analytics";
 import { Footer, Nav } from "@/components/nav";
 import "./globals.css";
 
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Nav />
         <main className="flex-1">{children}</main>
         <Footer />
+        <UsageCounts />
       </body>
     </html>
   );

@@ -9,7 +9,9 @@ two seconds apart. Rerun to resume.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
+import re
 import json
 import time
 from pathlib import Path
@@ -21,6 +23,14 @@ from ingest.nirf_fetch import USER_AGENT
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "data" / "registry" / "exam_history.yaml"
+
+
+def pdf_bytes(content: bytes, embedded: bool) -> bytes | None:
+    """The PDF itself. Some authorities (Maharashtra's CET Cell) send a web page holding the PDF as base64."""
+    if embedded:
+        match = re.search(rb"JVBERi0[A-Za-z0-9+/=]+", content)
+        content = base64.b64decode(match.group()) if match else b""
+    return content if content.startswith(b"%PDF") else None
 
 
 def main(only: str | None = None) -> int:
@@ -44,12 +54,13 @@ def main(only: str | None = None) -> int:
                         print(f"{code} {key}: {type(error).__name__}, run again later")
                         failures += 1
                         continue
-                    if response.status_code != 200 or not response.content.startswith(b"%PDF"):
+                    content = pdf_bytes(response.content, doc.get("embedded", False)) if response.status_code == 200 else None
+                    if content is None:
                         print(f"{code} {key}: HTTP {response.status_code}, not a PDF")
                         failures += 1
                         continue
-                    path.write_bytes(response.content)
-                    print(f"{code} {key}: saved {len(response.content) / 1e6:.1f} MB")
+                    path.write_bytes(content)
+                    print(f"{code} {key}: saved {len(content) / 1e6:.1f} MB")
                     time.sleep(2)
                 content = path.read_bytes()
                 manifest[key] = {"title": doc["title"], "url": doc["url"], "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}

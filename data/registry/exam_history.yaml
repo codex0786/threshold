@@ -28,3 +28,65 @@ routes:
         round2: {title: "Final Allotment Status for Round 2 of UG Counselling 2023", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/08/2023081882.pdf"}
         round3: {title: "Final Result of UG 2023 Round 3", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/09/2023090732.pdf"}
         stray: {title: "Result of Stray Vacancy Round UG 2023", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/09/2023092765.pdf"}
+  maharashtra-engineering:
+    authority: State CET Cell, Maharashtra
+    archive: https://fe2024.mahacet.org/StaticPages/HomePage
+    # The CET Cell's document pages wrap each PDF in a web page as base64 (`embedded: true`); older years are plain PDFs.
+    # Only the "Maharashtra and minority seats" cut-off list for each CAP round, not the All India or diploma lists.
+    years:
+      2025:
+        round1: {title: "Cut Off List for Maharashtra & Minority Seats, CAP Round I, 2025-26", url: "https://fe2025.mahacet.org/ViewPublicDocument.aspx?MenuId=2449", embedded: true}
+        round2: {title: "Cut Off List for Maharashtra & Minority Seats, CAP Round II, 2025-26", url: "https://fe2025.mahacet.org/ViewPublicDocument.aspx?MenuId=3475", embedded: true}
+        round3: {title: "Cut Off List for Maharashtra & Minority Seats, CAP Round III, 2025-26", url: "https://fe2025.mahacet.org/ViewPublicDocument.aspx?MenuId=3483", embedded: true}
+        round4: {title: "Cut Off List for Maharashtra & Minority Seats, CAP Round IV, 2025-26", url: "https://fe2025.mahacet.org/ViewPublicDocument.aspx?MenuId=9822", embedded: true}
+      2024:
+        round1: {title: "CAP Round I MH Cut Off, 2024-25", url: "https://fe2024.mahacet.org/ViewPublicDocument.aspx?MenuId=2449", embedded: true}
+        round2: {title: "CAP Round II MH Cut Off, 2024-25", url: "https://fe2024.mahacet.org/ViewPublicDocument.aspx?MenuId=3475", embedded: true}
+        round3: {title: "MH Cut Off CAP Round III, 2024-25", url: "https://fe2024.mahacet.org/ViewPublicDocument.aspx?MenuId=3483", embedded: true}
+      2023:
+        round1: {title: "CAP Round I Cut Off, 2023-24", url: "https://fe2024.mahacet.org/2023/2023ENGG_CAP1_CutOff.pdf"}
+        round2: {title: "CAP Round II Cut Off, 2023-24", url: "https://fe2024.mahacet.org/2023/2023ENGG_CAP2_CutOff.pdf"}
+        round3: {title: "CAP Round III Cut Off, 2023-24", url: "https://fe2024.mahacet.org/2023/2023ENGG_CAP3_CutOff.pdf"}
+      2022:
+        round1: {title: "CAP Round I Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP1_CutOff.pdf"}
+        round2: {title: "CAP Round II Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP2_CutOff.pdf"}
+        round3: {title: "CAP Round III Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP3_CutOff.pdf"}
+  karnataka-neet:
+    authority: Karnataka Examinations Authority
+    archive: https://cetonline.karnataka.gov.in/kea/
+    # KEA's pages are in Kannada and some years had court-ordered or extra lists. For each main round, the latest
+    # final list for medical and for dental. The round each file belongs to is checked from its own heading when read.
+    years:
+      2026:
+        round1-med: {title: "Medical, first round final allotment list, 28-08-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_2nd_M_Fin_28082026kannada.pdf"}
+        round1-den: {title: "Dental, first round final allotment list, 28-08-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_2nd_D_Fin_28082026kannada.pdf"}
+        round2-med: {title: "Medical, second round final allotment list, 16-09-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_2nd_MFINAL_16092026_R2_SECONDkannada.pdf"}
+        round2-den: {title: "Dental, second round final allotment list, 16-09-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_2nd_DFINAL_16092026_R2_SECONDkannada.pdf"}
+        round3-med: {title: "Medical, third round final allotment list, 06-10-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_3rd_MFINAL_06102026_R3kannada.pdf"}
+        round3-den: {title: "Dental, third round final allotment list, 06-10-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_3rd_DFINAL_06102026_R3kannada.pdf"}
+        stray-med: {title: "Medical, stray vacancy round final allotment list, 22-10-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_MED_STRAYkannada.pdf"}
+        stray-den: {title: "Dental, stray vacancy round final allotment list, 22-10-2026", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2026/UGNEET_ALLOT_2026_DEN_STRAYkannada.pdf"}
+      2025:
+        round1-med: {title: "UGNEET 2025 medical, first round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_1st_final_mbbskannada.pdf"}
+        round1-den: {title: "UGNEET 2025 dental, first round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_1st_final_bdskannada.pdf"}
+        round2-med: {title: "UGNEET 2025 medical, second round final allotment list, 23-09-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_R2_prov_2ND_FIN_MED_23092025.pdf"}
+        round2-den: {title: "UGNEET 2025 dental, second round final allotment list, 23-09-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_R2_prov_2ND_FIN_DEN_23092025.pdf"}
+        round3-med: {title: "UGNEET 2025 medical, third round final allotment list (after the court order), 08-12-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_court_Fin_08122025kannada.pdf"}
+        round3-den: {title: "UGNEET 2025 dental, third round final allotment list (after the court order), 08-12-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_court_fin_08122025_denkannada.pdf"}
+        stray-med: {title: "UGNEET 2025 medical, stray round final allotment list, 16-12-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_SPE_STRY_med_16122025_finl.pdf"}
+        stray-den: {title: "UGNEET 2025 dental, stray round final allotment list, 16-12-2025", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet2025/UGNEET_ALLOT_2025_SPE_STRY_Den_16122025_finl.pdf"}
+      2024:
+        round1-med: {title: "UGNEET 2024 medical, first round allotment list, 01-09-2024", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_MEDICAL.pdf"}
+        round1-den: {title: "UGNEET 2024 dental, first round allotment list, 01-09-2024", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_DENTAL.pdf"}
+        round2-med: {title: "UGNEET 2024 medical, second round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_MEDICAL_R2_final.pdf"}
+        round2-den: {title: "UGNEET 2024 dental, second round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_DENTAL_R2_final.pdf"}
+        round3-med: {title: "UGNEET 2024 medical, mop-up round final allotment list, 18-10-2024", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_MEDICAL_R3_final_ALL_NEW_622.pdf"}
+        round3-med-kims: {title: "UGNEET 2024 medical, mop-up round final allotment list (KIMS new 100 seats)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_MEDICAL_R3_FINAL_KIMS81.pdf"}
+        round3-den: {title: "UGNEET 2024 dental, mop-up round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_DENTAL_ALLOT_2023_finalkannada.pdf"}
+      2023:
+        round1-med: {title: "UGNEET 2023 medical, first round allotment list, 16-08-2023", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/ALLOT_2023kannada.pdf"}
+        round1-den: {title: "UGNEET 2023 dental, first round allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/ALLOT_2023_1kannada.pdf"}
+        round2-med: {title: "UGNEET 2023 medical allotment list (second round)", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/UGALLOT_2023_M1kannada.pdf"}
+        round2-den: {title: "UGNEET 2023 dental allotment list (second round)", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/UGALLOT_2023_D1kannada.pdf"}
+        round3-med: {title: "UGNEET 2023 medical, mop-up round allotment list, 22-09-2023", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/RC8_MOPUP_UGALLOT_2023kannada.pdf"}
+        round3-den: {title: "UGNEET 2023 dental, mop-up round allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/Dental_mopup_allotmentkannada.pdf"}

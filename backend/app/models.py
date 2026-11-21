@@ -10,6 +10,10 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+# Postgres keeps 64-bit ids. SQLite numbers a key itself only when its type is exactly INTEGER, so the
+# public snapshot gets INTEGER here; without it, inserting into the snapshot fails on a missing id.
+BIG_ID = BigInteger().with_variant(Integer, "sqlite")
+
 
 class Base(DeclarativeBase):
     pass
@@ -124,7 +128,7 @@ class CutoffRecord(Base):
         Index("ix_cutoff_lookup", "year", "round", "seat_type", "quota", "gender_pool"),
         Index("ix_cutoff_programme", "programme_id", "year"),
     )
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BIG_ID, primary_key=True)
     programme_id: Mapped[int] = mapped_column(ForeignKey("programmes.id"))
     authority: Mapped[str] = mapped_column(String(16))  # JOSAA now. CSAB and state adapters later.
     year: Mapped[int] = mapped_column(Integer)
@@ -421,7 +425,7 @@ class RecommendationRun(Base):
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BIG_ID, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actor: Mapped[str] = mapped_column(String(120))
     action: Mapped[str] = mapped_column(String(64))

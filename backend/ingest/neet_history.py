@@ -13,10 +13,11 @@ MCC prints institute names differently across rounds and years (with or without 
 "Government Medical College". A link is made only between spellings that never appear in the same year.
 
 Reading the tables is slow (about 0.1 s a page, 25,000 pages), so each file's rows are cached next to it as
-<label>.rows.jsonl, which is git-ignored with the rest of data/raw.
+<label>.<sha256 prefix>.rows.jsonl, which is git-ignored with the rest of data/raw.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter, defaultdict
@@ -46,8 +47,10 @@ def squash(text: str) -> str:
 
 
 def table_rows(path: Path) -> list[list[str | None]]:
-    cache = path.with_suffix(".rows.jsonl")
-    if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
+    # Named by the file's sha256, so a changed or re-downloaded file never reuses old rows.
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    cache = path.with_name(f"{path.stem}.{digest}.rows.jsonl")
+    if cache.exists():
         return [json.loads(line) for line in cache.read_text().splitlines() if line]
     rows = []
     with pymupdf.open(path) as doc:

@@ -134,7 +134,7 @@ function BandMix({ counts }: { counts: Record<string, number> }) {
 
 type ListOrder = "top" | "fit";
 const ORDERS: Record<ListOrder, { label: string; note: string }> = {
-  top: { label: "Top institutes first", note: "Top institutes and their most contested branches come first, based on NIRF rank (mostly from a secondary source) and past closing ranks. Branches you prefer move up. This isn’t a quality score." },
+  top: { label: "Top institutes first", note: "Top institutes and their most contested branches come first, based on NIRF rank (mostly from a secondary source) and past closing ranks. Branches you marked as preferred move up strongly, and acceptable ones less. This isn’t a quality score." },
   fit: { label: "Best fit for me", note: "Sorted by the priorities you set under “What matters to you”." },
 };
 
@@ -223,6 +223,18 @@ export default function RecommendationsPage() {
         </div>
       </PageHeader>
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
+      {result?.missing_ranks?.map((m) => <div key={m} className="mb-4"><Notice tone="warn">{m}</Notice></div>)}
+      {result && result.options.length === 0 && !loading && (
+        <section className="card mb-6 p-5" aria-labelledby="no-options-title">
+          <h2 id="no-options-title" className="text-xl">No JoSAA seat has closed near this rank recently</h2>
+          <p className="mt-1 text-ink-2">JoSAA covers the IITs, NITs, IIITs and other government-funded institutes, and most of their seats close well before this rank. That says nothing about your other options.</p>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-2">
+            <li>Check your ranks are right, and add your category rank if you have one. Category seats close much later.</li>
+            <li>CSAB special rounds fill seats left after JoSAA, sometimes at later ranks.</li>
+            <li>Your state’s engineering counselling usually goes much further. <Link href="/exams" className="underline">See the state and other routes we cover</Link>.</li>
+          </ul>
+        </section>
+      )}
       <RankEditor profile={profile} onChange={changeRanks} />
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -287,9 +299,7 @@ export default function RecommendationsPage() {
           {result && shown.length === 0 && !loading && (
             <div className="space-y-3">
               {result.options.length === 0 && result.warnings.filter((w) => w.includes("no options")).map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
-              <Notice>{result.options.length === 0
-                ? "No JoSAA programme has closed within 20% of your rank in recent years. Check that your ranks and Class XII state are correct. State counselling isn't covered here, and it may still have options."
-                : "No options in this view. Try another band, or check that your ranks and Class XII state are correct."}</Notice>
+              {result.options.length > 0 && <Notice>No options in this view. Try another band, or check that your ranks and Class XII state are correct.</Notice>}
             </div>
           )}
         </div>

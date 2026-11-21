@@ -50,6 +50,8 @@ class StudentProfile(BaseModel):
     career_goals: list[Short] = Field(default=[], max_length=20)
     annual_budget_inr: int | None = Field(default=None, gt=0, le=100_000_000)
     priorities: dict[str, float] = Field(default_factory=lambda: dict(DEFAULT_PRIORITIES), max_length=40)
+    # Only orders the default list (standing). It never changes a band.
+    branch_vs_institute: Literal["balanced", "branch", "institute"] = "balanced"
 
     @model_validator(mode="after")
     def check_consistency(self) -> "StudentProfile":

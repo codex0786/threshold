@@ -19,6 +19,7 @@ const profileSchema = z.object({
   preferred_types: strings, preferred_states: strings, career_goals: strings,
   annual_budget_inr: z.number().nonnegative().nullable(),
   priorities: z.record(z.string(), z.number().min(0).max(100)),
+  branch_vs_institute: z.enum(["balanced", "branch", "institute"]).optional(),
 });
 const entrySchema = z.object({ id: z.number().int().positive(), label: z.string().max(200) });
 const payloadSchema = z.object({

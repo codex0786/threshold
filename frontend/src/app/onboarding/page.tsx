@@ -25,6 +25,7 @@ const schema = z.object({
   preferred_branches: z.array(z.string()), acceptable_branches: z.array(z.string()), avoid_branches: z.array(z.string()),
   preferred_types: z.array(z.string()), preferred_states: z.array(z.string()), career_goals: z.array(z.string()),
   annual_budget: rank,
+  branch_vs_institute: z.enum(["balanced", "branch", "institute"]),
 }).superRefine((v, ctx) => {
   const main = [v.main_crl, v.main_category, v.main_crl_pwd, v.main_category_pwd].some(Boolean);
   const adv = [v.adv_crl, v.adv_category, v.adv_crl_pwd, v.adv_category_pwd].some(Boolean);
@@ -36,7 +37,7 @@ type Form = z.infer<typeof schema>;
 const DEFAULTS: Form = {
   advanced_qualified: false, category: "GEN", gender: "male", is_pwd: false, eligibility_state: "", class12_status: "unknown",
   main_crl: "", main_category: "", main_crl_pwd: "", main_category_pwd: "", adv_crl: "", adv_category: "", adv_crl_pwd: "", adv_category_pwd: "",
-  preferred_branches: [], acceptable_branches: [], avoid_branches: [], preferred_types: [], preferred_states: [], career_goals: [], annual_budget: "",
+  preferred_branches: [], acceptable_branches: [], avoid_branches: [], preferred_types: [], preferred_states: [], career_goals: [], annual_budget: "", branch_vs_institute: "balanced",
 };
 const STEPS = ["About you", "Your ranks", "Branches and places", "Goals and budget"];
 const STEP_FIELDS: FieldPath<Form>[][] = [
@@ -56,6 +57,7 @@ function toProfile(v: Form, meta: Meta): Profile {
     advanced_qualified: adv, preferred_branches: v.preferred_branches, acceptable_branches: v.acceptable_branches, avoid_branches: v.avoid_branches,
     preferred_types: v.preferred_types, preferred_states: v.preferred_states, career_goals: v.career_goals,
     annual_budget_inr: asNumber(v.annual_budget), priorities: meta.default_priorities,
+    branch_vs_institute: v.branch_vs_institute,
   };
 }
 
@@ -127,7 +129,7 @@ export default function Onboarding() {
     const kept = loadProfile()?.priorities;
     saveProfile({ ...toProfile(v, meta), priorities: { ...meta.default_priorities, ...kept } });
     saveDraft({ values: v, step: 0 });
-    track("onboarding_completed");
+    track("onboarding_completed", { first: v.branch_vs_institute });
     router.push("/recommendations");
   };
 
@@ -198,6 +200,13 @@ export default function Onboarding() {
         {step === 2 && <>
           <Chips legend="Branches you prefer" options={families} value={values.preferred_branches} disabled={[...values.avoid_branches, ...values.acceptable_branches]} onChange={(v) => setValue("preferred_branches", v, { shouldDirty: true })} />
           <Chips legend="Branches you would accept" options={families} value={values.acceptable_branches} disabled={[...values.avoid_branches, ...values.preferred_branches]} onChange={(v) => setValue("acceptable_branches", v, { shouldDirty: true })} />
+          <Field label="When a branch and an institute pull different ways, which comes first?" hint="Only changes the order of your list. It never changes your chances.">
+            <select className="input" {...register("branch_vs_institute")}>
+              <option value="balanced">Balanced: my branches move up, but a much stronger institute can still lead</option>
+              <option value="branch">Branch first: every branch I prefer, then every branch I’d accept, then the rest</option>
+              <option value="institute">Institute first: the strongest institutes lead, whatever the branch</option>
+            </select>
+          </Field>
           <Chips legend="Branches to avoid" hint="These are removed from your shortlist, and we tell you how many were removed." options={families} value={values.avoid_branches} disabled={[...values.preferred_branches, ...values.acceptable_branches]} onChange={(v) => setValue("avoid_branches", v, { shouldDirty: true })} />
           <Chips legend="Institution types you prefer" options={Object.entries(meta.institute_types)} value={values.preferred_types} onChange={(v) => setValue("preferred_types", v, { shouldDirty: true })} />
           <Chips legend="States you prefer" hint="Optional. Leave empty if location doesn’t matter." options={meta.states.map((s) => [s, s])} value={values.preferred_states} onChange={(v) => setValue("preferred_states", v, { shouldDirty: true })} />

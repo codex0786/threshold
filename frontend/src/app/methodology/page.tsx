@@ -56,6 +56,7 @@ export default async function Methodology() {
           </ul>
         </Section>
         <Section title="Current coverage" hint={`Out of ${num(completeness.institutions)} institutes, ${num(completeness.programmes)} programme names and ${num(completeness.cutoff_records)} cutoff records.`}>
+          {meta.latest_round && <p className="mb-3 text-sm text-ink-2">Newest JoSAA round on record: {meta.latest_round.year} round {meta.latest_round.round}{meta.latest_round.is_final_round ? " (final)" : ", while counselling is still running. Bands use complete years only until the last round is out"}.{meta.latest_round.fetched_at ? ` Collected ${new Date(meta.latest_round.fetched_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}.` : ""}</p>}
           <ul className="space-y-1">{coverage.map(([label, n]) => <li key={label} className="flex justify-between text-sm"><span>{label}</span><span className="tnum text-ink-2">{num(n)} institutes</span></li>)}</ul>
           {completeness.by_type && (
             <div className="mt-4 overflow-x-auto">

@@ -219,6 +219,27 @@ def annual_cost(fee: FeeRecord | None) -> int | None:
     return fee.annual_tuition_inr + fee.annual_hostel_inr + fee.annual_mess_inr + (fee.annual_other_inr or 0)
 
 
+def course_cost(fee: FeeRecord | None, years: int | None) -> dict | None:
+    """Total published cost over the whole course, from one year's charges. Fees usually rise, so this is a floor.
+
+    "complete" needs tuition, hostel and mess. Otherwise the stated charges give only a minimum ("at_least").
+    Refundable deposits are left out, because they come back.
+    """
+    if fee is None or not years:
+        return None
+    complete = annual_cost(fee)
+    known = known_annual_charges(fee)
+    yearly = complete if complete is not None else known
+    if yearly is None:
+        return None
+    one_time = fee.one_time_inr or 0
+    return {
+        "status": "complete" if complete is not None else "at_least", "years": years, "annual_inr": yearly, "one_time_inr": one_time,
+        "total_inr": yearly * years + one_time, "academic_year": fee.academic_year, "seat_type_group": fee.seat_type_group,
+        "missing": [] if complete is not None else [name for name, v in (("hostel", fee.annual_hostel_inr), ("mess", fee.annual_mess_inr)) if v is None],
+    }
+
+
 def known_annual_charges(fee: FeeRecord | None) -> int | None:
     """Yearly charges the record does state. A minimum, so it can only show that a budget is exceeded."""
     if fee is None:

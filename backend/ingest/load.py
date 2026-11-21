@@ -160,6 +160,8 @@ def load_table(db: Session, path: Path, source: DataSource, by_alias: dict[str, 
     for start in range(0, len(unique), 2000):
         batch = list(unique.values())[start:start + 2000]
         db.execute(insert(CutoffRecord).values(batch).on_conflict_do_nothing(constraint="uq_cutoff_identity"))
+    # A round loaded mid-season isn't final. When the season closes its metadata changes, and existing rows follow it.
+    db.execute(update(CutoffRecord).where(CutoffRecord.authority == "JOSAA", CutoffRecord.year == meta["year"], CutoffRecord.round == meta["round"]).values(is_final_round=meta["is_final_round"]))
     print(f"{path.name}: {len(rows):,} rows, {len(rows) - len(unique)} duplicates skipped")
     return len(unique)
 

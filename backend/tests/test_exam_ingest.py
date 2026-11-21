@@ -66,3 +66,10 @@ def test_fee_match_needs_exactly_one_institute():
     names = {"Kasturba Medical College, Mangalore,Light house Hill Road", "Kasturba Medical College, Manipal,Madhav Nagar"}
     assert match("Kasturba Medical College, Manipal", names) == "Kasturba Medical College, Manipal,Madhav Nagar"
     assert match("Kasturba Medical College", names) is None
+
+
+def test_no_round_is_final_while_a_josaa_season_is_running():
+    from ingest.josaa_fetch import final_flags
+    assert final_flags([1, 2, 3], season_in_progress=True) == {1: False, 2: False, 3: False}
+    assert final_flags([1, 2, 3, 4, 5], season_in_progress=False) == {1: False, 2: False, 3: False, 4: False, 5: True}
+    assert final_flags([], season_in_progress=False) == {}

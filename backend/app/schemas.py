@@ -124,3 +124,24 @@ class RoiRequest(BaseModel):
     high_ctc_inr: int | None = Field(default=None, gt=0, le=100_000_000)
     take_home_share: float = Field(default=0.7, gt=0, le=1)
     repayment_share: float = Field(default=0.4, gt=0, le=1)
+
+
+class RankEstimateRequest(BaseModel):
+    percentile: float = Field(ge=0, le=100)
+    exam_year: int = Field(default=2027, ge=2024, le=2030)
+
+
+class ListBuildRequest(BaseModel):
+    profile: StudentProfile
+    order: Literal["top", "fit"] = "top"
+    size: int = Field(default=60, ge=5, le=150)
+    safety_net: int = Field(default=5, ge=1, le=20)
+    include_ambitious: bool = True
+
+
+class RoundAdviceRequest(BaseModel):
+    profile: StudentProfile
+    programme_ids: list[int] = Field(min_length=1, max_length=200)
+    allotted_programme_id: int
+    round: int = Field(ge=1, le=10)
+    final_round: int = Field(default=5, ge=1, le=10)

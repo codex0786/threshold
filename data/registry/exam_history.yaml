@@ -8,6 +8,11 @@ routes:
     authority: Medical Counselling Committee
     archive: https://mcc.nic.in/archive-ug/
     years:
+      2026:
+        round1: {title: "NEET-UG Counselling Seats Allotment 2026, Round 1 (revised provisional result II)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/08/20260824777992744.pdf"}
+        round2: {title: "NEET-UG Counselling Seats Allotment 2026, Round 2 (final result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/09/20260912351980769.pdf"}
+        round3: {title: "NEET-UG Counselling Seats Allotment 2026, Round 3 (final allotment result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610011801857474.pdf"}
+        stray: {title: "NEET-UG Counselling Seats Allotment 2026, Stray Round (final allotment result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610201457709919.pdf"}
       2025:
         round1: {title: "Final Result for Round-I of NEET UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/08/20250813289226788.pdf"}
         round2: {title: "Final Result for Round 2 of UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/09/202509182057444522.pdf"}

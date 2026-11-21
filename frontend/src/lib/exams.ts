@@ -1,4 +1,5 @@
 // Shared types and helpers for exam routes beyond JEE.
+import type { Band } from "@/lib/api";
 import { Scale, Stethoscope, Wrench } from "lucide-react";
 
 export type ExamMetric = { label: string; unit: string; lower_is_better: boolean; whole_number?: boolean; max?: number; value_label: string; second_label: string | null };
@@ -9,6 +10,7 @@ export type ExamRoute = {
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
   rounds?: string[]; default_group?: string; default_programme?: string;
+  history?: { years: number[]; basis: string; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
   quotas?: string[]; quota_requirements?: Record<string, string>; ranked_institute_count?: number; fee_institute_count?: number;
 };
 export type ExamRanking = { category: string; rank: number; year: number; source_url: string };
@@ -36,6 +38,7 @@ export type ExamOption = {
   institute: string; institute_short: string | null; programme: string; programme_code: string | null; quota: string | null; category: string;
   female_only: boolean; seats: number | null; note: string | null; position: string; rounds: RoundStep[]; furthest: number;
   ranking: ExamRanking | null; fee: DeclaredFee | null; standing: number; why: string[];
+  history?: { band: Band; explanation: string; years: number[]; closing: Record<string, number> } | null;
   institution?: { slug: string; short_name: string; type: string; state: string; academics: ExamAcademics } | null;
 };
 export type ExamShortlist = {

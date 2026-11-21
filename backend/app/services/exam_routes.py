@@ -10,6 +10,7 @@ from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
 
+from app.services.bands import CutoffPoint, classify
 from app.services.scoring import NEUTRAL, contest_scores, reputation_score
 
 MAX_PROGRAMME_CHOICES = 8
@@ -74,7 +75,9 @@ def summary(route: dict) -> dict:
     records = route["records"]
     key = group_order(route)
     return {
-        **{k: v for k, v in route.items() if k != "records"},
+        **{k: v for k, v in route.items() if k not in ("records", "history")},
+        # The full history is large and only the shortlist needs it, so the summary carries what explains the bands.
+        "history": {k: route["history"][k] for k in ("years", "basis", "backtest")} if route.get("history") else None,
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
@@ -168,6 +171,8 @@ POSITIONS = {
     "near": ("Just beyond your {unit}", "It never reached your {unit} that year, but its furthest figure was within 20% of it."),
 }
 NEAR_MARGIN = 1.20
+# Banded seats first, then seats with too little history, then seats beyond the recent range.
+BAND_ORDER = {"safer": 0, "competitive": 0, "ambitious": 0, None: 1, "beyond": 2}
 LEFTOVER = re.compile(r"stray|special|spot", re.I)
 POSITION_LIMIT = 100
 
@@ -194,6 +199,30 @@ def lower_first(label: str) -> str:
 
 def fmt(route: dict, value: float) -> str:
     return f"{value:,.0f}" if route["metric"].get("whole_number") or value == int(value) else str(value)
+
+
+def _squash(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (text or "").lower())
+
+
+def seat_band(route: dict, row: dict, value: float) -> dict | None:
+    """A JEE-style band from the seat's closing ranks in recent years, where the route has a history.
+
+    Only for routes ranked so that lower is better, and only when the seat's institute can be told apart
+    in every year. Otherwise None, and the seat shows only this year's rounds, as before.
+    """
+    history = route.get("history")
+    if not history or not route["metric"]["lower_is_better"]:
+        return None
+    institute = history["institutes"].get(_squash(row["institute"]))
+    if institute is None:
+        return None
+    closing = history["closing"].get(f"{institute}|{row['programme']}|{_squash(base_quota(row.get('group')) or '')}|{row['category']}", {})
+    result = classify(int(value), [CutoffPoint(int(year), rank) for year, rank in closing.items()], max(history["years"]))
+    return {
+        "band": result.band, "explanation": result.explanation, "years": list(result.years_used),
+        "closing": {year: closing[year] for year in sorted(closing)},
+    }
 
 
 def _seat(route: dict, rows: list[dict], value: float) -> dict | None:
@@ -247,6 +276,7 @@ def _seat(route: dict, rows: list[dict], value: float) -> dict | None:
         "female_only": any(r.get("female_only") for r in rows), "seats": last.get("seats"), "note": last.get("note"),
         "position": position, "rounds": ladder, "furthest": furthest, "ranking": ranking, "fee": with_fee,
         "standing": max(r.get("standing", NEUTRAL) for r in rows), "why": why,
+        "history": seat_band(route, last, value),
         "margin": abs((first or {"value": furthest})["value"] - value),
     }
 
@@ -283,10 +313,12 @@ def shortlist(
             beyond += 1
         else:
             options.append(seat)
+    # Where a route has history, seats in a band come first and seats beyond the recent range last, as on JEE.
+    banded = (lambda o: BAND_ORDER.get((o["history"] or {}).get("band"), 3)) if route.get("history") else (lambda o: 0)
     if order == "closest":
-        options.sort(key=lambda o: (o["margin"], o["institute"], o["programme"]))
+        options.sort(key=lambda o: (banded(o), o["margin"], o["institute"], o["programme"]))
     else:
-        options.sort(key=lambda o: (-o["standing"], o["margin"], o["institute"], o["programme"]))
+        options.sort(key=lambda o: (banded(o), -o["standing"], o["margin"], o["institute"], o["programme"]))
     counts: dict[str, int] = defaultdict(int)
     shown = []
     for option in options:

@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronDown, ExternalLink, Info } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
+import { BandBadge, Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
 import { api, inr, num } from "@/lib/api";
 import {
   EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
@@ -122,6 +122,25 @@ function Alumni({ alumni }: { alumni: NonNullable<ExamProfile["alumni"]> }) {
   );
 }
 
+function HistoryNote({ history }: { history: NonNullable<ExamRoute["history"]> }) {
+  const latest = Object.keys(history.backtest).sort().at(-1);
+  const tests = Object.entries(history.backtest).sort(([a], [b]) => a.localeCompare(b));
+  return (
+    <Notice>
+      <p>
+        Each seat also has a band from its closing ranks in {history.years.slice(-3).join(", ")}, using the same rule as JEE: Safer is at least 10% inside every recent closing rank,
+        Competitive is within the recent range, and Ambitious is up to 20% beyond it. {history.basis}
+      </p>
+      <p className="mt-1">
+        How well the rule held when tested on the next year, for a rank exactly at the Safer edge:{" "}
+        {tests.map(([year, groups]) => `${year}: ${groups["All seats"]?.safer}% of seats (${groups["All India quota, Open, MBBS"]?.safer}% for All India Open MBBS)`).join("; ")}.
+        {latest && (history.backtest[latest]["All seats"]?.safer ?? 100) < 85 ? ` In ${latest} many seats closed earlier than before, so treat Safer with more care outside the All India Open list.` : ""}
+        {" "}This describes past seats, not your chance of admission.
+      </p>
+    </Notice>
+  );
+}
+
 function OptionCard({ option, route, figure, labels, index }: { option: ExamOption; route: ExamRoute; figure: number; labels: ExamShortlist["positions"]; index: number }) {
   const [open, setOpen] = useState(false);
   const style = POSITION_STYLE[option.position] ?? POSITION_STYLE.near;
@@ -144,6 +163,7 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
     <article className="card card-hover band-card rise p-5 pl-6" style={{ "--band": style.color, "--i": Math.min(index, 10) } as CSSProperties}>
       <div className="flex flex-wrap items-center gap-2">
         <PositionBadge position={option.position} label={label.label} hint={label.hint} />
+        {option.history && <BandBadge band={option.history.band ?? "limited_history"} />}
         {option.female_only && <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--competitive-soft)", color: "var(--competitive)" }}>Female candidates only</span>}
         <span className="text-xs text-ink-3">{[option.institution ? `${option.institution.type} · ${option.institution.state}` : null, option.quota, option.category].filter(Boolean).join(" · ")}</span>
       </div>
@@ -199,6 +219,13 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
         <div className="rise mt-4 grid gap-6 border-t border-line pt-4 md:grid-cols-2">
           <div className="space-y-4">
             <div><h3 className="text-base font-medium">Why it appears</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-ink-2">{option.why.map((w) => <li key={w}>{w}</li>)}</ul></div>
+            {option.history && (
+              <div>
+                <h3 className="text-base font-medium">Across recent years</h3>
+                <p className="mt-1 text-sm text-ink-2">{option.history.explanation}</p>
+                <p className="tnum mt-1 text-xs text-ink-3">Last rank allotted in rounds 1 to 3: {Object.entries(option.history.closing).map(([y, r]) => `${y}: ${num(r)}`).join(" · ")}</p>
+              </div>
+            )}
             <div><h3 className="text-base font-medium">Data gaps</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-ink-2">{missing.map((w) => <li key={w}>{w}</li>)}</ul></div>
             {option.note && <p className="text-sm text-ink-2">{option.note}</p>}
           </div>
@@ -325,7 +352,9 @@ export default function ExamShortlistPage() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <Link href="/exams" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-brand"><ArrowLeft size={15} aria-hidden /> All exams</Link>
       <PageHeader title={`Your ${route.name} shortlist`} intro={route.rounds?.length
-        ? <>Compared with {route.authority}’s {route.document.year} figures, round by round. One year of figures can’t support admission bands, so each seat shows the round in which it reached your {route.metric.unit}.</>
+        ? route.history
+          ? <>Compared with {route.authority}’s figures from {route.history.years[0]} to {route.history.years.at(-1)}. Each seat shows a band from the last three years, as on JEE, and the {route.document.year} round in which it reached your {route.metric.unit}.</>
+          : <>Compared with {route.authority}’s {route.document.year} figures, round by round. One year of figures can’t support admission bands, so each seat shows the round in which it reached your {route.metric.unit}.</>
         : <>Compared with {route.authority}’s {route.document.year} cut-offs. One year of figures can’t support admission bands, so each seat shows whether its cut-off reached your {route.metric.unit}.</>} />
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
@@ -410,6 +439,7 @@ export default function ExamShortlistPage() {
                 ))}
               </div>
               <PositionMix counts={result.counts} labels={result.positions} />
+              {route.history && <HistoryNote history={route.history} />}
               <p className="mb-3 text-sm text-ink-3">
                 {result.beyond > 0 ? `Not shown: ${num(result.beyond)} ${result.beyond === 1 ? "seat" : "seats"} in this list that didn’t reach your ${route.metric.unit}${route.rounds?.length ? " in any round" : ""}${route.metric.lower_is_better ? " or come within 20% of it" : ""}. ` : ""}
                 {result.hidden_female_only > 0 ? `Seats only female candidates may hold are hidden, because you chose ${answers.gender}. ` : ""}

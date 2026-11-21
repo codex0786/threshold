@@ -55,8 +55,24 @@ For OPEN gender-neutral seats alone, the Safer edge held 94.5% to 96.9% of the t
 
 **How to read this:** it measures whether seats stayed stable, at the worst rank in each band. It is not an individual's chance of admission. It ignores what other applicants choose and the student's own preference order. It doesn't justify showing numerical probabilities, so none are shown. Individual outcomes are not public, so calibration isn't possible.
 
+## NEET UG (MCC All India counselling)
+`python -m ingest.neet_history`, after `ingest.fetch_exam_history` and `ingest.exam_extract`.
+
+NEET seats use the same band rule and margins as JEE. A seat is an institute, course, quota and category. Its closing rank for a year is the worst NEET rank MCC allotted to it in rounds 1 to 3, read from the official allotment files for 2023 to 2026 (`data/registry/exam_history.yaml`). The stray round is left out: it only fills seats still empty at the end, under its own eligibility, and including it lowered the Safer result to 88% in the 2025 test.
+
+MCC prints college names differently across rounds and years, and reworded most of them in 2026. Names are linked by the words and PIN code that identify a college, never by generic words, and two spellings that appear in the same year are never linked. That gives 809 institutes. 3,479 of the 3,481 seats in the 2026 lists have history, and 2,215 have the two years a band needs.
+
+| Test year | Seats | Safer edge held | Competitive edge held | Ambitious edge held |
+|---|---:|---:|---:|---:|
+| 2025 (edges from 2023–2024) | 2,394 | 91.1% | 52.9% | 6.9% |
+| 2026 (edges from 2023–2025) | 1,915 | 77.3% | 18.6% | 1.6% |
+
+For All India quota, Open, MBBS seats alone, the Safer edge held 97.4% in 2025 and 95.7% in 2026. In 2026 other seats closed earlier than before, and the page says so. Round 1 of 2026 is MCC's revised provisional result, and the 2026 rounds after the stray round aren't included yet.
+
+In the NEET shortlist, seats with a band come first and seats beyond the recent range last; within each group the order the student picked holds. Each seat still shows the 2026 round in which it reached the student's rank.
+
 ## Known limitations
-- Bands cover JoSAA only. CSAB special round ranks are listed apart, on the common rank list, for 2026 only and with no bands. State routes need separate adapters.
+- Bands cover JoSAA and NEET UG All India counselling. The other routes beyond JEE have one year of figures and no bands yet. CSAB special round ranks are listed apart, on the common rank list, for 2026 only and with no bands. State routes need separate adapters.
 - Only Round 1 and the last round are stored, and only the last round drives bands. Students wanting an early seat may also care about Round 1.
 - The 2026 seat matrix decides whether a programme is offered, and removes a route with no seat and no 2026 cutoff. A category with one or two seats gets a warning. Seats don't change a band.
 - Renamed programmes share one history, only for pairs reviewed by hand in `data/registry/programme_lineage.yaml`.

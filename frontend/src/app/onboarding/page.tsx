@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type FieldPath, useForm } from "react-hook-form";
@@ -8,6 +9,7 @@ import { z } from "zod";
 import { ResetData } from "@/components/reset-data";
 import { Notice, PageHeader, Skeleton } from "@/components/ui";
 import { api, type Meta, type Profile } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import { loadDraft, loadProfile, saveDraft, saveProfile } from "@/lib/store";
 
 const rank = z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) > 0), "Enter a whole number above 0, or leave this blank");
@@ -125,6 +127,7 @@ export default function Onboarding() {
     const kept = loadProfile()?.priorities;
     saveProfile({ ...toProfile(v, meta), priorities: { ...meta.default_priorities, ...kept } });
     saveDraft({ values: v, step: 0 });
+    track("onboarding_completed");
     router.push("/recommendations");
   };
 
@@ -185,6 +188,7 @@ export default function Onboarding() {
 
         {step === 1 && <>
           <Notice>Enter each rank exactly as shown on your scorecard. Your CRL and your category rank are different numbers on different lists, and we compare each only with cutoffs from its own list.</Notice>
+          <p className="text-sm text-ink-3">Only have your JEE Main percentile so far? <Link href="/rank-estimator" className="underline">Estimate your CRL rank</Link>.</p>
           <div className="space-y-3"><h3 className="text-lg">JEE Main</h3><p className="-mt-2 text-sm text-ink-3">Used for NITs, IIITs and other government-funded institutes (Paper 1, B.E./B.Tech).</p>{rankFields("main", "JEE Main")}</div>
           <label className="flex items-start gap-2.5"><input type="checkbox" className="mt-1" {...register("advanced_qualified")} /><span className="text-sm">I qualified JEE Advanced</span></label>
           {values.advanced_qualified && <div className="space-y-3"><h3 className="text-lg">JEE Advanced</h3><p className="-mt-2 text-sm text-ink-3">Used for IITs and IISc.</p>{rankFields("adv", "JEE Advanced")}</div>}

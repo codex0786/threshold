@@ -219,6 +219,27 @@ def annual_cost(fee: FeeRecord | None) -> int | None:
     return fee.annual_tuition_inr + fee.annual_hostel_inr + fee.annual_mess_inr + (fee.annual_other_inr or 0)
 
 
+def course_cost(fee: FeeRecord | None, years: int | None) -> dict | None:
+    """Total published cost over the whole course, from one year's charges. Fees usually rise, so this is a floor.
+
+    "complete" needs tuition, hostel and mess. Otherwise the stated charges give only a minimum ("at_least").
+    Refundable deposits are left out, because they come back.
+    """
+    if fee is None or not years:
+        return None
+    complete = annual_cost(fee)
+    known = known_annual_charges(fee)
+    yearly = complete if complete is not None else known
+    if yearly is None:
+        return None
+    one_time = fee.one_time_inr or 0
+    return {
+        "status": "complete" if complete is not None else "at_least", "years": years, "annual_inr": yearly, "one_time_inr": one_time,
+        "total_inr": yearly * years + one_time, "academic_year": fee.academic_year, "seat_type_group": fee.seat_type_group,
+        "missing": [] if complete is not None else [name for name, v in (("hostel", fee.annual_hostel_inr), ("mess", fee.annual_mess_inr)) if v is None],
+    }
+
+
 def known_annual_charges(fee: FeeRecord | None) -> int | None:
     """Yearly charges the record does state. A minimum, so it can only show that a budget is exceeded."""
     if fee is None:
@@ -369,6 +390,20 @@ def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -
     }
 
 
+def missing_rank_notices(profile: StudentProfile) -> list[str]:
+    """Reserved-category seats need the category rank. Without it only OPEN seats are checked, and many options go missing."""
+    notices = []
+    if profile.category == "GEN":
+        return notices
+    for exam, ranks, needed in (("JEE Main", profile.main, True), ("JEE Advanced", profile.advanced, profile.advanced_qualified)):
+        if not needed or ranks is None:
+            continue
+        has_any = any(getattr(ranks, k, None) for k in ("crl", "category_rank", "crl_pwd", "category_pwd_rank"))
+        if has_any and not ranks.category_rank:
+            notices.append(f"You haven't entered your {exam} {profile.category} category rank, so only OPEN seats are checked. {profile.category} seats usually close at much higher ranks, so add it to see them.")
+    return notices
+
+
 def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, record_run: bool = True, order: str = "top") -> dict:
     student = profile.to_student()
     warnings: list[str] = [
@@ -387,6 +422,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     if student.is_pwd:
         warnings.append("PwD seats depend on verified certificates. Institute-specific restrictions may also apply.")
     warnings.append("Some programmes have medical or other special restrictions. Check the JoSAA annexure for your programme.")
+    missing_ranks = missing_rank_notices(profile)
 
     data_year = latest_year(db)
     window_start = data_year - LOOKBACK_YEARS + 1
@@ -532,7 +568,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
 
     payload = {
         "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year], "order": order,
-        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "options": limited,
+        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "missing_ranks": missing_ranks, "options": limited,
         "csab": csab_leads(db, profile, student, quota_map),
     }
     if record_run:

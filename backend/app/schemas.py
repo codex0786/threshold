@@ -1,9 +1,9 @@
 """Request schemas. The student profile holds no name, contact details or exact address."""
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from app.services.eligibility import Student, StudentRanks
 from app.services.scoring import DEFAULT_PRIORITIES
@@ -28,6 +28,9 @@ class RankInput(BaseModel):
         return StudentRanks(self.crl, self.category_rank, self.crl_pwd, self.category_pwd_rank)
 
 
+Short = Annotated[str, StringConstraints(max_length=60)]
+
+
 class StudentProfile(BaseModel):
     category: Literal["GEN", "GEN-EWS", "OBC-NCL", "SC", "ST"]
     gender: Literal["female", "male", "other"]
@@ -38,14 +41,15 @@ class StudentProfile(BaseModel):
     advanced: RankInput = RankInput()
     advanced_qualified: bool = False
 
-    preferred_branches: list[str] = []
-    acceptable_branches: list[str] = []
-    avoid_branches: list[str] = []
-    preferred_types: list[Literal["IIT", "IISC", "NIT", "IIIT", "GFTI"]] = []
-    preferred_states: list[str] = []
-    career_goals: list[str] = []
-    annual_budget_inr: int | None = Field(default=None, gt=0)
-    priorities: dict[str, float] = Field(default_factory=lambda: dict(DEFAULT_PRIORITIES))
+    # Bounded so a single request can't carry an oversized profile. Each list is far longer than the real choices.
+    preferred_branches: list[Short] = Field(default=[], max_length=40)
+    acceptable_branches: list[Short] = Field(default=[], max_length=40)
+    avoid_branches: list[Short] = Field(default=[], max_length=40)
+    preferred_types: list[Literal["IIT", "IISC", "NIT", "IIIT", "GFTI"]] = Field(default=[], max_length=5)
+    preferred_states: list[Short] = Field(default=[], max_length=40)
+    career_goals: list[Short] = Field(default=[], max_length=20)
+    annual_budget_inr: int | None = Field(default=None, gt=0, le=100_000_000)
+    priorities: dict[str, float] = Field(default_factory=lambda: dict(DEFAULT_PRIORITIES), max_length=40)
 
     @model_validator(mode="after")
     def check_consistency(self) -> "StudentProfile":
@@ -64,8 +68,13 @@ class StudentProfile(BaseModel):
             raise ValueError("Enter at least one JEE rank")
         if set(self.preferred_branches) & set(self.avoid_branches):
             raise ValueError("A branch cannot be both preferred and avoided")
-        if any(v < 0 for v in self.priorities.values()):
-            raise ValueError("Priorities cannot be negative")
+        if any(v < 0 or v > 1000 for v in self.priorities.values()):
+            raise ValueError("Priorities must be between 0 and 1000")
+        # A profile saved by an older version may hold a priority that no longer exists. It's dropped, not refused.
+        self.priorities = {k: v for k, v in self.priorities.items() if k in DEFAULT_PRIORITIES}
+        # An empty set means none were chosen, not that nothing matters. Without this every option shows "no data" for fit.
+        if not self.priorities:
+            self.priorities = dict(DEFAULT_PRIORITIES)
         # Profiles saved in a browser before this factor existed hold every other priority. Partial API requests stay as sent.
         if "demand" not in self.priorities and set(DEFAULT_PRIORITIES) - {"demand", "faculty", "research"} <= set(self.priorities):
             self.priorities["demand"] = DEFAULT_PRIORITIES["demand"]
@@ -124,3 +133,24 @@ class RoiRequest(BaseModel):
     high_ctc_inr: int | None = Field(default=None, gt=0, le=100_000_000)
     take_home_share: float = Field(default=0.7, gt=0, le=1)
     repayment_share: float = Field(default=0.4, gt=0, le=1)
+
+
+class RankEstimateRequest(BaseModel):
+    percentile: float = Field(ge=0, le=100)
+    exam_year: int = Field(default=2027, ge=2024, le=2030)
+
+
+class ListBuildRequest(BaseModel):
+    profile: StudentProfile
+    order: Literal["top", "fit"] = "top"
+    size: int = Field(default=60, ge=5, le=150)
+    safety_net: int = Field(default=5, ge=1, le=20)
+    include_ambitious: bool = True
+
+
+class RoundAdviceRequest(BaseModel):
+    profile: StudentProfile
+    programme_ids: list[int] = Field(min_length=1, max_length=200)
+    allotted_programme_id: int
+    round: int = Field(ge=1, le=10)
+    final_round: int = Field(default=5, ge=1, le=10)

@@ -208,3 +208,17 @@ The project owner reports written confirmation from these authorities. Candidate
 **Alumni samples.** `python -m ingest.exam_alumni` counts people on Wikidata who list an institute as where they studied, as for JEE: exact name matches only, aggregate counts only, and no sample under 30 people shown. Medical colleges are matched at college level only. A university's item, such as Banaras Hindu University, would count graduates of every faculty, so it isn't used for one of its colleges. GATE institutes reuse the JEE counts where their name exactly matches a JoSAA institute. This is a small public sample of notable people. It isn't the alumni network.
 
 **Not found yet:** law fees for the other 18 NLUs. NLU Jodhpur's brochure and its programme page disagree, so neither is shown. NIRF Law submissions for 14 NLUs, whose sites didn't show one or build their pages with scripts.
+## Fee sprint, batch 1 (21 Nov 2026)
+Added from official 2026-27 documents, read on screen or as text, awaiting independent review: NIT Tiruchirappalli (pilot, previously missing), NIT Karnataka Surathkal (pilot), NIT Uttarakhand (complete yearly cost, including hostel and mess). Each row reconciles to the document's own semester or course totals.
+
+To load them on the machine that holds `data/raw`: `python -m ingest.fetch_fee_documents`, then `python -m ingest.import_records fees ../data/import/fees_official.csv`, then again with `--commit`.
+
+**Found but not entered yet**
+| Institute | Why | Document |
+|---|---|---|
+| IIT Kanpur | PDFs are scanned images; needs reading by eye | DoSA: Fee Structure for New UG 2026-27 (1st sem) and Cumulative Fee Structure for Loan 2026-27 |
+| NIT Delhi | Redirects to old.nitdelhi.ac.in, not reachable from the sandbox | nitdelhi.ac.in/wp-content/uploads/2026/02/Fee-structure-B-Tech.pdf |
+| NIT Sikkim | Text extraction scrambles the fee labels and the first-semester total doesn't reconcile | nitsikkim.ac.in, B.Tech Fee structure for Academic Year 2026-27 |
+| MNNIT Allahabad, VNIT Nagpur | No official 2026-27 document found by search; aggregator figures only, which aren't used | Institute websites |
+
+Next targets by seats and demand: MNNIT Allahabad, VNIT Nagpur, NIT Durgapur, NIT Silchar, NIT Patna, NIT Jalandhar, IIT Kharagpur, IIT (BHU), IIT (ISM), IIEST Shibpur.

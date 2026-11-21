@@ -50,3 +50,9 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: npm audit --audit-level=high --omit=dev
+      # A production build catches what a type check can't. There's no API in CI, so pages that read it build without figures here only.
+      - run: npm run build
+        env:
+          THRESHOLD_OFFLINE_BUILD: "1"
+          NEXT_TELEMETRY_DISABLED: "1"

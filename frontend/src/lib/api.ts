@@ -60,12 +60,13 @@ export type Option = {
 };
 export type Recommendations = {
   engine_version: string; data_year?: number; history_window?: [number, number]; counts: Record<string, number>;
-  excluded?: Record<string, number>; warnings: string[]; options: Option[]; result_hash?: string; csab?: CsabLeads | null;
+  excluded?: Record<string, number>; warnings: string[]; missing_ranks?: string[]; options: Option[]; result_hash?: string; csab?: CsabLeads | null;
 };
 export type Meta = {
   states: string[]; branch_families: Record<string, string>; career_options: Record<string, string>; career_mapped: string[];
   default_priorities: Record<string, number>; suitability_labels: Record<string, string>; quality_labels: Record<string, string>;
   quality_weights: Record<string, number>; latest_data_year: number; engine_version: string; institute_types: Record<string, string>;
+  latest_round?: { year: number; round: number; is_final_round: boolean; fetched_at: string | null } | null;
 };
 export type Profile = {
   category: string; gender: string; is_pwd: boolean; eligibility_state: string; class12_status: string;
@@ -95,10 +96,27 @@ export type CutoffPoint = {
 export type ComparisonItem = {
   programme_id: number; programme: string; degree: string | null; duration_years: number | null; branch_label: string; branch_family: string;
   institution: InstitutionRef; reference_cutoff: { year: number; quota: string; closing_rank: number; rank_list: string; source_url: string; source_title: string } | null;
-  ranking: Ranking | null; placements: Placement[]; fee: Fee | null; quality: Quality; data_gaps: string[];
+  ranking: Ranking | null; placements: Placement[]; fee: Fee | null; course_cost?: CourseCost | null; quality: Quality; data_gaps: string[];
   student_route: Route | null; suitability: { score: number | null; coverage: number; components: Component[] } | null; careers: Careers; academics: Academics | null;
 };
+export type CourseCost = { status: "complete" | "at_least"; years: number; annual_inr: number; one_time_inr: number; total_inr: number; academic_year: string; seat_type_group: string; missing: string[] };
 export type Comparison = { items: ComparisonItem[]; trade_offs: string[]; note: string };
+export type RankEstimate = {
+  percentile: number; exam_year: number; rank_low: number; rank_high: number; rank_list: string; candidates_note: string;
+  method: string[]; warnings: string[]; sources: { year: number; url: string }[]; version: string;
+};
+export type BuiltItem = { position: number; programme_id: number; programme: string; institution: string; institution_slug: string; band: Band; reason: string; explanation: string };
+export type BuiltList = { items: BuiltItem[]; counts: Record<string, number>; order: "top" | "fit"; size: number; safety_net: number; stop_reason: string; notes: string[]; data_year: number | null };
+export type RoundYear = { year: number; closing_at_round: number | null; round_used: number | null; final_closing: number | null; reached_by_final: boolean };
+export type HigherChoice = {
+  position: number; programme_id: number; programme: string | null; institution: string; same_institute: boolean; band: Band | null;
+  years: RoundYear[]; reached_years: number; opened_later_years: number; status: "often" | "sometimes" | "not_seen" | "no_history"; rank_used?: number;
+  route?: { seat_type: string; quota: string; gender_pool: string };
+};
+export type RoundAdvice = {
+  round: number; final_round: number; data_year: number; allotted: { programme_id: number; programme: string | null; institution: string; position: number };
+  higher_choices: HigherChoice[]; suggestion: "freeze" | "float" | "slide"; why: string; options: Record<string, string>; cautions: string[];
+};
 export type DataSource = { key: string; name: string; publisher: string; url: string; tier: string; access_method: string; access_status: string; terms_note: string | null; documents: number; last_checked_at: string | null };
 export type Completeness = {
   institutions: number; programmes: number; cutoff_records: number; cutoff_years: number[]; coverage: Record<string, number>; not_yet_collected: string[];

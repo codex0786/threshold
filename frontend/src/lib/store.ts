@@ -67,3 +67,22 @@ export function addToList(entry: CompareEntry) {
   if (!lists[0].items.some((e) => e.id === entry.id)) lists[0].items.push(entry);
   saveLists(lists);
 }
+
+// Used when a shared link replaces this browser's answers, so "Edit my answers" doesn't reopen someone else's draft.
+export function clearDraft() {
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Storage can be blocked.
+  }
+}
+
+// Adds a shared list without touching the student's own lists. An empty starter list is replaced.
+export function importList(name: string, items: CompareEntry[]): string {
+  const lists = loadLists();
+  const id = `shared-${Date.now()}`;
+  const incoming: SavedList = { id, name: name.startsWith("Shared") ? name : `Shared: ${name}`.slice(0, 60), items };
+  const onlyEmptyStarter = lists.length === 1 && lists[0].items.length === 0;
+  saveLists(onlyEmptyStarter ? [incoming] : [...lists, incoming]);
+  return id;
+}

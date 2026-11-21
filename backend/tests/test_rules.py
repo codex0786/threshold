@@ -452,5 +452,12 @@ def test_standing_favours_top_institutes_then_contested_branches():
 
 def test_standing_treats_missing_evidence_as_neutral_and_lifts_preferred_branches():
     assert standing_score(None, None) == 50.0
-    assert standing_score(20, 60, preferred=True) == pytest.approx(standing_score(20, 60) + 10)
-    assert standing_score(20, 60, acceptable=True) == pytest.approx(standing_score(20, 60) + 5)
+    assert standing_score(20, 60, preferred=True) == pytest.approx(standing_score(20, 60) + 20)
+    assert standing_score(20, 60, acceptable=True) == pytest.approx(standing_score(20, 60) + 10)
+
+
+def test_a_preferred_branch_at_a_good_institute_leads_a_core_branch_at_the_best_one():
+    # NIT rank 9 vs 40, a moderately contested preferred branch vs a less contested unlisted one.
+    assert standing_score(40, 70, preferred=True) > standing_score(9, 45)
+    # A preferred branch at an unranked, barely contested institute doesn't jump a strong institute's acceptable branch.
+    assert standing_score(None, 10, preferred=True) < standing_score(5, 80, acceptable=True)

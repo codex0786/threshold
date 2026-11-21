@@ -8,6 +8,9 @@ import { BandBadge, bandMeta, ComponentList, Notice, PageHeader, PlacementBlock,
 import { api, type CsabLeads, type Meta, num, type Option, post, type Profile, type Recommendations, type Route } from "@/lib/api";
 import { RankEditor } from "@/components/rank-editor";
 import { ResetData } from "@/components/reset-data";
+import { BandsExplainer } from "@/components/bands-explainer";
+import { ShareButton } from "@/components/share-button";
+import { track } from "@/lib/analytics";
 import { loadProfile, saveProfile } from "@/lib/store";
 
 const BANDS = ["all", "safer", "competitive", "ambitious", "limited_history"] as const;
@@ -131,7 +134,7 @@ function BandMix({ counts }: { counts: Record<string, number> }) {
 
 type ListOrder = "top" | "fit";
 const ORDERS: Record<ListOrder, { label: string; note: string }> = {
-  top: { label: "Top institutes first", note: "Top institutes and their most contested branches come first, based on NIRF rank (mostly from a secondary source) and past closing ranks. Branches you prefer move up. This isn’t a quality score." },
+  top: { label: "Top institutes first", note: "Top institutes and their most contested branches come first, based on NIRF rank (mostly from a secondary source) and past closing ranks. Branches you marked as preferred move up strongly, and acceptable ones less. This isn’t a quality score." },
   fit: { label: "Best fit for me", note: "Sorted by the priorities you set under “What matters to you”." },
 };
 
@@ -154,7 +157,7 @@ export default function RecommendationsPage() {
     setError(null);
     try {
       const next = await post<Recommendations>("/recommendations/generate", { profile: p, order: listOrder });
-      if (request === latest.current) setResult(next);
+      if (request === latest.current) { setResult(next); track("shortlist_generated", { order: listOrder }); }
     } catch (e) {
       if (request === latest.current) setError((e as Error).message);
     } finally {
@@ -205,6 +208,7 @@ export default function RecommendationsPage() {
         <h1 className="text-4xl font-bold">Your shortlist starts with your rank</h1>
         <p className="mt-2 text-ink-2">Answer a few questions, and we’ll compare your rank with official past cutoffs.</p>
         <Link href="/onboarding" className="btn btn-primary mt-5">Find my best fit</Link>
+        <p className="mt-4 text-sm text-ink-3">Only have your JEE Main percentile? <Link href="/rank-estimator" className="underline">Estimate your rank first</Link>.</p>
       </div>
     );
   }
@@ -214,10 +218,23 @@ export default function RecommendationsPage() {
       <PageHeader title="Your shortlist" intro={result?.data_year ? `Compared with official JoSAA final-round closing ranks from ${result.history_window?.[0]} to ${result.history_window?.[1]}.` : undefined}>
         <div className="flex flex-wrap gap-2">
           <Link href="/onboarding" className="btn btn-secondary">Edit my answers</Link>
+          <ShareButton />
           <ResetData />
         </div>
       </PageHeader>
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
+      {result?.missing_ranks?.map((m) => <div key={m} className="mb-4"><Notice tone="warn">{m}</Notice></div>)}
+      {result && result.options.length === 0 && !loading && (
+        <section className="card mb-6 p-5" aria-labelledby="no-options-title">
+          <h2 id="no-options-title" className="text-xl">No JoSAA seat has closed near this rank recently</h2>
+          <p className="mt-1 text-ink-2">JoSAA covers the IITs, NITs, IIITs and other government-funded institutes, and most of their seats close well before this rank. That says nothing about your other options.</p>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-2">
+            <li>Check your ranks are right, and add your category rank if you have one. Category seats close much later.</li>
+            <li>CSAB special rounds fill seats left after JoSAA, sometimes at later ranks.</li>
+            <li>Your state’s engineering counselling usually goes much further. <Link href="/exams" className="underline">See the state and other routes we cover</Link>.</li>
+          </ul>
+        </section>
+      )}
       <RankEditor profile={profile} onChange={changeRanks} />
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -270,6 +287,7 @@ export default function RecommendationsPage() {
             </div>
           )}
           {result && <BandMix counts={result.counts} />}
+          {result && <div className="mb-5"><BandsExplainer page="shortlist" /></div>}
           {result?.excluded && (result.excluded.beyond_range > 0 || result.excluded.avoided_branch > 0 || result.excluded.no_latest_cutoff > 0) && (
             <p className="mb-3 text-sm text-ink-3">Not shown: {num(result.excluded.beyond_range)} options more than 20% beyond recent closing ranks, {num(result.excluded.avoided_branch)} in branches you chose to avoid and {num(result.excluded.no_latest_cutoff)} missing from the {result.data_year} seat matrix, so not offered this year{(result.excluded.no_seat_in_category ?? 0) > 0 ? `, and ${num(result.excluded.no_seat_in_category)} with no ${result.data_year} seat in your category` : ""}. Each band shows its first 25 in this order, and options with limited history come last.</p>
           )}
@@ -281,9 +299,7 @@ export default function RecommendationsPage() {
           {result && shown.length === 0 && !loading && (
             <div className="space-y-3">
               {result.options.length === 0 && result.warnings.filter((w) => w.includes("no options")).map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
-              <Notice>{result.options.length === 0
-                ? "No JoSAA programme has closed within 20% of your rank in recent years. Check that your ranks and Class XII state are correct. State counselling isn't covered here, and it may still have options."
-                : "No options in this view. Try another band, or check that your ranks and Class XII state are correct."}</Notice>
+              {result.options.length > 0 && <Notice>No options in this view. Try another band, or check that your ranks and Class XII state are correct.</Notice>}
             </div>
           )}
         </div>

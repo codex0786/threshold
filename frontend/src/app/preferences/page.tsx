@@ -1,7 +1,12 @@
 "use client";
-import { ArrowDown, ArrowUp, GripVertical, Plus, Printer, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, GripVertical, Plus, Printer, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BandsExplainer } from "@/components/bands-explainer";
+import { ListBuilder } from "@/components/list-builder";
+import { ShareButton } from "@/components/share-button";
+import { sizeBucket, track } from "@/lib/analytics";
+import { downloadCsv } from "@/lib/csv";
 import { BandBadge, Notice, PageHeader, Skeleton } from "@/components/ui";
 import { num, post, type PreferenceAnalysis, type PreferenceItem, type Profile } from "@/lib/api";
 import { loadLists, loadProfile, type SavedList, saveLists } from "@/lib/store";
@@ -18,7 +23,15 @@ export default function PreferencesPage() {
   const [dragging, setDragging] = useState<number | null>(null);
   const [filter, setFilter] = useState("All");
 
-  useEffect(() => { setProfile(loadProfile()); setLists(loadLists()); }, []);
+  useEffect(() => {
+    const stored = loadLists();
+    setProfile(loadProfile());
+    setLists(stored);
+    // A shared list opens on its own tab.
+    const wanted = new URLSearchParams(window.location.search).get("list");
+    const index = wanted ? stored.findIndex((l) => l.id === wanted) : -1;
+    if (index >= 0) setActive(index);
+  }, []);
   const list = lists[active];
   const ids = list?.items.map((i) => i.id).join(",") ?? "";
 
@@ -50,6 +63,23 @@ export default function PreferencesPage() {
     const next = [...lists, { id: String(Date.now()), name: `Scenario ${lists.length + 1}`, items: list ? [...list.items] : [] }];
     setLists(next); saveLists(next); setActive(next.length - 1);
   };
+  const [builtNotes, setBuiltNotes] = useState<string[]>([]);
+  const addBuilt = (name: string, items: SavedList["items"], notes: string[]) => {
+    const incoming = { id: `built-${Date.now()}`, name, items };
+    // An untouched empty starter list is replaced rather than kept beside the suggestion.
+    const next = lists.length === 1 && lists[0].items.length === 0 ? [incoming] : [...lists, incoming];
+    setLists(next); saveLists(next); setActive(next.length - 1); setBuiltNotes(notes);
+  };
+  const exportCsv = () => {
+    if (!list?.items.length) return;
+    const rows = list.items.map((entry, i) => {
+      const item = byId.get(entry.id);
+      const route = item?.routes?.[0];
+      return [i + 1, item?.institution?.short_name ?? entry.label.split(":")[0], item?.programme ?? entry.label, item?.band ?? "", route ? `${route.seat_type} / ${QUOTA[route.quota] ?? route.quota} / ${route.gender_pool}` : "", (item?.issues ?? []).join(" ")];
+    });
+    downloadCsv(`${list.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "list"}.csv`, [["Choice", "Institute", "Programme", "Band (past cutoffs)", "Seat route", "Issues"], ...rows]);
+    track("list_exported", { size: sizeBucket(list.items.length) });
+  };
   const removeList = () => {
     if (lists.length < 2) return;
     const next = lists.filter((_, i) => i !== active);
@@ -62,13 +92,19 @@ export default function PreferencesPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <PageHeader title="JoSAA preference list" intro="Put choices in the order you actually want them. We flag problems, but we never change your order.">
-        <button className="btn btn-secondary no-print" onClick={() => window.print()} disabled={!list?.items.length}><Printer size={15} aria-hidden /> Save as PDF</button>
+        <div className="flex flex-wrap gap-2">
+          <ShareButton list={list} />
+          <button className="btn btn-secondary no-print" onClick={exportCsv} disabled={!list?.items.length}><Download size={15} aria-hidden /> CSV</button>
+          <button className="btn btn-secondary no-print" onClick={() => window.print()} disabled={!list?.items.length}><Printer size={15} aria-hidden /> Save as PDF</button>
+        </div>
       </PageHeader>
       <div className="no-print mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Saved lists">
         {lists.map((l, i) => <button key={l.id} aria-pressed={i === active} onClick={() => setActive(i)} className={`rounded-full border px-3 py-1.5 text-sm ${i === active ? "border-brand bg-brand text-brand-ink" : "border-line bg-surface text-ink-2"}`}>{l.name} ({l.items.length})</button>)}
         <button className="btn btn-secondary !px-3 !py-1.5 text-sm" onClick={addList}><Plus size={14} aria-hidden /> Copy as new scenario</button>
         {lists.length > 1 && <button className="btn btn-secondary !px-3 !py-1.5 text-sm" onClick={removeList}><Trash2 size={14} aria-hidden /> Delete this list</button>}
       </div>
+      {profile && <ListBuilder profile={profile} onBuilt={addBuilt} />}
+      {builtNotes.length > 0 && <div className="no-print mb-4 space-y-2">{builtNotes.map((n) => <Notice key={n}>{n}</Notice>)}</div>}
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
       {!list?.items.length ? (
         <Notice>Your list is empty. Open your <Link href="/recommendations" className="underline">shortlist</Link> and choose “Add to list” on the options you want.</Notice>
@@ -78,6 +114,7 @@ export default function PreferencesPage() {
             <div className="mb-4 space-y-2">
               <p className="tnum text-sm text-ink-3">{num(analysis.counts.safer)} safer, {num(analysis.counts.competitive)} competitive, {num(analysis.counts.ambitious)} ambitious. Based on past cutoffs to {analysis.data_year}.</p>
               {analysis.advice.map((a) => <Notice key={a} tone="warn">{a}</Notice>)}
+              <div className="no-print"><BandsExplainer page="preferences" /></div>
             </div>
           )}
           <div className="no-print mb-3 flex flex-wrap gap-2" role="group" aria-label="Show institution type">
@@ -115,7 +152,10 @@ export default function PreferencesPage() {
               <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-ink-2">{analysis.rules.map((r) => <li key={r}>{r}</li>)}</ul>
             </section>
           )}
-          <p className="no-print mt-4 text-sm"><Link href="/report" className="underline underline-offset-2">Create a parent report from this list</Link></p>
+          <p className="no-print mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <Link href="/report" className="underline underline-offset-2">Create a parent report from this list</Link>
+            <Link href={`/rounds?list=${encodeURIComponent(list.id)}`} className="underline underline-offset-2">Got a seat in a JoSAA round? Decide Freeze, Float or Slide</Link>
+          </p>
         </>
       )}
     </div>

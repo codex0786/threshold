@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from statistics import median
 from typing import Mapping, Sequence
 
-ENGINE_VERSION = "0.5.1"
+ENGINE_VERSION = "0.5.2"
 MIN_QUALITY_COVERAGE = 0.5
 # Salary percentiles among a few selected institutes would mislead, so wait for a broad cohort.
 MIN_COHORT_INSTITUTIONS = 50
@@ -82,6 +82,13 @@ def reputation_score(nirf_rank: int | None) -> float | None:
     return max(50.5, 100.0 - (nirf_rank - 1) * 0.5)
 
 
+# Tested on the real snapshot in November 2026: at +10/+5, a student at JEE Main 15,000 who asked for CS and ECE
+# saw NIT Tiruchirappalli Chemical first and only 9 of their branches in the top 20. At +20/+10 all 20 are their
+# branches, and a 45,000 rank still keeps a mix of strong institutes. Higher lifts pushed weak institutes up.
+PREFERRED_BRANCH_LIFT = 20
+ACCEPTABLE_BRANCH_LIFT = 10
+
+
 def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool = False, acceptable: bool = False) -> float:
     """Default list position: two parts institute rank to one part how contested the programme is.
 
@@ -91,7 +98,7 @@ def standing_score(nirf_rank: int | None, demand: float | None, preferred: bool 
     institute = reputation_score(nirf_rank)
     institute = NEUTRAL if institute is None else institute
     contested = NEUTRAL if demand is None else demand
-    return round((2 * institute + contested) / 3 + (10 if preferred else 5 if acceptable else 0), 1)
+    return round((2 * institute + contested) / 3 + (PREFERRED_BRANCH_LIFT if preferred else ACCEPTABLE_BRANCH_LIFT if acceptable else 0), 1)
 
 
 def contest_scores(closing_ranks: Mapping[int, float]) -> dict[int, float]:

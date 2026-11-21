@@ -16,10 +16,22 @@ const DETAIL: [string, string][] = [
   ["official_rankings", "NIRF ranks entered from the official site"],
 ];
 
+async function load() {
+  try {
+    return await Promise.all([api<Meta>("/meta"), api<Completeness>("/data/completeness"), api<{ sources: DataSource[] }>("/data/sources")]);
+  } catch (error) {
+    // CI builds have no API. Only there may the page build without figures; a real deployment must fail loudly instead.
+    if (process.env.THRESHOLD_OFFLINE_BUILD === "1") return null;
+    throw error;
+  }
+}
+
 export default async function Methodology() {
-  const [meta, completeness, sources] = await Promise.all([
-    api<Meta>("/meta"), api<Completeness>("/data/completeness"), api<{ sources: DataSource[] }>("/data/sources"),
-  ]);
+  const loaded = await load();
+  if (!loaded) {
+    return <div className="mx-auto max-w-4xl px-4 py-10"><PageHeader title="Data and methodology" /><Notice>Figures are loading. Please try again shortly.</Notice></div>;
+  }
+  const [meta, completeness, sources] = loaded;
   const coverage: [string, number][] = [
     ["Official cutoffs", completeness.coverage.cutoffs], ["NIRF rank (secondary source)", completeness.coverage.nirf_rank],
     ["Placement records (self-reported, institute-wide)", completeness.coverage.placements], ["Fee records (official circulars)", completeness.coverage.fees],
@@ -56,6 +68,7 @@ export default async function Methodology() {
           </ul>
         </Section>
         <Section title="Current coverage" hint={`Out of ${num(completeness.institutions)} institutes, ${num(completeness.programmes)} programme names and ${num(completeness.cutoff_records)} cutoff records.`}>
+          {meta.latest_round && <p className="mb-3 text-sm text-ink-2">Newest JoSAA round on record: {meta.latest_round.year} round {meta.latest_round.round}{meta.latest_round.is_final_round ? " (final)" : ", while counselling is still running. Bands use complete years only until the last round is out"}.{meta.latest_round.fetched_at ? ` Collected ${new Date(meta.latest_round.fetched_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}.` : ""}</p>}
           <ul className="space-y-1">{coverage.map(([label, n]) => <li key={label} className="flex justify-between text-sm"><span>{label}</span><span className="tnum text-ink-2">{num(n)} institutes</span></li>)}</ul>
           {completeness.by_type && (
             <div className="mt-4 overflow-x-auto">
@@ -76,6 +89,13 @@ export default async function Methodology() {
             </ul>
           )}
           <p className="mt-3 text-sm text-ink-3">Not yet collected: {completeness.not_yet_collected.join(", ")}.</p>
+        </Section>
+        <Section title="Your privacy">
+          <ul className="list-disc space-y-1.5 pl-5 text-ink-2">
+            <li>Your answers, ranks and lists are kept in this browser. They are sent to our server only to work out your results, with no name or contact details.</li>
+            <li>We count visits and a few actions, such as creating a shortlist or a share link, with Vercel Web Analytics. It sets no cookies, and we never send it your ranks, category, state, gender or choices. Addresses are counted without anything after the page name.</li>
+            <li>A share link carries your answers and one list inside the link itself, after the # sign. Browsers don’t send that part to any server, so we never see it. Anyone who has the link can read it, so share it only with people you trust.</li>
+          </ul>
         </Section>
         <Section title="Sources">
           <ul className="divide-y divide-line">

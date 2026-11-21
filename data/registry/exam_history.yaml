@@ -1,0 +1,25 @@
+# Past-year official documents for the admission routes beyond JEE, so each route gets several years of history
+# (the basis for admission bands, as on JEE). Links were read from each authority's own archive page.
+# `python -m ingest.fetch_exam_history` downloads them into data/raw/<route>/<year>/ and records each sha256.
+# Raw files stay out of git, as elsewhere.
+retrieved: "2026-11-21"
+routes:
+  neet-ug:
+    authority: Medical Counselling Committee
+    archive: https://mcc.nic.in/archive-ug/
+    years:
+      2025:
+        round1: {title: "Final Result for Round-I of NEET UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/08/20250813289226788.pdf"}
+        round2: {title: "Final Result for Round 2 of UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/09/202509182057444522.pdf"}
+        round3: {title: "Final Allotment Result for Round 3 of UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/10/202510231856675154.pdf"}
+        stray: {title: "Final Allotment Result for Stray Vacancy Round UG 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/11/2025111596488171.pdf"}
+      2024:
+        round1: {title: "Final Result of Round 1 NEET UG 2024", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2024/08/2024082536.pdf"}
+        round2: {title: "Final Allotment Result for Round 2 of UG Counselling 2024", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2024/09/2024092017.pdf"}
+        round3: {title: "Final Result Round 3 UG Counselling 2024", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2024/10/FinalAllotmentStatusUG_R3_111024_Com_compressed.pdf"}
+        stray: {title: "Final Allotment Result for Stray Vacancy Round UG Counselling 2024", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2024/10/2024103043.pdf"}
+      2023:
+        round1: {title: "Final Result Round 1 UG 2023", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/07/2023073062.pdf"}
+        round2: {title: "Final Allotment Status for Round 2 of UG Counselling 2023", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/08/2023081882.pdf"}
+        round3: {title: "Final Result of UG 2023 Round 3", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/09/2023090732.pdf"}
+        stray: {title: "Result of Stray Vacancy Round UG 2023", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2023/09/2023092765.pdf"}

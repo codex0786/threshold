@@ -235,3 +235,18 @@ def test_career_profile_withholds_small_alumni_samples_and_holds_no_names(seeded
         result = careers.alumni_sample(db, inst.id)
     assert result["status"] == "too_small" and "occupations" not in result and "not the alumni network" in result["caveat"]
     assert not any(hasattr(AlumniObservation, field) for field in ("person_name", "person_id", "name"))
+
+
+def test_a_fresh_sqlite_snapshot_numbers_its_own_ids(tmp_path):
+    """The public snapshot is SQLite. Imports into it write an audit row, which needs an id SQLite assigns."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from app.models import AuditLog, Base
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'snapshot.db'}")
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        db.add(AuditLog(actor="test", action="import", entity="fees", detail={}))
+        db.commit()
+        assert db.query(AuditLog).one().id == 1

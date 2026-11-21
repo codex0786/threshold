@@ -12,6 +12,11 @@ type Events = {
   share_link_created: { has_list: boolean; size: SizeBucket; method: "copy" | "native" };
   share_link_opened: { valid: boolean };
   share_link_imported: { has_list: boolean };
+  rank_estimated: { year: number };
+  rank_estimate_used: Record<string, never>;
+  list_built: { order: "top" | "fit"; size: SizeBucket; safety_net: number };
+  list_exported: { size: SizeBucket };
+  round_advice_viewed: { round: number; suggestion: "freeze" | "float" | "slide" };
 };
 
 export type SizeBucket = "0" | "1-10" | "11-30" | "31-60" | "60+";

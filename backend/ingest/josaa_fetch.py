@@ -4,7 +4,10 @@ The pages are public ASP.NET forms with no login or CAPTCHA. We request one
 "ALL" table per year and round, wait between requests, and keep the raw HTML
 untouched so that parsing can be re-run without contacting the source again.
 
-Usage: python -m ingest.josaa_fetch --years 2021-2025 --current
+Usage: python -m ingest.josaa_fetch --years 2021-2025 --current [--season-in-progress]
+
+During counselling, run with --current --season-in-progress after each round is published,
+then without --season-in-progress once the last round is out, so that round becomes final.
 """
 from __future__ import annotations
 
@@ -102,19 +105,39 @@ def save(html: str, url: str, year: int, round_no: int, is_final: bool) -> dict:
     return meta
 
 
-def fetch_year(url: str, query_year: int | None, year: int) -> None:
+def final_flags(rounds: list[int], season_in_progress: bool) -> dict[int, bool]:
+    """Which rounds count as final. While a season is running, none does, so bands keep using complete years."""
+    last = max(rounds) if rounds else None
+    return {r: (not season_in_progress and r == last) for r in rounds}
+
+
+def refresh_final_flags(year: int, rounds: list[int], season_in_progress: bool) -> None:
+    """Rewrite each saved round's metadata, so a round saved mid-season becomes final once the season closes."""
+    flags = final_flags(rounds, season_in_progress)
+    for round_no, is_final in flags.items():
+        meta_path = RAW_DIR / f"orcr_{year}_r{round_no}.json"
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text())
+            if meta.get("is_final_round") != is_final:
+                meta["is_final_round"] = is_final
+                meta_path.write_text(json.dumps(meta, indent=2))
+
+
+def fetch_year(url: str, query_year: int | None, year: int, all_rounds: bool = True, season_in_progress: bool = False) -> None:
     rounds = available_rounds(url, query_year)
     if not rounds:
         print(f"{year}: no rounds offered")
         return
-    final = max(rounds)
-    for round_no in sorted({min(rounds), final}):
+    flags = final_flags(rounds, season_in_progress)
+    wanted = sorted(rounds) if all_rounds else sorted({min(rounds), max(rounds)})
+    for round_no in wanted:
         if (RAW_DIR / f"orcr_{year}_r{round_no}.html").exists():
             print(f"{year} round {round_no}: already downloaded")
             continue
         html = fetch_table(url, query_year, str(round_no))
-        meta = save(html, url, year, round_no, round_no == final)
-        print(f"{year} round {round_no}/{final}: {len(html):,} bytes, sha {meta['sha256'][:10]}")
+        meta = save(html, url, year, round_no, flags[round_no])
+        print(f"{year} round {round_no}/{max(rounds)}: {len(html):,} bytes, sha {meta['sha256'][:10]}")
+    refresh_final_flags(year, rounds, season_in_progress)
 
 
 def main() -> None:
@@ -122,12 +145,14 @@ def main() -> None:
     parser.add_argument("--years", default="2021-2025")
     parser.add_argument("--current", action="store_true", help="also fetch the current-year page")
     parser.add_argument("--current-year", type=int, default=2026)
+    parser.add_argument("--first-and-final-only", action="store_true", help="the old behaviour: round 1 and the last round only")
+    parser.add_argument("--season-in-progress", action="store_true", help="the current year's rounds are still being published, so none is final yet")
     args = parser.parse_args()
     start, _, end = args.years.partition("-")
     for year in range(int(end or start), int(start) - 1, -1):
-        fetch_year(ARCHIVE_URL, year, year)
+        fetch_year(ARCHIVE_URL, year, year, all_rounds=not args.first_and_final_only)
     if args.current:
-        fetch_year(CURRENT_URL, None, args.current_year)
+        fetch_year(CURRENT_URL, None, args.current_year, all_rounds=not args.first_and_final_only, season_in_progress=args.season_in_progress)
 
 
 if __name__ == "__main__":

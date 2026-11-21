@@ -63,3 +63,6 @@ For OPEN gender-neutral seats alone, the Safer edge held 94.5% to 96.9% of the t
 - Very small seat pools are noisy, which the "other seats" backtest reflects.
 - Programme name changes break history, which shows up as Limited history.
 - Rules come from 2026 and are applied to all past years' cutoffs.
+
+## Rounds during counselling
+`python -m ingest.josaa_fetch --current --season-in-progress` downloads every round published so far and marks none of them final, so bands keep using complete years. Run it after each round, then `python -m ingest.load`. When the last round is out, run it once more without `--season-in-progress`. That marks the last round final in the saved metadata, and the next load updates the stored rows to match. Past years are now fetched with every round too, so the round companion can show how seats moved between rounds. Use `--first-and-final-only` for the old behaviour.

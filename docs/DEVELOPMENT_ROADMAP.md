@@ -27,6 +27,13 @@ Not built: student dashboard, admin dashboard.
 - "What the bands mean" card on the shortlist and preference list, with the backtest figures in plain words.
 - Share links for the profile and a preference list, with no account.
 
+## Done in the second slice (November 2026)
+- Percentile-to-rank estimator (`/rank-estimator`, `POST /estimates/rank`), checked against NTA's published JEE Advanced qualifier counts for 2024–2026.
+- Choice-list builder (`POST /preference-lists/build`) with a safety net of Safer choices, opening as a new scenario, plus CSV export of any list.
+- Round companion (`/rounds`, `POST /rounds/advice`): how each higher choice moved by the final round in recent years, and a Freeze / Float / Slide suggestion with its reason.
+- Whole-course cost on the compare page, marked "at least" when hostel or mess charges aren't published.
+- Ingest keeps every JoSAA round, and `--season-in-progress` keeps the current year out of the bands until its last round is published. Methodology shows the newest round on record.
+
 ## Backlog in recommended order
 1. **Authentication and role-based access**, then saving profiles and lists on the server.
 2. **Admin:** review queue, verification, audit trail. This also unlocks marking data `verified`.

@@ -5,7 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { AcademicBlock } from "@/components/academics";
 import { CareerSummary } from "@/components/careers";
 import { BandBadge, FeeBlock, NotAvailable, Notice, PageHeader, PlacementBlock, QualityScore, RankingLine, ScoreBar, Skeleton } from "@/components/ui";
-import { type Comparison, type ComparisonItem, num, post } from "@/lib/api";
+import { type Comparison, type ComparisonItem, inr, num, post } from "@/lib/api";
 import { clearCompare, type CompareEntry, loadCompare, loadProfile, toggleCompare } from "@/lib/store";
 
 const listName = (l: string) => l.replace("JEE_ADVANCED:", "JEE Advanced ").replace("JEE_MAIN:", "JEE Main ");
@@ -18,6 +18,12 @@ const ROWS: { label: string; render: (i: ComparisonItem) => ReactNode; onlyWithP
   { label: "Programme quality", render: (i) => <QualityScore quality={i.quality} /> },
   { label: "Placement outcomes", render: (i) => <PlacementBlock records={i.placements} /> },
   { label: "Fees", render: (i) => <FeeBlock fee={i.fee} /> },
+  { label: "Cost of the whole course", render: (i) => i.course_cost ? (
+    <div>
+      <p className="tnum font-medium">{i.course_cost.status === "at_least" ? "At least " : ""}{inr(i.course_cost.total_inr)}</p>
+      <p className="text-xs text-ink-3">{inr(i.course_cost.annual_inr)} a year × {i.course_cost.years} years{i.course_cost.one_time_inr ? ` + ${inr(i.course_cost.one_time_inr)} one-time` : ""}, from {i.course_cost.academic_year} fees ({i.course_cost.seat_type_group}).{i.course_cost.missing.length ? ` No ${i.course_cost.missing.join(" or ")} charges published.` : ""} Fees usually rise each year.</p>
+    </div>
+  ) : <NotAvailable /> },
   { label: "Faculty and academics (whole institute)", render: (i) => <AcademicBlock academics={i.academics} compact /> },
   { label: "Curriculum", render: () => <NotAvailable /> },
   { label: "Where graduates go", render: (i) => <CareerSummary careers={i.careers} /> },

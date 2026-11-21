@@ -118,6 +118,12 @@ def _trade_offs(items: list[dict]) -> list[str]:
     elif missing:
         names = ", ".join(dict.fromkeys(i["institution"]["short_name"] for i in missing))
         notes.append(f"Placement data is missing for {names}, so outcomes cannot be compared across all the options.")
+    costs = {f"{i['programme']} at {i['institution']['short_name']}": i["course_cost"] for i in items if i.get("course_cost") and i["course_cost"]["status"] == "complete"}
+    if len(costs) >= 2:
+        text = ", ".join(f"{name} Rs {c['total_inr'] / 100000:.2f} lakh over {c['years']} years" for name, c in costs.items())
+        notes.append(f"Published cost for the whole course, from one year's fees: {text}. Fees usually rise each year, and these are for the fee group each document names.")
+    elif any(i.get("course_cost") is None for i in items) and costs:
+        notes.append("Some of these institutes publish no complete yearly cost, so the course costs can't be compared fairly.")
     return notes
 
 
@@ -151,7 +157,7 @@ def compare(db: Session, programme_ids: list[int], profile: StudentProfile | Non
             "branch_family": programme.branch_family, "branch_label": FAMILY_LABELS.get(programme.branch_family, "Other"),
             "institution": rec.institution_json(programme, full=False),
             "reference_cutoff": _reference_cutoff(list(records)), "ranking": rec.ranking_json(ranking),
-            "placements": rec.placement_json(placement_records), "fee": rec.fee_json(fee), "quality": rec.describe_quality(quality),
+            "placements": rec.placement_json(placement_records), "fee": rec.fee_json(fee), "course_cost": rec.course_cost(fee, programme.duration_years), "quality": rec.describe_quality(quality),
             "data_gaps": rec.data_gaps(placement_records, ranking, fee, quality.components),
             "academics": academic_profile, "curriculum": None, "careers": careers.career_profile(db, inst.id), "student_experience": None,
             "student_route": None, "suitability": None,

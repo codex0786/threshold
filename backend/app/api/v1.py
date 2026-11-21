@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.db import get_db
 from app.models import AcademicSnapshot, CsabCutoff, CutoffRecord, DataSource, FeeRecord, Institution, InstitutionAlias, InstitutionRanking, PlacementRecord, Programme, ResearchOutput, SeatMatrixRecord, SourceDocument
-from app.schemas import STATES, ComparisonRequest, CounsellingRequest, ParentReportRequest, PreferenceListRequest, RecommendationRequest, RoiRequest
-from app.services import academics, assistant, careers, finance, preferences, report
+from app.schemas import STATES, ComparisonRequest, CounsellingRequest, ListBuildRequest, ParentReportRequest, PreferenceListRequest, RankEstimateRequest, RecommendationRequest, RoiRequest, RoundAdviceRequest
+from app.services import academics, assistant, careers, finance, list_builder, preferences, rank_estimate, report, rounds
 from app.services import recommend as rec
 from app.services.branches import CAREER_BRANCH_AFFINITY, FAMILY_LABELS
 from app.services.comparison import compare
@@ -31,13 +31,27 @@ def health(db: Session = Depends(get_db)) -> dict:
     return {"status": "ok", "cutoff_rows": db.scalar(select(func.count()).select_from(CutoffRecord))}
 
 
+def _latest_round(db: Session) -> dict | None:
+    """The newest JoSAA round on record, so the site can say how fresh the figures are during counselling."""
+    row = db.execute(
+        select(CutoffRecord.year, CutoffRecord.round, CutoffRecord.is_final_round, func.max(SourceDocument.fetched_at))
+        .join(SourceDocument, SourceDocument.id == CutoffRecord.source_document_id)
+        .where(CutoffRecord.authority == "JOSAA")
+        .group_by(CutoffRecord.year, CutoffRecord.round, CutoffRecord.is_final_round)
+        .order_by(CutoffRecord.year.desc(), CutoffRecord.round.desc()).limit(1)
+    ).first()
+    if row is None:
+        return None
+    return {"year": row[0], "round": row[1], "is_final_round": row[2], "fetched_at": row[3].isoformat() if row[3] else None}
+
+
 @router.get("/meta")
 def meta(db: Session = Depends(get_db)) -> dict:
     return {
         "states": STATES, "branch_families": FAMILY_LABELS, "career_options": CAREER_OPTIONS,
         "career_mapped": sorted(CAREER_BRANCH_AFFINITY), "default_priorities": DEFAULT_PRIORITIES,
         "suitability_labels": SUITABILITY_LABELS, "quality_labels": QUALITY_LABELS, "quality_weights": QUALITY_WEIGHTS,
-        "latest_data_year": rec.latest_year(db), "engine_version": ENGINE_VERSION,
+        "latest_data_year": rec.latest_year(db), "engine_version": ENGINE_VERSION, "latest_round": _latest_round(db),
         "institute_types": {"IIT": "IIT", "IISC": "IISc", "NIT": "NIT", "IIIT": "IIIT", "GFTI": "Other government-funded (GFTI)"},
     }
 
@@ -232,6 +246,20 @@ def analyse_preference_list(body: PreferenceListRequest, db: Session = Depends(g
     return preferences.analyse(db, body.profile, body.programme_ids)
 
 
+@router.post("/preference-lists/build")
+def build_preference_list(body: ListBuildRequest, db: Session = Depends(get_db)) -> dict:
+    return list_builder.build(db, body.profile, body.order, body.size, body.safety_net, body.include_ambitious)
+
+
+@router.post("/rounds/advice")
+def round_advice(body: RoundAdviceRequest, db: Session = Depends(get_db)) -> dict:
+    if body.allotted_programme_id not in body.programme_ids:
+        raise HTTPException(422, "Choose the allotted programme from your list")
+    if body.round > body.final_round:
+        raise HTTPException(422, "The round can't be after the final round")
+    return rounds.advise(db, body.profile, body.programme_ids, body.allotted_programme_id, body.round, body.final_round)
+
+
 @router.post("/reports/parent")
 def parent_report(body: ParentReportRequest, db: Session = Depends(get_db)) -> dict:
     result = report.build(db, body.profile, body.programme_ids)
@@ -283,6 +311,12 @@ def financial_roi(body: RoiRequest) -> dict:
         },
         "warning": "This is an estimate and not a guaranteed return. Salaries vary, and the median is for placed students only. Costs change every year. Check loan terms with your lender.",
     }
+
+
+@router.post("/estimates/rank")
+def estimate_rank(body: RankEstimateRequest) -> dict:
+    """A CRL rank range from a JEE Main percentile. Nothing is stored."""
+    return rank_estimate.estimate(body.percentile, body.exam_year)
 
 
 @router.get("/data/sources")

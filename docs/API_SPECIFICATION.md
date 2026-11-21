@@ -66,3 +66,13 @@ Returns `tool`, `summary`, `facts` (each with `text`, `source_title`, `source_ur
 ## Faculty
 `GET /api/v1/programmes/{id}/faculty` returns `institute_wide` figures and a `department_level` that is always `null`, because none is collected.
 
+
+## Added in November 2026
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/v1/estimates/rank` | `{percentile, exam_year}` → a JEE Main CRL rank range, the method and sources. Nothing stored |
+| POST | `/api/v1/preference-lists/build` | `{profile, order, size, safety_net, include_ambitious}` → a suggested choice list in shortlist order, ending once the safety net of Safer choices is filled |
+| POST | `/api/v1/rounds/advice` | `{profile, programme_ids, allotted_programme_id, round, final_round}` → each higher choice's past round-by-round closing ranks and a Freeze / Float / Slide suggestion |
+| GET | `/api/v1/meta` | Now also returns `latest_round`: the newest JoSAA year and round on record |
+
+`/api/v1/comparisons` items now include `course_cost`: one year's published charges times the course length plus one-time fees, `status` `complete` or `at_least`.

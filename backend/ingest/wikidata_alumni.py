@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -99,6 +100,9 @@ def main() -> None:
         cache = RAW / f"{slug}.json"
         if cache.exists():
             results[slug] = json.loads(cache.read_text())
+            continue
+        if os.environ.get("WIKIDATA_OFFLINE"):
+            print(f"{slug}: no cached file, skipped (WIKIDATA_OFFLINE)")
             continue
         try:
             results[slug] = {"qid": qid, "retrieved_at": retrieved.isoformat(), **collect(session, qid)}

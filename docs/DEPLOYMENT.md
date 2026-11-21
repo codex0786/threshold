@@ -55,6 +55,15 @@ npm run dev
 
 The app opens at `http://localhost:3400`. Raw downloads aren't in git, so a fresh setup fetches them again. Please keep that infrequent, as it uses a public government service.
 
+### Rebuild the database from files already on disk
+When `data/raw` is present but the Postgres database is gone, rebuild it without downloading anything:
+
+```bash
+cd backend && scripts/rebuild_database.sh
+```
+
+It creates the `threshold` database, runs every loader in order (including `load_academics`, and `wikidata_alumni` from cached files only), exports `snapshot/threshold.rebuilt.db` and compares it table by table with the live `snapshot/threshold.db`, ignoring ids and timestamps. It refuses to run if the database already exists, and it never overwrites the live snapshot. "All tables match" means the database is a faithful copy of what is deployed, so later round loads and imports can go through Postgres again. Checked on 2026-11-21: all 19 tables matched, 132,982 cutoff rows included.
+
 ## Planned production shape
 - FastAPI on a container host, once accounts need writes.
 - Managed PostgreSQL, with `DATABASE_URL`.

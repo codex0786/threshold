@@ -192,6 +192,17 @@ POSITION_REALISM = {"first_round": 0, "later_round": 0, "reached": 0, "leftover_
 # Banded seats first, then seats with too little history, then seats beyond the recent range.
 BAND_ORDER = {"safer": 0, "competitive": 0, "ambitious": 0, None: 1, "beyond": 2}
 LEFTOVER = re.compile(r"stray|special|spot", re.I)
+
+
+def leftover_round(rounds: list[str], label: str | None) -> bool:
+    """A round for seats still empty near the end: one named stray, special or spot, or any round after the first
+    such round (MCC's Rounds 5 and 6 for BDS and B.Sc Nursing came after the stray round)."""
+    if not label:
+        return False
+    if LEFTOVER.search(label):
+        return True
+    first = next((i for i, r in enumerate(rounds) if LEFTOVER.search(r)), None)
+    return first is not None and label in rounds and rounds.index(label) > first
 POSITION_LIMIT = 100
 
 
@@ -325,7 +336,7 @@ def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None)
         position = "reached"
         why.append(f"{metric['value_label']}: {fmt(route, first['value'])}. Yours is {fmt(route, value)}.")
     else:
-        position = "first_round" if first["round"] == rounds[0] else "leftover_round" if LEFTOVER.search(first["round"] or "") else "later_round"
+        position = "first_round" if first["round"] == rounds[0] else "leftover_round" if leftover_round(rounds, first["round"]) else "later_round"
         why.append(f"In {first['round']}, the {lower_first(metric['value_label'])} was {fmt(route, first['value'])}. Yours is {fmt(route, value)}.")
         if position == "later_round":
             earlier = [step for step in ladder if step["value"] is not None and index.get(step["round"], 0) < index.get(first["round"], 0)]
@@ -334,7 +345,7 @@ def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None)
             elif index.get(first["round"], 0) > 0:
                 why.append(f"This seat has no figure for the rounds before {first['round']}.")
     missed = [step["round"] for step in ladder if first is not None and step["value"] is not None and not step["reached"]
-              and index.get(step["round"], 0) > index.get(first["round"], 0) and not LEFTOVER.search(step["round"] or "")]
+              and index.get(step["round"], 0) > index.get(first["round"], 0) and not leftover_round(rounds, step["round"])]
     if missed:
         why.append(f"It didn't reach your {unit} in {', '.join(missed)}.")
     if rounds and "provisional" in (ladder[0]["round"] or "") and position == "first_round":

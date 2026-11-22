@@ -368,11 +368,13 @@ export default function ExamShortlistPage() {
       setRoute(found);
       if (!found) return;
       const saved = loadExamAnswers(found.code);
-      const start = { value: "", gender: "", domicile: "", ...examDefaults(found), ...saved };
+      // A link from the JEE results carries the student's rank, so they don't type it again.
+      const linked = new URLSearchParams(window.location.search).get("rank")?.replace(/\D/g, "") ?? "";
+      const start = { value: "", gender: "", domicile: "", ...examDefaults(found), ...saved, ...(linked ? { value: linked } : {}) };
       // Answers saved before categories were matched to quotas may hold a pair that can never match.
       start.category = categoryFor(found, start.quota, start.category);
       setAnswers(start);
-      if (saved?.value) run(found, start, "top");
+      if (start.value) run(found, start, "top");
     }).catch(() => setError("These figures aren’t available right now. Please try again shortly."));
   }, [code, run]);
 

@@ -227,6 +227,9 @@ export default function RecommendationsPage() {
       {result?.missing_ranks?.map((m) => (
         <div key={m} className="mb-4"><Notice tone="warn">{m}{m.startsWith("IITs and IISc") && <> <Link href="/onboarding" className="font-semibold underline">Add my JEE Advanced rank</Link></>}</Notice></div>
       ))}
+      {result?.state_routes?.map((s) => (
+        <div key={s.code} className="mb-4"><Notice>{s.note} <Link href={`/exams/${s.code}${profile?.main?.crl ? `?rank=${profile.main.crl}` : ""}`} className="font-semibold underline">See {s.name} seats for your rank</Link></Notice></div>
+      ))}
       {result && result.options.length === 0 && !loading && (
         <section className="card mb-6 p-5" aria-labelledby="no-options-title">
           <h2 id="no-options-title" className="text-xl">No JoSAA seat has closed near this rank recently</h2>

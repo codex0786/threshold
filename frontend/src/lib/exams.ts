@@ -50,7 +50,7 @@ export type ExamShortlist = {
 
 // The first view shows one clear list: the open category, and the route's own default quota and course.
 // KEA's general merit category is GM.
-export const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS", "GM"];
+export const OPEN_CATEGORIES = ["Open", "OPEN", "General (General)", "GOPENS", "GM", "OPNO"];
 export const EXAM_ICONS: Record<string, typeof Wrench> = { Medical: Stethoscope, Law: Scale, Engineering: Wrench };
 
 // Colours follow the JEE bands, so the order of strength reads the same across the site.
@@ -114,6 +114,7 @@ export function saveExamAnswers(code: string, answers: ExamAnswers) {
 
 // Short guides to category codes that aren't self-explanatory, shown under the category menu.
 export const CATEGORY_GUIDES: Record<string, string> = {
+  uptac: "Codes as UPTAC prints them. The first part is the category: OP open, BC OBC from UP, SC, ST and EWS from UP. The rest is the sub-category: NO none, GL female (given to every female UP candidate), FF dependants of freedom fighters, AF armed forces, PH Divyangjan. TFW is the tuition fee waiver scheme. Pick OPNO if none applies.",
   "karnataka-neet": "Codes as KEA prints them. GM is General Merit; 1, 2A, 2B, 3A and 3B are Karnataka's backward-class categories, and SC and ST follow the same pattern. The next letter is G (general), K (Kannada medium) or R (rural), and a final H means the Hyderabad-Karnataka (Article 371(J)) quota: 2AKH is 2A, Kannada medium, Hyderabad-Karnataka. Other codes are KEA's special and minority categories; check KEA's information bulletin before choosing one.",
   clat: "National categories apply to everyone. State categories appear once you choose your domicile state, and only universities in that state use them.",
   "maharashtra-engineering": "Codes as the CET Cell prints them: G is general and L is ladies (women only), then the category (OPEN, OBC, SC and so on), then where the seat sits: H home university, O other than home university, S state level. Only codes that exist for the chosen quota are listed.",

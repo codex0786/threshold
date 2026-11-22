@@ -508,6 +508,76 @@ def kea_route(folder: Path) -> dict:
     }
 
 
+UPTAC_HEADER = ["Sr.No", "Round", "Institute", "Programme", "Branch", "Category", "Seat Gender", "Exam Name", "Opening Rank", "Closing Rank", "Min Score", "Max Score", "Remark"]
+# UPTAC's B.Tech rounds as its OR-CR page labels them, in order. R5 lets students move to another branch in the same
+# institute; R6 and R7 are special rounds, which out-of-state candidates (OSGE) may also join.
+UPTAC_ROUNDS = {
+    "R1: First Round": "Round 1", "R2: Second Round": "Round 2", "R3: Third Round": "Round 3", "R4: Fourth Round": "Round 4",
+    "R5: Internal Sliding": "Internal sliding", "R6: Special Round": "Special round 1", "R7: Special Round Two": "Special round 2",
+}
+UPTAC_QUOTA = "Uttar Pradesh"
+UPTAC_PAGE = "https://uptac.samarth.edu.in/index.php/cut-off-matrix/index"
+UPTAC_BROCHURE = "https://samarth-notification.s3.ap-south-1.amazonaws.com/uptacadmin.samarth.ac.in/admission/2026/july/admissionhed126/bc7d57e0090dd6f13e771125a9ad72a1ecdc68edf2e4430417ac2bb64bd909331/17901474761_admission_docs.pdf"
+
+
+def uptac_records(path: Path) -> tuple[list[dict], dict]:
+    """UPTAC's opening and closing JEE Main ranks for B.Tech, as saved from its public OR-CR page.
+
+    Only rows ranked by JEE Main are kept: special rounds can also rank by CUET UG or Class 12 marks, which aren't on
+    the same scale. A "-" means no one was allotted that seat in that round, so the row carries no figure.
+    """
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    if saved["header"] != UPTAC_HEADER:
+        raise SystemExit(f"Unexpected UPTAC header: {saved['header']}")
+    if saved.get("total") not in (None, len(saved["rows"])):
+        raise SystemExit(f"{path.name}: {len(saved['rows'])} rows saved but the page reported {saved['total']}")
+    records, check = [], Counter()
+    for serial, (number, round_label, institute, _programme, branch, category, gender, exam, opening, closing, *_rest) in enumerate(saved["rows"], start=1):
+        check["rows"] += 1
+        check["sequence_breaks"] += int(number) != serial
+        if round_label not in UPTAC_ROUNDS:
+            raise SystemExit(f"Unexpected UPTAC round: {round_label}")
+        if exam.upper() != "JEE-MAIN":
+            check["other_exam"] += 1
+            continue
+        if closing == "-":
+            check["no_allotment"] += 1
+            continue
+        records.append({
+            "institute": clean(institute), "programme": clean(branch),
+            "group": f"{UPTAC_QUOTA} · {UPTAC_ROUNDS[round_label]}", "category": clean(category),
+            # Special-round ranks print as 87671.0000000, and a few main-round ranks carry a tie-break .01; the rank is the whole part.
+            "value": int(float(closing)), "first_value": int(float(opening)), "female_only": gender.lower().startswith("female"),
+        })
+        check["records"] += 1
+    return records, dict(check)
+
+
+def uptac_route(path: Path) -> dict:
+    records, check = uptac_records(path)
+    present = {r["group"].rsplit(" · ", 1)[1] for r in records}
+    rounds = [label for label in UPTAC_ROUNDS.values() if label in present]
+    return {
+        "code": "uptac", "stream": "Engineering", "level": "UG", "name": "UPTAC B.Tech (Uttar Pradesh, AKTU)", "authority": "Uttar Pradesh Technical Admission Counselling (AKTU)",
+        "compare_requires_group": True, "rounds": rounds, "default_group": f"{UPTAC_QUOTA} · Round 4",
+        "asks_gender": True,
+        "metric": {"label": "JEE Main rank (CRL)", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Closing rank", "second_label": None},
+        "document": document("UPTAC 2026 Opening Rank & Closing Rank Details, B.Tech", UPTAC_PAGE, "2026", ", ".join(rounds), "official"),
+        "sources": [
+            {"title": "UPTAC 2026 Opening Rank & Closing Rank Details", "url": UPTAC_PAGE},
+            {"title": "UPTAC Information Brochure 2026-27", "url": UPTAC_BROCHURE},
+        ],
+        "limits": [
+            "UPTAC's main rounds are for candidates who passed Class 12 in Uttar Pradesh, or whose parent is domiciled in UP. Others (code OSGE) can join only the special rounds (Information Brochure 2026-27, clause 4).",
+            "Closing ranks are UPTAC's own, round by round. Only seats ranked by JEE Main are shown; special-round seats ranked by CUET UG or Class 12 marks are left out.",
+            "Reserved categories (SC 21%, ST 2%, OBC 27%, EWS 10%) and sub-categories apply only to candidates from UP with the certificates the brochure lists.",
+            "15% of seats in private institutes are filled by the institute under management or NRI quota, outside counselling, and aren't shown.",
+            "One year of figures so far, so seats have no bands yet.",
+        ],
+        "check": check, "records": records,
+    }
+
+
 CCMT_ROUNDS = ["Round 1", "Round 2", "Round 3", "Special Round 1", "Special Round 2", "National Spot Round"]
 
 
@@ -683,6 +753,10 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         })
     else:
         routes.append(kept["maharashtra-engineering"])
+    if args.uptac:
+        routes.append(uptac_route(args.uptac))
+    elif "uptac" in kept:
+        routes.append(kept["uptac"])
     if args.kea:
         routes.append(kea_route(args.kea))
     elif "karnataka-neet" in kept:
@@ -700,6 +774,7 @@ if __name__ == "__main__":
     parser.add_argument("--clat", type=Path, nargs="+", required=True)
     parser.add_argument("--maharashtra", type=Path, nargs="+", help="One cut-off PDF per CAP round, in round order")
     parser.add_argument("--ccmt", type=Path)
+    parser.add_argument("--uptac", type=Path, help="UPTAC's B.Tech OR-CR table saved from its page (uptac-<year>-orcr-from-page.json)")
     parser.add_argument("--kea", type=Path, help="Folder holding KEA's final allotment lists, named as in KEA_LISTS")
     data = build(parser.parse_args(), json.loads(OUT.read_text()) if OUT.exists() else {})
     OUT.parent.mkdir(parents=True, exist_ok=True)

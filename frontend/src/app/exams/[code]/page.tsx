@@ -143,14 +143,23 @@ function Elsewhere({ items, unit, year, onPick }: { items: { quota: string; prog
 function HistoryNote({ history, hasMerit }: { history: NonNullable<ExamRoute["history"]>; hasMerit: boolean }) {
   const weakest = Object.entries(history.backtest).map(([year, groups]) => [year, groups["All seats"]?.safer ?? 100] as const).sort((a, b) => a[1] - b[1])[0];
   const tests = Object.entries(history.backtest).sort(([a], [b]) => a.localeCompare(b));
+  const margin = history.margin;
+  const figure = margin ? "score" : history.uses === "second_value" ? "merit number" : "rank";
   return (
     <Notice>
-      <p>
-        Each seat also has a band from its closing {history.uses === "second_value" ? "state merit numbers" : "ranks"} in {history.years.slice(-3).join(", ")}, using the same rule as JEE: Safer is at least 10% inside every recent closing {history.uses === "second_value" ? "merit number" : "rank"},
-        Competitive is within the recent range, and Ambitious is up to 20% beyond it. {history.basis}
-      </p>
+      {margin ? (
+        <p>
+          Each seat also has a band from its closing scores in {history.years.slice(-3).join(", ")}: Safer is at least {margin} points above every recent closing score,
+          Competitive is within the recent range, and Ambitious is up to {margin} points below it. {history.basis}
+        </p>
+      ) : (
+        <p>
+          Each seat also has a band from its closing {history.uses === "second_value" ? "state merit numbers" : "ranks"} in {history.years.slice(-3).join(", ")}, using the same rule as JEE: Safer is at least 10% inside every recent closing {figure},
+          Competitive is within the recent range, and Ambitious is up to 20% beyond it. {history.basis}
+        </p>
+      )}
       <p className="mt-1">
-        How well the rule held when tested on the next year, for a {history.uses === "second_value" ? "merit number" : "rank"} exactly at the Safer edge:{" "}
+        How well the rule held when tested on the next year, for a {figure} exactly at the Safer edge:{" "}
         {tests.map(([year, groups]) => {
           const named = Object.keys(groups).find((g) => g !== "All seats" && g !== "Other seats");
           return `${year}: ${groups["All seats"]?.safer}% of seats${named ? ` (${groups[named]?.safer}% for ${named})` : ""}`;
@@ -245,7 +254,7 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
               <div>
                 <h3 className="text-base font-medium">Across recent years</h3>
                 <p className="mt-1 text-sm text-ink-2">{option.history.explanation}</p>
-                <p className="tnum mt-1 text-xs text-ink-3">{route.history?.uses === "second_value" ? "Worst merit number admitted in CAP rounds I to III" : "Last rank allotted in rounds 1 to 3"}: {Object.entries(option.history.closing).map(([y, r]) => `${y}: ${num(r)}`).join(" · ")}</p>
+                <p className="tnum mt-1 text-xs text-ink-3">{route.history?.margin ? "Lowest score admitted in rounds 1 to 3" : route.history?.uses === "second_value" ? "Worst merit number admitted in CAP rounds I to III" : "Last rank allotted in rounds 1 to 3"}: {Object.entries(option.history.closing).map(([y, r]) => `${y}: ${num(r)}`).join(" · ")}</p>
               </div>
             )}
             <div><h3 className="text-base font-medium">Data gaps</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-ink-2">{missing.map((w) => <li key={w}>{w}</li>)}</ul></div>

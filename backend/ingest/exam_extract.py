@@ -512,7 +512,7 @@ CCMT_ROUNDS = ["Round 1", "Round 2", "Round 3", "Special Round 1", "Special Roun
 
 
 def ccmt_records(path: Path) -> tuple[list[dict], dict]:
-    """Every row of CCMT's 2025 maximum and minimum GATE score table, as saved from its public page.
+    """Every row of one year's CCMT maximum and minimum GATE score table, as saved from its public page.
 
     The page lists rows in its own order. Round 1 prints groups as G1, later rounds as Group 1, so both read as Group N.
     The page repeats some rows exactly, and a repeat adds nothing, so each is kept once.
@@ -524,18 +524,53 @@ def ccmt_records(path: Path) -> tuple[list[dict], dict]:
     for round_label, institute, programme, group, category, highest, lowest in saved["rows"]:
         if round_label not in CCMT_ROUNDS or not re.fullmatch(r"(G|Group )\d", group):
             raise SystemExit(f"Unexpected CCMT row: {round_label}, {group}")
-        key = (round_label, institute, programme, group, category, highest, lowest)
+        key = (round_label, clean(institute), clean(programme), group, clean(category), highest, lowest)
         if key in seen:
             continue
         seen.add(key)
         records.append({
-            "institute": institute.strip(), "programme": programme.strip(),
-            "group": f"Group {group[-1]} · {round_label}", "category": category.strip(),
+            "institute": clean(institute), "programme": clean(programme),
+            "group": f"Group {group[-1]} · {round_label}", "category": clean(category),
             "value": int(lowest), "second_value": int(highest),
         })
     order = {label: i for i, label in enumerate(CCMT_ROUNDS)}
     records.sort(key=lambda r: (order[r["group"].rsplit(" · ", 1)[1]], r["group"], r["institute"], r["programme"], r["category"]))
     return records, {"source_rows": len(saved["rows"]), "repeated_rows": len(saved["rows"]) - len(records), "sequence_breaks": 0}
+
+
+# CCMT's public score page for each year, as linked from https://ccmt.admissions.nic.in/or-cr/.
+CCMT_PAGES = {
+    2023: "https://admissions.nic.in/admiss/admissions/orcrjacd/105012321",
+    2024: "https://admissions.nic.in/admiss/admissions/orcrjacd/105012421",
+    2025: "https://admissions.nic.in/admiss/admissions/orcrjacd/105012521",
+    2026: "https://ccmt.admissions.nic.in/or-cr/",
+}
+
+
+def ccmt_year(path: Path) -> int:
+    match = re.search(r"ccmt-(\d{4})-", path.name)
+    if not match:
+        raise SystemExit(f"Name the CCMT file ccmt-<year>-orcr-from-page.json, not {path.name}")
+    return int(match.group(1))
+
+
+def ccmt_route(path: Path) -> dict:
+    """The GATE route from one year's CCMT score table: the latest year published."""
+    year = ccmt_year(path)
+    ccmt, ccmt_check = ccmt_records(path)
+    return {
+        "code": "gate-ccmt", "stream": "Engineering", "level": "PG", "name": "GATE to NIT M.Tech (CCMT)", "authority": "Centralized Counselling for M.Tech./M.Arch./M.Plan. Admissions",
+        # Round 1 is the only round whose scores cover every allotted candidate, so the page opens on it.
+        "compare_requires_group": True, "rounds": CCMT_ROUNDS, "default_group": "Group 1 · Round 1",
+        "metric": {"label": "GATE score", "unit": "score", "lower_is_better": False, "max": 1000, "whole_number": True, "value_label": "Minimum GATE score", "second_label": "Maximum GATE score"},
+        "document": document(f"Maximum and Minimum GATE Score of CCMT {year}", CCMT_PAGES.get(year, CCMT_PAGES[2026]), str(year), "All six rounds", "official"),
+        "limits": [
+            f"All {len({r['institute'] for r in ccmt})} institutes and six rounds of CCMT {year}, as CCMT publishes them. Each round is shown separately.",
+            "For Special Round-I, Round-II and the National Spot Round, scores cover only candidates newly allotted or upgraded.",
+            "Scores from different GATE papers and years may not compare directly. Check the group for your paper.",
+        ],
+        "check": ccmt_check, "records": ccmt,
+    }
 
 
 def document(title: str, url: str, year: str, round_label: str, status: str) -> dict:
@@ -621,20 +656,7 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         },
     ]
     if args.ccmt:
-        ccmt, ccmt_check = ccmt_records(args.ccmt)
-        routes.append({
-            "code": "gate-ccmt", "stream": "Engineering", "level": "PG", "name": "GATE to NIT M.Tech (CCMT)", "authority": "Centralized Counselling for M.Tech./M.Arch./M.Plan. Admissions",
-            # Round 1 is the only round whose scores cover every allotted candidate, so the page opens on it.
-            "compare_requires_group": True, "rounds": CCMT_ROUNDS, "default_group": "Group 1 · Round 1",
-            "metric": {"label": "GATE score", "unit": "score", "lower_is_better": False, "max": 1000, "whole_number": True, "value_label": "Minimum GATE score", "second_label": "Maximum GATE score"},
-            "document": document("Maximum and Minimum GATE Score of CCMT 2025", "https://admissions.nic.in/admiss/admissions/orcrjacd/105012521", "2025", "All six rounds", "official"),
-            "limits": [
-                f"All {len({r['institute'] for r in ccmt})} institutes and six rounds of CCMT 2025, as CCMT publishes them. Each round is shown separately.",
-                "For Special Round-I, Round-II and the National Spot Round, scores cover only candidates newly allotted or upgraded.",
-                "Scores from different GATE papers and years may not compare directly. Check the group for your paper.",
-            ],
-            "check": ccmt_check, "records": ccmt,
-        })
+        routes.append(ccmt_route(args.ccmt))
     else:
         routes.append(kept["gate-ccmt"])
     if args.maharashtra:

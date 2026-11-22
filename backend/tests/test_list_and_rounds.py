@@ -39,6 +39,7 @@ def test_builder_can_keep_going_past_the_safety_net(client):
     assert longer["stop_reason"] != "safety_net_complete"
     if longer["counts"]["safer"] > 1:
         assert any("past the safety net" in n for n in longer["notes"])
+    assert not any("before the safety net filled" in n for n in longer["notes"])
 
 
 def test_builder_reserves_slots_for_the_safety_net(client):

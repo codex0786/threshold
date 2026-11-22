@@ -96,3 +96,31 @@ routes:
         round2-den: {title: "UGNEET 2023 dental allotment list (second round)", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/UGALLOT_2023_D1kannada.pdf"}
         round3-med: {title: "UGNEET 2023 medical, mop-up round allotment list, 22-09-2023", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/RC8_MOPUP_UGALLOT_2023kannada.pdf"}
         round3-den: {title: "UGNEET 2023 dental, mop-up round allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/Dental_mopup_allotmentkannada.pdf"}
+  kcet-engineering:
+    authority: Karnataka Examinations Authority
+    archive: https://cetonline.karnataka.gov.in/kea/ugcet2026
+    # UGCET engineering cut-off ranks, per round: general seats (`-gen`) and Hyderabad-Karnataka (Article 371(J)) seats
+    # (`-hk`). Mock and superseded provisional lists are left out; where KEA posted only a provisional list for a
+    # round, that one is used and labelled so. Special-category (SPL) lists aren't used yet.
+    years:
+      2026:
+        round1-gen: {title: "UGCET 2026 first round seat allotment cut-off, engineering (15-07-2026)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/PROF_CODE_E_R_15072026kannada.pdf"}
+        round1-hk: {title: "UGCET 2026 first round seat allotment cut-off, engineering, HK (15-07-2026)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/PROF_CODE_E_H_15072026kannada.pdf"}
+        round2-gen: {title: "UGCET 2026 second round provisional cut-off, engineering", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/R_E.pdf"}
+        round2-hk: {title: "UGCET 2026 second round provisional cut-off, engineering, HK", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/H_E.pdf"}
+        round3-gen: {title: "UGCET 2026 third round provisional cut-off, engineering (04-09-2026)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/PROF_CODE_E_R_04092026kannada.pdf"}
+        round3-hk: {title: "UGCET 2026 third round provisional cut-off, engineering, HK (04-09-2026)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2026/PROF_CODE_E_H_04092026kannada.pdf"}
+      2025:
+        round1-gen: {title: "UGCET 2025 first round final cut-off, engineering (02-08-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_R_R1kannada.pdf"}
+        round1-hk: {title: "UGCET 2025 first round final cut-off, engineering, HK (02-08-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_H_R1kannada.pdf"}
+        round2-gen: {title: "UGCET 2025 second round final cut-off, engineering (30-08-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_R_30082025kannada.pdf"}
+        round2-hk: {title: "UGCET 2025 second round final cut-off, engineering, HK (30-08-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_H_30082025kannada.pdf"}
+        round3-gen: {title: "UGCET 2025 third round cut-off, engineering (11-09-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_R_11092025kannada.pdf"}
+        round3-hk: {title: "UGCET 2025 third round cut-off, engineering, HK (11-09-2025)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2025/PROF_CODE_E_H_11092025kannada.pdf"}
+      2024:
+        round1-gen: {title: "UGCET 2024 first round cut-off, engineering", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_GEN_R1english.pdf"}
+        round1-hk: {title: "UGCET 2024 first round cut-off, engineering, HK", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_HK_R1english.pdf"}
+        round2-gen: {title: "UGCET 2024 second round final cut-off, engineering (23-09-2024)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_GEN_R2_FIN.pdf"}
+        round2-hk: {title: "UGCET 2024 second round final cut-off, engineering, HK (23-09-2024)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_HK_R2_FIN.pdf"}
+        round3-gen: {title: "UGCET 2024 second extended round cut-off, engineering (09-10-2024)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_GEN_EXT_RNDkannada.pdf"}
+        round3-hk: {title: "UGCET 2024 second extended round cut-off, engineering, HK (09-10-2024)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugcet2024/ENGG_CUTOFF_2024_HK_EXT_RNDkannada.pdf"}

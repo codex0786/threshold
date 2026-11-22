@@ -39,7 +39,7 @@ export default function Colleges() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <PageHeader title="Colleges" intro="Institutes in JoSAA counselling, with official cutoff history. Where a NIRF rank is on record, ranked institutes appear first. Having no rank here is a gap in our data, not a judgement." />
+      <PageHeader title="JoSAA colleges" intro="IITs, NITs, IIITs and GFTIs in JEE counselling, with official cutoff history. Where a NIRF rank is on record, ranked institutes appear first; having no rank here is a gap in our data, not a judgement. Colleges in other exams appear on that exam’s shortlist." />
       <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="relative sm:col-span-2 lg:col-span-1">
           <span className="sr-only">Search by name or city</span>

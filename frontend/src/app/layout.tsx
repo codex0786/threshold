@@ -11,7 +11,7 @@ const heading = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-head
 
 export const metadata: Metadata = {
   title: "Threshold: college and branch decisions, with evidence",
-  description: "Compare colleges and branches using official JoSAA cutoffs and clearly sourced data.",
+  description: "See which seats your rank or score reached in JEE, NEET, CLAT, GATE and state counselling, with the official source beside every figure.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

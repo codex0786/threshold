@@ -87,7 +87,7 @@ export default function PreferencesPage() {
   };
 
   if (profile === undefined) return <div className="mx-auto max-w-4xl px-4 py-10"><Skeleton /></div>;
-  if (profile === null) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><h1 className="text-3xl">Start with your rank</h1><p className="mt-2 text-ink-2">We need your ranks to check a preference list.</p><Link href="/onboarding" className="btn btn-primary mt-5">Find my best fit</Link></div>;
+  if (profile === null) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><h1 className="text-3xl">Start with your rank</h1><p className="mt-2 text-ink-2">We need your ranks to check a preference list.</p><Link href="/onboarding" className="btn btn-primary mt-5">Enter my JEE ranks</Link></div>;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">

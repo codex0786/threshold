@@ -113,9 +113,12 @@ export function saveExamAnswers(code: string, answers: ExamAnswers) {
 }
 
 // Short guides to category codes that aren't self-explanatory, shown under the category menu.
+const KEA_GUIDE = "Codes as KEA prints them. GM is General Merit; 1, 2A, 2B, 3A and 3B are Karnataka's backward-class categories, and SC and ST follow the same pattern. The next letter is G (general), K (Kannada medium) or R (rural), and a final H means the Hyderabad-Karnataka (Article 371(J)) quota: 2AKH is 2A, Kannada medium, Hyderabad-Karnataka. Other codes are KEA's special and minority categories; check KEA's information bulletin before choosing one.";
+
 export const CATEGORY_GUIDES: Record<string, string> = {
+  "kcet-engineering": KEA_GUIDE,
   uptac: "Codes as UPTAC prints them. The first part is the category: OP open, BC OBC from UP, SC, ST and EWS from UP. The rest is the sub-category: NO none, GL female (given to every female UP candidate), FF dependants of freedom fighters, AF armed forces, PH Divyangjan. TFW is the tuition fee waiver scheme. Pick OPNO if none applies.",
-  "karnataka-neet": "Codes as KEA prints them. GM is General Merit; 1, 2A, 2B, 3A and 3B are Karnataka's backward-class categories, and SC and ST follow the same pattern. The next letter is G (general), K (Kannada medium) or R (rural), and a final H means the Hyderabad-Karnataka (Article 371(J)) quota: 2AKH is 2A, Kannada medium, Hyderabad-Karnataka. Other codes are KEA's special and minority categories; check KEA's information bulletin before choosing one.",
+  "karnataka-neet": KEA_GUIDE,
   clat: "National categories apply to everyone. State categories appear once you choose your domicile state, and only universities in that state use them.",
   "maharashtra-engineering": "Codes as the CET Cell prints them: G is general and L is ladies (women only), then the category (OPEN, OBC, SC and so on), then where the seat sits: H home university, O other than home university, S state level. Only codes that exist for the chosen quota are listed.",
 };
@@ -142,4 +145,56 @@ export function categoryFor(route: ExamRoute, quota: string, current: string): s
   const allowed = route.quota_categories?.[quota];
   if (!allowed?.length || allowed.includes(current)) return current;
   return OPEN_CATEGORIES.find((c) => allowed.includes(c)) ?? allowed.find((c) => /^GOPEN/.test(c)) ?? allowed[0];
+}
+
+// ---- The exam catalog: one place that names, groups and orders every exam, JEE included ----
+
+export type StreamKey = "Engineering" | "Medical" | "Law" | "Postgraduate";
+export const STREAMS: { key: StreamKey; label: string; blurb: string }[] = [
+  { key: "Engineering", label: "Engineering", blurb: "B.Tech and B.E. after Class 12" },
+  { key: "Medical", label: "Medical", blurb: "MBBS, BDS and nursing" },
+  { key: "Law", label: "Law", blurb: "Five-year integrated law" },
+  { key: "Postgraduate", label: "Postgraduate", blurb: "M.Tech and other PG courses" },
+];
+
+// Short names students use for each counselling route. Routes not listed use their metric's name.
+export const EXAM_SHORT: Record<string, { name: string; scope: string }> = {
+  jee: { name: "JEE Main & Advanced", scope: "IITs, NITs, IIITs and GFTIs (JoSAA)" },
+  uptac: { name: "UPTAC", scope: "Uttar Pradesh, AKTU colleges" },
+  "kcet-engineering": { name: "KCET", scope: "Karnataka engineering (KEA)" },
+  "maharashtra-engineering": { name: "MHT-CET", scope: "Maharashtra engineering (CAP)" },
+  "neet-ug": { name: "NEET UG", scope: "All India counselling (MCC)" },
+  "karnataka-neet": { name: "NEET UG, Karnataka", scope: "State quota (KEA)" },
+  clat: { name: "CLAT", scope: "National Law Universities" },
+  "gate-ccmt": { name: "GATE", scope: "NIT M.Tech (CCMT)" },
+};
+
+export type CatalogEntry = {
+  code: string; href: string; stream: StreamKey; name: string; scope: string; enter: string;
+  year: string; institutes: number | null; bands: boolean; rounds: number | null;
+};
+
+export function streamOf(route: Pick<ExamRoute, "stream" | "level">): StreamKey {
+  if (route.level === "PG") return "Postgraduate";
+  return (["Engineering", "Medical", "Law"] as const).find((s) => s === route.stream) ?? "Engineering";
+}
+
+/** Every exam we cover, JEE first within engineering, then the rest in a fixed order. */
+export function examCatalog(routes: ExamRoute[], jee: { years: number[]; institutes: number } | null): CatalogEntry[] {
+  const order = Object.keys(EXAM_SHORT);
+  const entries: CatalogEntry[] = routes.map((r) => ({
+    code: r.code, href: `/exams/${r.code}`, stream: streamOf(r),
+    name: EXAM_SHORT[r.code]?.name ?? r.metric.label.replace(/ (rank|score|percentile|All India Rank).*$/i, ""),
+    scope: EXAM_SHORT[r.code]?.scope ?? r.name, enter: r.metric.label,
+    year: r.document.year, institutes: r.institute_count, bands: Boolean(r.history), rounds: r.rounds?.length ?? null,
+  }));
+  entries.push({
+    code: "jee", href: "/onboarding", stream: "Engineering", name: EXAM_SHORT.jee.name, scope: EXAM_SHORT.jee.scope, enter: "JEE ranks",
+    year: jee ? `${jee.years[0]}–${String(jee.years.at(-1)).slice(2)}` : "", institutes: jee?.institutes ?? null, bands: true, rounds: null,
+  });
+  return entries.sort((a, b) => (order.indexOf(a.code) + 1 || 99) - (order.indexOf(b.code) + 1 || 99));
+}
+
+export function byStream(entries: CatalogEntry[]): { stream: (typeof STREAMS)[number]; entries: CatalogEntry[] }[] {
+  return STREAMS.map((stream) => ({ stream, entries: entries.filter((e) => e.stream === stream.key) })).filter((g) => g.entries.length);
 }

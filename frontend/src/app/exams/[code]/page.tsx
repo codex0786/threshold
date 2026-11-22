@@ -219,7 +219,7 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
       <h2 className="mt-2 text-xl">{option.programme}</h2>
       <p className="text-ink-2">
         {option.institution ? <Link href={`/colleges/${option.institution.slug}`} className="hover:underline">{name}</Link> : name}
-        {option.programme_code ? <span className="text-ink-3"> · course code {option.programme_code}</span> : null}
+        {option.programme_code && !option.programme_code.includes("|") ? <span className="text-ink-3"> · course code {option.programme_code}</span> : null}
       </p>
       {name !== option.institute && <p className="text-xs text-ink-3">{option.institute.replace(/\s*\(Female Seat only\s*\)/, "")}</p>}
       {profile?.website && (
@@ -477,7 +477,9 @@ export default function ExamShortlistPage() {
           <details className="card p-4 text-sm">
             <summary className="flex cursor-pointer items-center justify-between gap-2 font-medium"><span className="inline-flex items-center gap-1.5"><Info size={15} aria-hidden /> What this covers ({route.limits.length})</span><ChevronDown size={16} className="chev" aria-hidden /></summary>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">{route.limits.map((l) => <li key={l}>{l}</li>)}</ul>
-            <p className="mt-2"><Link href={`/exams?route=${route.code}`} className="text-brand underline">See every past figure for this exam</Link></p>
+            {(route.sources ?? [route.document]).length > 0 && (
+              <p className="mt-2 text-ink-3">Official sources: {(route.sources ?? [route.document]).map((d, i) => <span key={d.url}>{i ? " · " : ""}<a href={d.url} target="_blank" rel="noreferrer" className="text-brand underline">{d.title}</a></span>)}</p>
+            )}
           </details>
         </aside>
 

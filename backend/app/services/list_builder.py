@@ -64,8 +64,10 @@ def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 
             notes.append(f"It's short because every option here was Safer for your rank: JoSAA would very likely give you one of the first choices, so put the ones you want most at the top.")
     if past_safety_net and safer_in > net:
         notes.append(f"You asked to keep going past the safety net, so the list has {safer_in} Safer options instead of stopping at {net}. Choices well below your safety net are rarely reached, but listing them costs nothing in JoSAA.")
-    if stop_reason == "size_reached":
+    if stop_reason == "size_reached" and safer_in < net:
         notes.append(f"The list reached the {size} choices you asked for before the safety net filled. Consider a longer list or fewer ambitious options.")
+    elif stop_reason == "size_reached":
+        notes.append(f"The list stops at the {size} choices you asked for.")
     if chosen and safer_available < safety_net:
         notes.append(f"Only {safer_available} Safer option{'s' if safer_available != 1 else ''} matched your profile, so the safety net is thinner than the {safety_net} you asked for. Add acceptable branches, institute types or states to widen it.")
     if not chosen:

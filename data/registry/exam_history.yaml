@@ -85,7 +85,7 @@ routes:
         round3-med-kims: {title: "UGNEET 2024 medical, mop-up round final allotment list (KIMS new 100 seats)", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_ALLOT_2024_MEDICAL_R3_FINAL_KIMS81.pdf"}
         round3-den: {title: "UGNEET 2024 dental, mop-up round final allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/ugneet24/UGNEET_DENTAL_ALLOT_2023_finalkannada.pdf"}
       2023:
-        round1-med: {title: "UGNEET 2023 medical, first round allotment list, 16-08-2023", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/ALLOT_2023kannada.pdf"}
+        # The 2023 first-round medical link (ALLOT_2023kannada.pdf) now serves the November special stray list, so it's left out.
         round1-den: {title: "UGNEET 2023 dental, first round allotment list", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/ALLOT_2023_1kannada.pdf"}
         round2-med: {title: "UGNEET 2023 medical allotment list (second round)", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/UGALLOT_2023_M1kannada.pdf"}
         round2-den: {title: "UGNEET 2023 dental allotment list (second round)", url: "https://cetonline.karnataka.gov.in/keawebentry456/Neet2023/UGALLOT_2023_D1kannada.pdf"}

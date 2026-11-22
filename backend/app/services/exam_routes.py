@@ -218,6 +218,10 @@ def seat_band(route: dict, row: dict, value: float, merit: int | None = None) ->
     if history.get("uses") == "second_value":
         figure = merit
         key = f"{row.get('programme_code')}|{row['group'].split(', Stage')[0]}|{row['category']}"
+    elif history.get("key") == "programme_code|category":
+        # KEA's course codes name the college and seat type and stay the same across years.
+        figure = int(value)
+        key = f"{row.get('programme_code')}|{row['category']}"
     elif route["metric"]["lower_is_better"]:
         figure = int(value)
         institute = history["institutes"].get(_squash(row["institute"]))

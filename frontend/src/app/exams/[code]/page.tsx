@@ -123,7 +123,7 @@ function Alumni({ alumni }: { alumni: NonNullable<ExamProfile["alumni"]> }) {
 }
 
 function HistoryNote({ history, hasMerit }: { history: NonNullable<ExamRoute["history"]>; hasMerit: boolean }) {
-  const latest = Object.keys(history.backtest).sort().at(-1);
+  const weakest = Object.entries(history.backtest).map(([year, groups]) => [year, groups["All seats"]?.safer ?? 100] as const).sort((a, b) => a[1] - b[1])[0];
   const tests = Object.entries(history.backtest).sort(([a], [b]) => a.localeCompare(b));
   return (
     <Notice>
@@ -137,7 +137,7 @@ function HistoryNote({ history, hasMerit }: { history: NonNullable<ExamRoute["hi
           const named = Object.keys(groups).find((g) => g !== "All seats" && g !== "Other seats");
           return `${year}: ${groups["All seats"]?.safer}% of seats${named ? ` (${groups[named]?.safer}% for ${named})` : ""}`;
         }).join("; ")}.
-        {latest && (history.backtest[latest]["All seats"]?.safer ?? 100) < 85 ? ` In ${latest} many seats closed earlier than before, so treat Safer with more care.` : ""}
+        {weakest && weakest[1] < 85 ? ` In ${weakest[0]} many seats closed earlier than in the years before, so treat Safer with more care.` : ""}
         {history.uses === "second_value" && !hasMerit ? " Add your state merit number to see each seat’s band." : ""}
         {" "}This describes past seats, not your chance of admission.
       </p>

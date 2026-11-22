@@ -84,8 +84,22 @@ Bands use the state merit number, which students add as an optional field. Closi
 
 For State Level GOPENS seats alone it held 86.4%. A 2024 test needs 2022-23 complete; the CET Cell archive's 2022-23 round I link pointed to the All India list, so that file is refused and the link has been corrected. Merit numbers grow as more students sit the exam, so closing merit numbers tend to rise and the bands err on the side of caution.
 
+## Karnataka NEET UG (KEA state quota)
+`python -m ingest.kea_history`, after `ingest.fetch_exam_history` and `ingest.exam_extract`.
+
+A seat is KEA's course code (such as `M001MG`, which names the college and seat type) and a category. KEA keeps these codes from year to year. A seat's closing rank for a year is the worst NEET rank KEA allotted to it in rounds 1 to 3 (the third round was called the mop-up round before 2025). Counting only rounds 1 and 2 didn't make the bands more reliable.
+
+KEA's pages are in Kannada and some links serve a different list than their label says, so each file's round is read from its own title and a file naming another round is refused. The 2023 round 1 medical link now serves a November special stray list, so 2023 medical history starts at round 2. The 2024 mop-up round includes KEA's separate list for KIMS's 100 new seats.
+
+| Test year | Seats | Safer edge held | Competitive edge held | Ambitious edge held |
+|---|---:|---:|---:|---:|
+| 2025 (edges from 2023–2024) | 1,577 | 81.8% | 30.9% | 5.8% |
+| 2026 (edges from 2023–2025) | 1,509 | 87.0% | 49.4% | 19.2% |
+
+For government MBBS seats in the GM category alone it held 65.6% in 2025 and 98.4% in 2026, on about 60 seats. KEA's closing ranks swing more from year to year than JoSAA's or MCC's, and the page says to treat Safer with more care.
+
 ## Known limitations
-- Bands cover JoSAA, NEET UG All India counselling and Maharashtra engineering (on the state merit number). CLAT's past lists are no longer published by the Consortium, so CLAT stays at one year with no bands. CSAB special round ranks are listed apart, on the common rank list, for 2026 only and with no bands. State routes need separate adapters.
+- Bands cover JoSAA, NEET UG All India counselling, Karnataka NEET (KEA) and Maharashtra engineering (on the state merit number). CLAT's past lists are no longer published by the Consortium, so CLAT stays at one year with no bands. CSAB special round ranks are listed apart, on the common rank list, for 2026 only and with no bands. State routes need separate adapters.
 - Only Round 1 and the last round are stored, and only the last round drives bands. Students wanting an early seat may also care about Round 1.
 - The 2026 seat matrix decides whether a programme is offered, and removes a route with no seat and no 2026 cutoff. A category with one or two seats gets a warning. Seats don't change a band.
 - Renamed programmes share one history, only for pairs reviewed by hand in `data/registry/programme_lineage.yaml`.

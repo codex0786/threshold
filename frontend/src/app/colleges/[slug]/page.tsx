@@ -1,3 +1,4 @@
+import { degreeLine } from "@/lib/programmes";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -37,7 +38,7 @@ export default async function CollegePage({ params }: { params: Promise<{ slug: 
               {current.map((p) => (
                 <li key={p.id} className="py-2.5">
                   <Link href={`/programmes/${p.id}`} className="block hover:underline">{p.name}</Link>
-                  <p className="text-xs text-ink-3">{p.degree}{p.duration_years ? `, ${p.duration_years} years` : ""} · {p.branch_label}</p>
+                  <p className="text-xs text-ink-3">{degreeLine(p.degree, p.duration_years)} · {p.branch_label}</p>
                 </li>
               ))}
             </ul>

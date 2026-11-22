@@ -1,4 +1,5 @@
 "use client";
+import { degreeLine } from "@/lib/programmes";
 import { X } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
@@ -86,7 +87,7 @@ export default function ComparePage() {
                 {data.items.map((i) => (
                   <th scope="col" key={i.programme_id} className="p-4 align-top font-normal">
                     <div className="flex items-start justify-between gap-2">
-                      <div><Link href={`/programmes/${i.programme_id}`} className="font-medium hover:underline">{i.programme}</Link><p className="text-sm text-ink-2">{i.institution.short_name}</p></div>
+                      <div><Link href={`/programmes/${i.programme_id}`} className="font-medium hover:underline">{i.programme}</Link><p className="text-sm text-ink-2">{i.institution.short_name}{i.degree ? ` · ${degreeLine(i.degree, i.duration_years)}` : ""}</p></div>
                       <button aria-label={`Remove ${i.programme} at ${i.institution.short_name}`} className="text-ink-3 hover:text-ink" onClick={() => toggleCompare({ id: i.programme_id, label: "" })}><X size={15} /></button>
                     </div>
                   </th>

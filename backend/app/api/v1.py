@@ -248,7 +248,7 @@ def analyse_preference_list(body: PreferenceListRequest, db: Session = Depends(g
 
 @router.post("/preference-lists/build")
 def build_preference_list(body: ListBuildRequest, db: Session = Depends(get_db)) -> dict:
-    return list_builder.build(db, body.profile, body.order, body.size, body.safety_net, body.include_ambitious)
+    return list_builder.build(db, body.profile, body.order, body.size, body.safety_net, body.include_ambitious, body.past_safety_net)
 
 
 @router.post("/rounds/advice")

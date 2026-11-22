@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 
 _RULES: list[tuple[str, str]] = [
-    (r"naval architecture|ocean engineering", "OCEAN"),
+    (r"naval architecture|ocean engineering|maritime", "OCEAN"),
     (r"\barchitecture\b", "ARCH"),
     (r"\bplanning\b", "PLANNING"),
     (r"artificial intelligence|machine learning|data science|data analytics|\bai\b", "AI_DS"),
@@ -12,13 +12,18 @@ _RULES: list[tuple[str, str]] = [
     (r"electrical|elctrical|power", "EE"),
     (r"electronics|electronic |communication|vlsi|integrated circuit|instrumentation|semiconductor", "ECE"),
     (r"mechatronics|robotics|automation", "ROBOTICS"),
-    (r"aerospace|aeronautical", "AERO"),
+    (r"aerospace|aeronautical|aviation", "AERO"),
     (r"mechanical|production|industrial|manufacturing|automobile|\(me\)", "ME"),
     (r"civil|infrastructure|construction|in ce\.", "CIVIL"),
     (r"chemical|petroleum|polymer|ceramic", "CHEM_E"),
-    (r"bio|food|pharma|agricultural", "BIO"),
+    (r"bio|food|pharma|agricultur|dairy", "BIO"),
     (r"metallurg|material|mining|mineral", "MATERIALS"),
     (r"physics|chemistry|mathematics|economics|statistics|science", "SCIENCE"),
+    # Smaller families, checked last so a course with a main discipline keeps it.
+    (r"\bdesign\b|animation", "DESIGN"),
+    (r"textile|fashion|apparel|printing and packaging", "TEXTILE"),
+    (r"geolog|geophysic|environment", "EARTH"),
+    (r"\benergy\b", "ENERGY"),
 ]
 _COMPILED = [(re.compile(p, re.I), family) for p, family in _RULES]
 # Names the rules above would misread, because a specialisation or a second degree comes after the
@@ -34,7 +39,7 @@ _SPECIFIC: list[tuple[str, str]] = [
     (r"^(applied and )?industrial chemistry", "SCIENCE"),
     (r"^(bs in )?chemical sciences?$", "SCIENCE"),
     (r"^ceramic engineering", "CHEM_E"),
-    (r"^industrial design", "OTHER"),
+    (r"^industrial design", "DESIGN"),
     (r"^(biochemical|biotechnology and biochemical) engineering", "BIO"),
 ]
 _COMPILED_SPECIFIC = [(re.compile(p, re.I), family) for p, family in _SPECIFIC]
@@ -45,7 +50,8 @@ FAMILY_LABELS = {
     "ME": "Mechanical & Production", "AERO": "Aerospace", "CIVIL": "Civil & Infrastructure",
     "CHEM_E": "Chemical & Process", "BIO": "Biotechnology & Food", "MATERIALS": "Materials, Metallurgy & Mining",
     "OCEAN": "Ocean & Naval", "SCIENCE": "Sciences & Economics", "ARCH": "Architecture",
-    "PLANNING": "Planning", "OTHER": "Other",
+    "PLANNING": "Planning", "DESIGN": "Design", "TEXTILE": "Textile & Fashion", "EARTH": "Earth & Environmental",
+    "ENERGY": "Energy", "OTHER": "General & Computational Engineering",
 }
 
 # Product assumption, not evidence: which branches commonly lead towards each career goal.

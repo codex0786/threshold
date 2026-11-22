@@ -178,7 +178,16 @@ def clat_records(path: Path) -> tuple[list[dict], dict]:
             label.append(line)
         words = [x for x in label if not re.fullmatch(r"\d+|\*\*", x)]
         values = [x for x in label if re.fullmatch(r"\d+|\*\*", x)]
-        if len(values) == 3:
+        if len(values) == 1 and label[-1] in ("-", "\u2013"):
+            # One dash spans both rank columns when no seat was filled from that category.
+            words = [x for x in words if x not in ("-", "\u2013")]
+            records.append({
+                "institute": institute, "programme": programme, "group": f"{section} reservation",
+                "category": " ".join(words), "seats": None if values[0] == "**" else int(values[0]),
+                "value": None, "second_value": None, "note": "No seat was filled from this category, so no cut-off is given",
+            })
+            label = []
+        elif len(values) == 3:
             seats, air, category_rank = values
             records.append({
                 "institute": institute, "programme": programme, "group": f"{section} reservation",

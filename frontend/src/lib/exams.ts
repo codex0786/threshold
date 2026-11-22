@@ -113,8 +113,26 @@ export function saveExamAnswers(code: string, answers: ExamAnswers) {
 
 // Short guides to category codes that aren't self-explanatory, shown under the category menu.
 export const CATEGORY_GUIDES: Record<string, string> = {
+  clat: "National categories apply to everyone. State categories appear once you choose your domicile state, and only universities in that state use them.",
   "maharashtra-engineering": "Codes as the CET Cell prints them: G is general and L is ladies (women only), then the category (OPEN, OBC, SC and so on), then where the seat sits: H home university, O other than home university, S state level. Only codes that exist for the chosen quota are listed.",
 };
+
+// Common national categories first, in the order counselling bodies usually list them.
+const NATIONAL_ORDER = [/^General\b/, /^Economically Weaker/, /^Other Backward Class \(OBC\)/, /^Scheduled Caste \(SC\)/, /^Scheduled Tribe \(ST\)/, /^Person With Disability \(PWD\)/, /^PWD /, /^Women/];
+const nationalRank = (c: string) => { const i = NATIONAL_ORDER.findIndex((r) => r.test(c)); return i < 0 ? NATIONAL_ORDER.length : i; };
+
+/** Categories split into menu groups: national ones first, then one group per state. Routes without state categories get one group. */
+export function categoryGroups(route: ExamRoute, categories: string[]): { label: string | null; options: string[] }[] {
+  const states = route.category_states;
+  if (!states) return [{ label: null, options: categories }];
+  const national = categories.filter((c) => !states[c]).sort((a, b) => nationalRank(a) - nationalRank(b) || a.localeCompare(b));
+  const byState = new Map<string, string[]>();
+  for (const c of categories.filter((c) => states[c])) byState.set(states[c], [...(byState.get(states[c]) ?? []), c]);
+  return [
+    { label: "National categories", options: national },
+    ...[...byState.keys()].sort().map((s) => ({ label: `${s} categories`, options: byState.get(s)!.sort((a, b) => nationalRank(a) - nationalRank(b) || a.localeCompare(b)) })),
+  ].filter((g) => g.options.length);
+}
 
 /** The category to keep when the quota changes: the current one if that quota has it, else an open category, else the first. */
 export function categoryFor(route: ExamRoute, quota: string, current: string): string {

@@ -10,7 +10,7 @@ export type ExamRoute = {
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
   rounds?: string[]; default_group?: string; default_programme?: string;
-  history?: { years: number[]; basis: string; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
+  history?: { years: number[]; basis: string; uses?: string | null; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
   quotas?: string[]; quota_requirements?: Record<string, string>; ranked_institute_count?: number; fee_institute_count?: number;
 };
 export type ExamRanking = { category: string; rank: number; year: number; source_url: string };
@@ -38,7 +38,7 @@ export type ExamOption = {
   institute: string; institute_short: string | null; programme: string; programme_code: string | null; quota: string | null; category: string;
   female_only: boolean; seats: number | null; note: string | null; position: string; rounds: RoundStep[]; furthest: number;
   ranking: ExamRanking | null; fee: DeclaredFee | null; standing: number; why: string[];
-  history?: { band: Band; explanation: string; years: number[]; closing: Record<string, number> } | null;
+  history?: { band: Band; explanation: string; years: number[]; closing: Record<string, number>; needs?: string } | null;
   institution?: { slug: string; short_name: string; type: string; state: string; academics: ExamAcademics } | null;
 };
 export type ExamShortlist = {
@@ -91,7 +91,7 @@ export function formatFigure(value: number, metric: ExamMetric): string {
   return String(value);
 }
 
-export type ExamAnswers = { value: string; category: string; quota: string; programme: string; gender: string; domicile: string };
+export type ExamAnswers = { value: string; category: string; quota: string; programme: string; gender: string; domicile: string; merit?: string };
 const key = (code: string) => `threshold.exam.${code}.v1`;
 export function loadExamAnswers(code: string): ExamAnswers | null {
   try {

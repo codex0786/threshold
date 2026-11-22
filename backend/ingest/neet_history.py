@@ -179,17 +179,18 @@ def seat_key(institute_id: str, course: str, quota: str, category: str) -> str:
     return f"{institute_id}|{course}|{squash(quota)}|{category}"
 
 
-def backtest(closing: dict[str, dict[int, int]], test_year: int) -> dict:
-    """Would a rank exactly at each band edge, set by the years before, still have got the seat in `test_year`?"""
+def backtest_edges(closing: dict[str, dict[int, int]], test_year: int, group_of) -> dict:
+    """Would a figure exactly at each band edge, set by the years before, still have got the seat in `test_year`?
+
+    Lower figures are better. `group_of(key)` names the group a seat is also counted in, beside "All seats".
+    """
     groups: dict[str, Counter] = defaultdict(Counter)
     for key, by_year in closing.items():
         prior = [by_year[y] for y in range(test_year - LOOKBACK_YEARS, test_year) if y in by_year]
         if len(prior) < MIN_YEARS_FOR_BAND or test_year not in by_year:
             continue
         actual, low, high = by_year[test_year], min(prior), max(prior)
-        _, course, quota, category = key.split("|")
-        group = "All India quota, Open, MBBS" if (course, quota, category) == ("MBBS", "allindia", "Open") else "Other seats"
-        for name in ("All seats", group):
+        for name in ("All seats", group_of(key)):
             groups[name]["seats"] += 1
             groups[name]["safer"] += SAFER_MARGIN * low <= actual
             groups[name]["competitive"] += high <= actual
@@ -198,6 +199,13 @@ def backtest(closing: dict[str, dict[int, int]], test_year: int) -> dict:
         name: {"seats": c["seats"], **{edge: round(100 * c[edge] / c["seats"], 1) for edge in ("safer", "competitive", "ambitious")}}
         for name, c in sorted(groups.items())
     }
+
+
+def backtest(closing: dict[str, dict[int, int]], test_year: int) -> dict:
+    def group_of(key: str) -> str:
+        _, course, quota, category = key.split("|")
+        return "All India quota, Open, MBBS" if (course, quota, category) == ("MBBS", "allindia", "Open") else "Other seats"
+    return backtest_edges(closing, test_year, group_of)
 
 
 def build() -> dict:

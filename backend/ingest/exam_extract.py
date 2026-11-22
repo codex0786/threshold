@@ -220,12 +220,13 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
 
     def read_heading(line: str) -> None:
         nonlocal programme, programme_code, section, in_programme_name
-        if match := re.match(r"^(\d{10}[A-Z]*) - (.+)$", line):
-            programme_code, programme = match.groups()
+        if match := re.match(r"^(\d{9,10})([A-Z]*) - (.+)$", line):
+            # Before 2024-25 the CET Cell printed codes one digit shorter (100219110, not 0100219110).
+            programme_code, programme = match.group(1).zfill(10) + match.group(2), match.group(3)
             section, in_programme_name = None, True
         elif line.startswith("Status"):
             in_programme_name = False
-        elif re.match(r"^\d{5} - ", line):
+        elif re.match(r"^\d{4,5} - ", line):
             return
         elif in_programme_name:
             programme = f"{programme} {line}"
@@ -235,7 +236,7 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
     # Wide tables spill onto a page with no headings, at the same height as the table they continue.
     parents: list[tuple[float, str, str, str]] = []
     with pymupdf.open(path) as doc:
-        institutes = {code: clean(name) for page in doc for code, name in re.findall(r"(?m)^(\d{5}) - (.+)$", page.get_text())}
+        institutes = {code.zfill(5): clean(name) for page in doc for code, name in re.findall(r"(?m)^(\d{4,5}) - (.+)$", page.get_text())}
         for page in doc:
             lines = page_lines(page)
             overflow = not any(line == "State Common Entrance Test Cell" for _, line in lines)
@@ -304,9 +305,13 @@ def maharashtra_records(path: Path) -> tuple[list[dict], dict]:
                     "group": f"{parent[3]}, Stage I", "category": code,
                     "value": float(match.group(2)) or None, "second_value": int(match.group(1)), "note": None,
                 })
-        title = MH_TITLE.search(doc[0].get_text())
+        first_page = " ".join(doc[0].get_text().split())
+        title = MH_TITLE.search(first_page)
     if title is None:
         raise SystemExit(f"No CAP round in the title of {path}")
+    # The CET Cell's archive once linked an All India list under the Maharashtra heading; those seats are a different pool.
+    if "Maharashtra & Minority Seats" not in first_page:
+        raise SystemExit(f"{path} isn't the cut-off list for Maharashtra and minority seats")
     round_label = f"CAP Round {title.group(1)}, {title.group(2)}"
     for record in records:
         record["group"] = f"{record['group']} · {round_label}"

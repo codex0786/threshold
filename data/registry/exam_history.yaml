@@ -48,7 +48,8 @@ routes:
         round2: {title: "CAP Round II Cut Off, 2023-24", url: "https://fe2024.mahacet.org/2023/2023ENGG_CAP2_CutOff.pdf"}
         round3: {title: "CAP Round III Cut Off, 2023-24", url: "https://fe2024.mahacet.org/2023/2023ENGG_CAP3_CutOff.pdf"}
       2022:
-        round1: {title: "CAP Round I Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP1_CutOff.pdf"}
+        # The archive's two round I links for 2022-23 are swapped: the "Cut Off" file is the All India list.
+        round1: {title: "CAP Round I Cut Off (Maharashtra & Minority Seats), 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP1_AI_CutOff.pdf"}
         round2: {title: "CAP Round II Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP2_CutOff.pdf"}
         round3: {title: "CAP Round III Cut Off, 2022-23", url: "https://fe2024.mahacet.org/2022/2022ENGG_CAP3_CutOff.pdf"}
   karnataka-neet:

@@ -83,3 +83,16 @@ def test_banded_seats_come_before_seats_beyond_the_recent_range():
     out = exam_routes.shortlist(r, 4000, "Open", "All India")
     assert [o["institute"] for o in out["options"]] == ["A College, Town", "C College, Town"]
     assert out["options"][1]["history"]["band"] == "beyond"
+
+
+def test_maharashtra_bands_use_the_merit_number_and_wait_for_it():
+    rows = [{"institute": "X College", "programme": "Civil Engineering", "programme_code": "0100219110", "group": f"State Level, Stage I · {rnd}",
+             "category": "GOPENS", "value": v, "second_value": m} for rnd, v, m in (("Round 1", 90.0, 30000), ("Round 2", 88.0, 34000))]
+    r = route(rows, lower=False, rounds=["Round 1", "Round 2"])
+    r["history"] = {"years": [2023, 2024, 2025], "uses": "second_value",
+                    "closing": {"0100219110|State Level|GOPENS": {"2023": 30000, "2024": 36000, "2025": 34000}}}
+    without = exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I")["options"][0]["history"]
+    assert without["band"] is None and without["needs"] == "merit"
+    with_merit = exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I", merit=20000)["options"][0]["history"]
+    assert with_merit["band"] == "safer" and "merit number" in with_merit["explanation"] and "final-round" not in with_merit["explanation"]
+    assert exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I", merit=40000)["options"][0]["history"]["band"] == "ambitious"

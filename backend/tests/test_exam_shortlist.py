@@ -109,3 +109,19 @@ def test_routes_with_few_nirf_ranks_order_by_contest_across_courses():
     by = {x["institute"]: x["standing"] for x in r["records"]}
     # One NIRF rank no longer lifts a barely contested seat above the most sought-after one.
     assert by["Sought"] > by["Other"] > by["Ranked"]
+
+
+def test_state_categories_point_past_the_national_cut_offs():
+    from app.services.exam_routes import state_categories
+    route = {
+        "metric": {"lower_is_better": True},
+        "category_states": {"General Category of Goa (GC-GA)": "Goa", "Scheduled Caste of Goa (SC-GA)": "Goa"},
+        "records": [
+            {"institute": "U1", "programme": "BA LLB", "category": "General (General)", "value": 3000},
+            {"institute": "U2", "programme": "BA LLB", "category": "General Category of Goa (GC-GA)", "value": 12000},
+            {"institute": "U2", "programme": "BBA LLB", "category": "General Category of Goa (GC-GA)", "value": 9000},
+            {"institute": "U2", "programme": "BA LLB", "category": "Scheduled Caste of Goa (SC-GA)", "value": 40000},
+        ],
+    }
+    assert state_categories(route, 10000, "General (General)") == [{"state": "Goa", "category": "General Category of Goa (GC-GA)", "seats": 1}]
+    assert state_categories(route, 10000, "Women (W)") == []

@@ -45,7 +45,7 @@ export type ExamOption = {
 export type ExamShortlist = {
   missing: string[]; positions: Record<string, { label: string; hint: string }>; counts: Record<string, number>; options: ExamOption[];
   beyond: number; hidden_female_only: number; limit?: number;
-  elsewhere?: { quota: string; programme: string; seats: number }[]; standing_basis?: string | null;
+  elsewhere?: { quota: string; programme: string; seats: number }[]; state_categories?: { state: string; category: string; seats: number }[]; standing_basis?: string | null;
 };
 
 // The first view shows one clear list: the open category, and the route's own default quota and course.
@@ -114,6 +114,7 @@ export function saveExamAnswers(code: string, answers: ExamAnswers) {
 
 // Short guides to category codes that aren't self-explanatory, shown under the category menu.
 export const CATEGORY_GUIDES: Record<string, string> = {
+  "karnataka-neet": "Codes as KEA prints them. GM is General Merit; 1, 2A, 2B, 3A and 3B are Karnataka's backward-class categories, and SC and ST follow the same pattern. The next letter is G (general), K (Kannada medium) or R (rural), and a final H means the Hyderabad-Karnataka (Article 371(J)) quota: 2AKH is 2A, Kannada medium, Hyderabad-Karnataka. Other codes are KEA's special and minority categories; check KEA's information bulletin before choosing one.",
   clat: "National categories apply to everyone. State categories appear once you choose your domicile state, and only universities in that state use them.",
   "maharashtra-engineering": "Codes as the CET Cell prints them: G is general and L is ladies (women only), then the category (OPEN, OBC, SC and so on), then where the seat sits: H home university, O other than home university, S state level. Only codes that exist for the chosen quota are listed.",
 };

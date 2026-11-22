@@ -236,6 +236,36 @@ def quota_categories(route: dict) -> dict[str, list[str]]:
     return {quota: sorted(categories) for quota, categories in sorted(found.items()) if categories}
 
 
+# For routes with state domicile categories (CLAT): the state categories that stand in for each national one.
+STATE_COUNTERPARTS = {
+    "General (General)": r"^General [Cc]ategory|Domicile|^Permanent Residents|^Resident of|^J & K Residents|^Seats for Karnataka Students",
+    "Economically Weaker Section (EWS)": r"^EWS of|^Economically Weaker Section of",
+    "Other Backward Class (OBC)": r"^Other Backward Class|^OBC|^Backward Class|^BC|^Backward Categor|^Extremely Backward|^Most Backward|^SEBC|^Socially",
+    "Scheduled Caste (SC)": r"^Scheduled Caste|^SC",
+    "Scheduled Tribe (ST)": r"^Scheduled Tribe|^ST",
+}
+
+
+def state_categories(route: dict, value: float, category: str) -> list[dict]:
+    """State domicile categories, matching the student's national one, whose cut-offs reached their figure.
+
+    A CLAT General candidate past the national cut-offs learns, say, that Goa's general domicile category reached
+    their rank, which matters if they hold that domicile. Shown under an empty or short list, like `elsewhere`.
+    """
+    states = route.get("category_states") or {}
+    pattern = STATE_COUNTERPARTS.get(category)
+    if not states or not pattern:
+        return []
+    reached: dict[str, set] = defaultdict(set)
+    for record in route["records"]:
+        name = record["category"]
+        if name in states and record["value"] is not None and re.search(pattern, name) and within(route, record, value):
+            reached[name].add((record["institute"], record["programme"]))
+    rows = [{"state": states[c], "category": c, "seats": len(seats)} for c, seats in reached.items()]
+    rows.sort(key=lambda r: (-r["seats"], r["state"], r["category"]))
+    return rows[:ELSEWHERE_LIMIT]
+
+
 def elsewhere(route: dict, value: float, category: str, quota: str | None, programme: str | None, gender: str | None) -> list[dict]:
     """Where else the student's figure reached a seat this year: other quotas and courses in the same category.
 
@@ -398,6 +428,9 @@ def shortlist(
         missing.append("quota")
     unit = route["metric"]["unit"]
     labels = {key: {"label": label.format(unit=unit), "hint": hint.format(unit=unit)} for key, (label, hint) in POSITIONS.items()}
+    if not route["metric"]["lower_is_better"]:
+        margin = (route.get("history") or {}).get("margin", SCORE_MARGIN)
+        labels["near"]["hint"] = f"It never reached your {unit} that year, but its lowest figure was within {margin} points of it."
     if missing:
         return {"missing": missing, "positions": labels, "counts": {}, "options": [], "beyond": 0, "hidden_female_only": 0}
     members = set((route.get("combined_quotas") or {}).get(quota or "", [quota])) if quota else None
@@ -440,4 +473,5 @@ def shortlist(
         "limit": POSITION_LIMIT, "standing_basis": route.get("standing_basis"),
         # Only worth showing when the chosen list leaves the student with little; otherwise it's noise.
         "elsewhere": elsewhere(route, value, category, quota, programme, gender) if reached < ELSEWHERE_WHEN_FEWER_THAN else [],
+        "state_categories": state_categories(route, value, category) if reached < ELSEWHERE_WHEN_FEWER_THAN else [],
     }

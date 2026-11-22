@@ -6,7 +6,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { BandBadge, Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
 import { api, inr, num } from "@/lib/api";
 import {
-  CATEGORY_GUIDES, categoryFor, EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
+  CATEGORY_GUIDES, categoryFor, categoryGroups, EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
   loadExamAnswers, POSITION_ORDER, POSITION_STYLE, saveExamAnswers, shortRound,
 } from "@/lib/exams";
 
@@ -412,7 +412,10 @@ export default function ExamShortlistPage() {
             )}
             <label className="block text-sm">Category, as published
               <select className="input mt-1" value={answers.category} onChange={(e) => set({ category: e.target.value })}>
-                <option value="">Choose</option>{categories.map((c) => <option key={c}>{c}</option>)}
+                <option value="">Choose</option>
+                {categoryGroups(route, categories).map((g) => g.label
+                  ? <optgroup key={g.label} label={g.label}>{g.options.map((c) => <option key={c}>{c}</option>)}</optgroup>
+                  : g.options.map((c) => <option key={c}>{c}</option>))}
               </select>
             {CATEGORY_GUIDES[route.code] && <span className="mt-1 block text-xs text-ink-3">{CATEGORY_GUIDES[route.code]}</span>}
               </label>

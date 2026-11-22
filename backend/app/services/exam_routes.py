@@ -14,6 +14,9 @@ from app.services.bands import CutoffPoint, classify
 from app.services.scoring import NEUTRAL, contest_scores, reputation_score
 
 MAX_PROGRAMME_CHOICES = 8
+MIN_RANKED_INSTITUTES = 10
+ELSEWHERE_LIMIT = 8
+ELSEWHERE_WHEN_FEWER_THAN = 10
 DATA = Path(__file__).resolve().parents[2] / "snapshot" / "exam_routes.json"
 
 
@@ -22,18 +25,30 @@ def add_standing(route: dict) -> None:
 
     NIRF rank uses the reputation scale (rank 1 is 100, rank 100 is 50.5) and a missing rank counts as a
     neutral 50. How contested a seat is compares its closing figure only with the same course, category and
-    list, so it never mixes rank lists. It only orders the list. It isn't a quality score.
+    list, so it never mixes rank lists. On a route where fewer than 10 institutes have an NIRF rank, the order
+    is how contested the seat is alone, compared across courses in the same category and list. It only orders
+    the list. It isn't a quality score.
     """
     lower_is_better = route["metric"]["lower_is_better"]
+    ranked = {record["institute"] for record in route["records"] if record.get("ranking")}
+    # With almost no NIRF ranks on a route (2 of 373 Maharashtra colleges), those few would lead every list,
+    # so such routes are ordered only by how contested each seat is, compared across all its courses.
+    by_contest_only = len(ranked) < MIN_RANKED_INSTITUTES
+    route["standing_basis"] = "contest" if by_contest_only else "nirf_and_contest"
     # Quotas shown together are scored together, or AIIMS seats would only be compared with other AIIMS seats.
     together = {member: name for name, members in combined_groups(route).items() for member in members}
     peers: dict[tuple, dict[int, float]] = defaultdict(dict)
     for index, record in enumerate(route["records"]):
         if record["value"] is not None:
             group = together.get(record.get("group"), record.get("group"))
-            peers[(record["programme"], record["category"], group)][index] = record["value"] if lower_is_better else -record["value"]
+            # On a contest-only route, seats compete across courses too, so the most sought-after seats lead the list.
+            course = None if by_contest_only else record["programme"]
+            peers[(course, record["category"], group)][index] = record["value"] if lower_is_better else -record["value"]
     contest = {index: score for group in peers.values() for index, score in contest_scores(group).items()}
     for index, record in enumerate(route["records"]):
+        if route["standing_basis"] == "contest":
+            record["standing"] = round(contest.get(index, NEUTRAL), 1)
+            continue
         institute = reputation_score((record.get("ranking") or {}).get("rank"))
         record["standing"] = round((2 * (NEUTRAL if institute is None else institute) + contest.get(index, NEUTRAL)) / 3, 1)
 
@@ -78,6 +93,7 @@ def summary(route: dict) -> dict:
         **{k: v for k, v in route.items() if k not in ("records", "history")},
         # The full history is large and only the shortlist needs it, so the summary carries what explains the bands.
         "history": {k: route["history"].get(k) for k in ("years", "basis", "backtest", "uses")} if route.get("history") else None,
+        "standing_basis": route.get("standing_basis"),
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
@@ -86,6 +102,7 @@ def summary(route: dict) -> dict:
         "ranked_institute_count": len({r["institute"] for r in records if r.get("ranking")}),
         "fee_institute_count": len({r["institute"] for r in records if r.get("fee")}),
         "quotas": quotas(route),
+        "quota_categories": quota_categories(route),
         "quota_requirements": {q: need for q in quotas(route) if (need := requirement(route, q))},
         "programmes": sorted({r["programme"] for r in records}) if len({r["programme"] for r in records}) <= MAX_PROGRAMME_CHOICES else [],
     }
@@ -171,6 +188,7 @@ POSITIONS = {
     "near": ("Just beyond your {unit}", "It never reached your {unit} that year, but its furthest figure was within 20% of it."),
 }
 NEAR_MARGIN = 1.20
+POSITION_REALISM = {"first_round": 0, "later_round": 0, "reached": 0, "leftover_round": 1, "near": 2}
 # Banded seats first, then seats with too little history, then seats beyond the recent range.
 BAND_ORDER = {"safer": 0, "competitive": 0, "ambitious": 0, None: 1, "beyond": 2}
 LEFTOVER = re.compile(r"stray|special|spot", re.I)
@@ -190,6 +208,46 @@ def quotas(route: dict) -> list[str]:
     bases = {base_quota(r.get("group")) for r in route["records"] if r.get("group")}
     joined = [name for name, members in (route.get("combined_quotas") or {}).items() if len(set(members) & bases) > 1]
     return joined + sorted(bases)
+
+
+def quota_categories(route: dict) -> dict[str, list[str]]:
+    """The categories that have seats under each quota, so a student is only offered pairs that exist.
+
+    Maharashtra's codes say where a seat sits (GOPENH is a home-university seat, GOPENS a state-level one), so a
+    state-level code under a home-university quota can never match.
+    """
+    found: dict[str, set[str]] = defaultdict(set)
+    for record in route["records"]:
+        if record.get("group"):
+            found[base_quota(record["group"])].add(record["category"])
+    for name, members in (route.get("combined_quotas") or {}).items():
+        found[name] = set().union(*(found.get(m, set()) for m in members))
+    return {quota: sorted(categories) for quota, categories in sorted(found.items()) if categories}
+
+
+def elsewhere(route: dict, value: float, category: str, quota: str | None, programme: str | None, gender: str | None) -> list[dict]:
+    """Where else the student's figure reached a seat this year: other quotas and courses in the same category.
+
+    Counts seats a round reached, not seats that only came close. Shown under an empty or short list, so a student
+    at NEET rank 50,000 learns that Self-Financed Merit Seat MBBS places reached their rank.
+    """
+    reached: dict[tuple[str, str], set] = defaultdict(set)
+    for record in route["records"]:
+        if record["category"] != category or record["value"] is None or not record.get("group"):
+            continue
+        if gender in ("male", "other") and record.get("female_only"):
+            continue
+        if within(route, record, value):
+            key = (base_quota(record["group"]), record["programme"])
+            reached[key].add((record["institute"], record.get("programme_code") or record["programme"]))
+    members = set((route.get("combined_quotas") or {}).get(quota or "", [quota])) if quota else set()
+    rows = [
+        {"quota": q, "programme": p, "seats": len(seats)}
+        for (q, p), seats in reached.items()
+        if not (q in members and (not programme or p == programme))
+    ]
+    rows.sort(key=lambda r: (-r["seats"], r["quota"], r["programme"]))
+    return rows[:ELSEWHERE_LIMIT]
 
 
 def lower_first(label: str) -> str:
@@ -331,17 +389,22 @@ def shortlist(
             options.append(seat)
     # Where a route has history, seats in a band come first and seats beyond the recent range last, as on JEE.
     banded = (lambda o: BAND_ORDER.get((o["history"] or {}).get("band"), 3)) if route.get("history") else (lambda o: 0)
+    # Within that, seats a main round reached come before stray-round-only seats, and those before seats that only came close.
+    realistic = lambda o: POSITION_REALISM.get(o["position"], 1)
     if order == "closest":
-        options.sort(key=lambda o: (banded(o), o["margin"], o["institute"], o["programme"]))
+        options.sort(key=lambda o: (banded(o), realistic(o), o["margin"], o["institute"], o["programme"]))
     else:
-        options.sort(key=lambda o: (banded(o), -o["standing"], o["margin"], o["institute"], o["programme"]))
+        options.sort(key=lambda o: (banded(o), realistic(o), -o["standing"], o["margin"], o["institute"], o["programme"]))
     counts: dict[str, int] = defaultdict(int)
     shown = []
     for option in options:
         counts[option["position"]] += 1
         if counts[option["position"]] <= POSITION_LIMIT:
             shown.append(option)
+    reached = sum(n for position, n in counts.items() if position != "near")
     return {
         "missing": [], "positions": labels, "counts": dict(counts), "options": shown, "beyond": beyond, "hidden_female_only": hidden,
-        "limit": POSITION_LIMIT,
+        "limit": POSITION_LIMIT, "standing_basis": route.get("standing_basis"),
+        # Only worth showing when the chosen list leaves the student with little; otherwise it's noise.
+        "elsewhere": elsewhere(route, value, category, quota, programme, gender) if reached < ELSEWHERE_WHEN_FEWER_THAN else [],
     }

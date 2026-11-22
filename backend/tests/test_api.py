@@ -467,8 +467,10 @@ def test_a_reserved_category_student_without_a_category_rank_is_told(client):
     without = generate(client, category="OBC-NCL")
     assert without["missing_ranks"] and "OBC-NCL category rank" in without["missing_ranks"][0]
     with_rank = generate(client, category="OBC-NCL", main={"crl": 12000, "category_rank": 3000})
-    assert with_rank["missing_ranks"] == []
-    assert generate(client)["missing_ranks"] == []
+    # Without an Advanced rank, the IIT notice still appears; no category-rank notice does.
+    from app.services.recommend import ADVANCED_NOTICE
+    assert with_rank["missing_ranks"] == [ADVANCED_NOTICE]
+    assert generate(client)["missing_ranks"] == [ADVANCED_NOTICE]
 
 
 def test_empty_priorities_fall_back_to_the_defaults(client):

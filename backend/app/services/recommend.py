@@ -390,17 +390,39 @@ def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -
     }
 
 
+# About 2.5 lakh candidates across all categories qualify for JEE Advanced each year, so a CRL within that range
+# may be enough, depending on category. The notice says "if you took it" rather than guessing.
+ADVANCED_NOTICE_CRL = 250_000
+ADVANCED_NOTICE = (
+    "IITs and IISc admit through JEE Advanced, so they aren't in this list. If you took JEE Advanced, "
+    "add your Advanced rank on the ranks step to see them beside these options."
+)
+
+
+def advanced_notice(profile: StudentProfile) -> str | None:
+    """Shown when a student could be an IIT candidate but gave no Advanced rank, so top ranks don't see only NITs."""
+    crl = profile.main.crl or profile.main.crl_pwd
+    if profile.advanced_qualified or not crl or crl > ADVANCED_NOTICE_CRL:
+        return None
+    return ADVANCED_NOTICE
+
+
 def missing_rank_notices(profile: StudentProfile) -> list[str]:
-    """Reserved-category seats need the category rank. Without it only OPEN seats are checked, and many options go missing."""
+    """Reserved-category seats need the category rank. Without it only OPEN seats are checked, and many options go missing.
+
+    Also asks for a JEE Advanced rank when the student may have one, because IITs need it.
+    """
     notices = []
-    if profile.category == "GEN":
-        return notices
-    for exam, ranks, needed in (("JEE Main", profile.main, True), ("JEE Advanced", profile.advanced, profile.advanced_qualified)):
-        if not needed or ranks is None:
-            continue
-        has_any = any(getattr(ranks, k, None) for k in ("crl", "category_rank", "crl_pwd", "category_pwd_rank"))
-        if has_any and not ranks.category_rank:
-            notices.append(f"You haven't entered your {exam} {profile.category} category rank, so only OPEN seats are checked. {profile.category} seats usually close at much higher ranks, so add it to see them.")
+    if profile.category != "GEN":
+        for exam, ranks, needed in (("JEE Main", profile.main, True), ("JEE Advanced", profile.advanced, profile.advanced_qualified)):
+            if not needed or ranks is None:
+                continue
+            has_any = any(getattr(ranks, k, None) for k in ("crl", "category_rank", "crl_pwd", "category_pwd_rank"))
+            if has_any and not ranks.category_rank:
+                notices.append(f"You haven't entered your {exam} {profile.category} category rank, so only OPEN seats are checked. {profile.category} seats usually close at much higher ranks, so add it to see them.")
+    # The missing category rank matters more, so the IIT notice comes after it.
+    if notice := advanced_notice(profile):
+        notices.append(notice)
     return notices
 
 

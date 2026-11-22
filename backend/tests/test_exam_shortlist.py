@@ -70,3 +70,42 @@ def test_no_probability_fields():
     out = exam_routes.shortlist(r, 1000, "Open", "All India")
     keys = set(out) | {k for o in out["options"] for k in o}
     assert not any("prob" in k or "chance" in k or "likel" in k for k in keys)
+
+
+def test_main_round_seats_come_before_stray_only_and_near_seats():
+    # C is reached only in the stray round, D never reaches 1000, A in round 1. C and D would lead on standing alone.
+    r = route(seat("A", [1200, 1500, 1600, 9000]) + seat("C", [500, 600, 700, 1150]) + seat("D", [500, 600, 700, 950]))
+    for record in r["records"]:
+        record["standing"] = {"A": 10, "C": 90, "D": 99}[record["institute"]]
+    got, _ = positions(r, 1000)
+    out = exam_routes.shortlist(r, 1000, "Open", "All India")
+    assert [o["institute"] for o in out["options"]] == ["A", "C", "D"]
+
+
+def test_an_empty_list_points_to_quotas_and_courses_that_reached_the_figure():
+    r = route(seat("A", [500, 600, 700, 800]) + seat("B", [5000, 5200, 5300, None], quota="Self-Financed Merit Seat")
+              + seat("C", [4000, 4100, None, None], quota="Non-Resident Indian") + seat("D", [9000, None, None, None], quota="Non-Resident Indian", category="OBC"))
+    out = exam_routes.shortlist(r, 3000, "Open", "All India")
+    assert out["options"] == [] or all(o["position"] == "near" for o in out["options"])
+    assert out["elsewhere"] == [{"quota": "Non-Resident Indian", "programme": "MBBS", "seats": 1}, {"quota": "Self-Financed Merit Seat", "programme": "MBBS", "seats": 1}]
+    # A full list doesn't need it.
+    many = route(sum((seat(f"X{i}", [5000, None, None, None]) for i in range(12)), []) + seat("B", [5000, None, None, None], quota="Non-Resident Indian"))
+    assert exam_routes.shortlist(many, 3000, "Open", "All India")["elsewhere"] == []
+
+
+def test_categories_are_offered_per_quota():
+    r = route([
+        {"institute": "A", "programme": "Civil", "group": "Home University, Stage I · Round 1", "category": "GOPENH", "value": 90.0},
+        {"institute": "A", "programme": "Civil", "group": "State Level, Stage I · Round 1", "category": "GOPENS", "value": 95.0},
+    ], lower=False, rounds=["Round 1"])
+    assert exam_routes.quota_categories(r) == {"Home University, Stage I": ["GOPENH"], "State Level, Stage I": ["GOPENS"]}
+
+
+def test_routes_with_few_nirf_ranks_order_by_contest_across_courses():
+    rows = [{"institute": name, "programme": course, "group": "Q · Round 1", "category": "Open", "value": v, **({"ranking": {"rank": 1}} if ranked else {})}
+            for name, course, v, ranked in (("Ranked", "Civil", 5000, True), ("Sought", "Computer", 100, False), ("Other", "Civil", 4000, False))]
+    r = route(rows, rounds=["Round 1"])
+    assert r["standing_basis"] == "contest"
+    by = {x["institute"]: x["standing"] for x in r["records"]}
+    # One NIRF rank no longer lifts a barely contested seat above the most sought-after one.
+    assert by["Sought"] > by["Other"] > by["Ranked"]

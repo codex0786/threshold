@@ -10,6 +10,7 @@ export type ExamRoute = {
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
   rounds?: string[]; default_group?: string; default_programme?: string;
+  quota_categories?: Record<string, string[]>; standing_basis?: string | null;
   history?: { years: number[]; basis: string; uses?: string | null; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
   quotas?: string[]; quota_requirements?: Record<string, string>; ranked_institute_count?: number; fee_institute_count?: number;
 };
@@ -44,6 +45,7 @@ export type ExamOption = {
 export type ExamShortlist = {
   missing: string[]; positions: Record<string, { label: string; hint: string }>; counts: Record<string, number>; options: ExamOption[];
   beyond: number; hidden_female_only: number; limit?: number;
+  elsewhere?: { quota: string; programme: string; seats: number }[]; standing_basis?: string | null;
 };
 
 // The first view shows one clear list: the open category, and the route's own default quota and course.
@@ -107,4 +109,16 @@ export function saveExamAnswers(code: string, answers: ExamAnswers) {
   } catch {
     // Storage can be blocked. The page still works for this visit.
   }
+}
+
+// Short guides to category codes that aren't self-explanatory, shown under the category menu.
+export const CATEGORY_GUIDES: Record<string, string> = {
+  "maharashtra-engineering": "Codes as the CET Cell prints them: G is general and L is ladies (women only), then the category (OPEN, OBC, SC and so on), then where the seat sits: H home university, O other than home university, S state level. Only codes that exist for the chosen quota are listed.",
+};
+
+/** The category to keep when the quota changes: the current one if that quota has it, else an open category, else the first. */
+export function categoryFor(route: ExamRoute, quota: string, current: string): string {
+  const allowed = route.quota_categories?.[quota];
+  if (!allowed?.length || allowed.includes(current)) return current;
+  return OPEN_CATEGORIES.find((c) => allowed.includes(c)) ?? allowed.find((c) => /^GOPEN/.test(c)) ?? allowed[0];
 }

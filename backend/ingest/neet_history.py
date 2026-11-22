@@ -230,17 +230,23 @@ def build() -> dict:
             seen[institute]["courses"].add(course)
     ids = link_institutes(seen)
     closing: dict[str, dict[int, int]] = defaultdict(dict)
+    # Each main round's own last rank, for round advice: did a seat reach further in a later round than in this one?
+    by_round: dict[str, dict[int, list]] = defaultdict(lambda: defaultdict(lambda: [None] * len(MAIN_ROUNDS)))
     for (year, label), found in per_round.items():
         if label not in MAIN_ROUNDS:
             continue
+        position = MAIN_ROUNDS.index(label)
         for rank, quota, institute, course, category in found:
             key = seat_key(ids[institute], course, quota, category)
             closing[key][year] = max(closing[key].get(year, 0), rank)
+            ranks = by_round[key][year]
+            ranks[position] = max(ranks[position] or 0, rank)
     tests = {str(y): backtest(closing, y) for y in years if y - LOOKBACK_YEARS >= years[0] - 1 and y > years[0] + 1}
     return {
         "years": years, "basis": "Worst rank allotted in rounds 1 to 3 of each year, per institute, course, quota and category.",
         "institutes": shown_names(ids), "institute_count": len(set(ids.values())),
         "closing": {k: {str(y): v for y, v in sorted(by_year.items())} for k, by_year in sorted(closing.items())},
+        "by_round": {k: {str(y): v for y, v in sorted(by_year.items())} for k, by_year in sorted(by_round.items())},
         "backtest": tests, "check": checks,
     }
 

@@ -15,6 +15,8 @@ COSTS = {
     "/api/v1/rounds/advice": 3,
     "/api/v1/recommendations/generate": 2,
     "/api/v1/reports/parent": 2,
+    "/api/v1/exams/neet-ug/list/build": 5,
+    "/api/v1/exams/neet-ug/list/advice": 3,
 }
 
 

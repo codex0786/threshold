@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Institution, InstitutionAlias
-from app.services import academics, exam_routes
+from pydantic import BaseModel, Field
+
+from app.services import academics, exam_lists, exam_routes
 
 router = APIRouter(prefix="/api/v1/exams")
 
@@ -42,7 +44,61 @@ def institute_links(db: Session) -> dict[str, Institution]:
 @router.get("")
 def routes() -> dict:
     data = exam_routes.load()
-    return {"routes": [exam_routes.summary(r) for r in data["routes"]]}
+    # Routes whose rules and round-by-round history support a choice list and round advice.
+    return {"routes": [{**exam_routes.summary(r), "list_tools": exam_lists.supported(r)} for r in data["routes"]]}
+
+
+Short = Field(max_length=400)
+
+
+class ListBuildRequest(BaseModel):
+    value: int = Field(gt=0, le=10_000_000)
+    category: str = Field(max_length=60)
+    quotas: list[str] = Field(min_length=1, max_length=40)
+    programmes: list[str] = Field(default=[], max_length=10)
+    gender: Literal["female", "male", "other"] | None = None
+    size: int = Field(default=60, ge=5, le=300)
+    safety_net: int = Field(default=5, ge=0, le=20)
+    include_ambitious: bool = True
+    past_safety_net: bool = False
+
+
+class ListItem(BaseModel):
+    institute: str = Short
+    institute_short: str | None = Field(default=None, max_length=400)
+    programme: str = Short
+    quota: str = Short
+    key: str | None = Field(default=None, max_length=400)
+
+
+class RoundAdviceRequest(BaseModel):
+    value: int = Field(gt=0, le=10_000_000)
+    items: list[ListItem] = Field(min_length=1, max_length=300)
+    allotted_index: int = Field(ge=0)
+    round: int = Field(ge=1, le=4)
+
+
+def _list_route(code: str) -> dict:
+    route = find(code)
+    if not exam_lists.supported(route):
+        raise HTTPException(status_code=404, detail="Choice lists and round advice aren't available for this route yet.")
+    return route
+
+
+@router.post("/{code}/list/build")
+def build_list(code: str, request: ListBuildRequest) -> dict:
+    route = _list_route(code)
+    return exam_lists.build(route, request.value, request.category, request.quotas, request.programmes or None, request.gender,
+                            request.size, request.safety_net, request.include_ambitious, request.past_safety_net)
+
+
+@router.post("/{code}/list/advice")
+def round_advice(code: str, request: RoundAdviceRequest) -> dict:
+    route = _list_route(code)
+    try:
+        return exam_lists.advise(route, request.value, [i.model_dump() for i in request.items], request.allotted_index, request.round)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.get("/{code}/shortlist")

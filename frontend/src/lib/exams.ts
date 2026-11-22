@@ -83,6 +83,7 @@ export function shortRound(round: string | null): string {
   const special = round.match(/Special Round (\d)/);
   if (special) return `Special ${special[1]}`;
   if (/spot/i.test(round)) return "Spot";
+  if (/special stray/i.test(round)) return "Special stray";
   if (/stray/i.test(round)) return "Stray";
   const n = round.match(/Round (\d)/);
   return n ? `R${n[1]}${/provisional/i.test(round) ? " (prov.)" : ""}` : round;

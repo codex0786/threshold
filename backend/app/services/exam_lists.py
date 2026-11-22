@@ -13,34 +13,35 @@ BULLETIN = {
     "title": "MCC UG Information Bulletin 2026 (dated 01.08.2026)",
     "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/08/20260801170630.pdf",
 }
-# MCC's choices after an allotment, by round, as its 2026 bulletin sets them out. Checked against the bulletin's
-# flow chart as reported on 22 November 2026; students are pointed to the bulletin before acting.
+# MCC's choices after an allotment, by round, in the 2026 bulletin's own terms. Checked against the bulletin
+# itself (Chapter 2, pages 8 to 14, and Chapter 15, pages 46 and 47) on 22 November 2026. MCC names two
+# choices, Freeze and Float; there is no Slide option in MCC counselling (Slide is a JoSAA term).
 MCC_ROUNDS = {
     1: {
         "label": "Round 1",
         "options": [
-            {"key": "upgrade", "name": "Join and opt for upgradation", "text": "Report to the allotted college and choose willingness for upgradation. You keep this seat, and Round 2 can move you to a higher choice."},
-            {"key": "join", "name": "Join without upgradation", "text": "Report and keep this seat. You won't be considered for higher choices in Round 2."},
-            {"key": "free_exit", "name": "Free exit", "text": "Don't join. Your security deposit isn't forfeited and you can take part in Round 2, but you lose this seat."},
+            {"key": "upgrade", "name": "Float (willing to upgrade)", "text": "Keep this seat and give willingness for upgradation online. Upload your documents on the MCC portal; you don't report in person yet. Round 2 can move you to a higher choice. If no round moves you, you report to this college after Round 3."},
+            {"key": "join", "name": "Freeze (no upgradation)", "text": "Report to the allotted college in person with your original documents and join. You won't be considered for higher choices in Round 2."},
+            {"key": "free_exit", "name": "Free exit", "text": "Resign or don't join. Round 1 allows a free exit: your security deposit isn't forfeited and you can take part in Round 2, but you lose any claim on this seat."},
         ],
     },
     2: {
         "label": "Round 2",
         "options": [
-            {"key": "upgrade", "name": "Join and opt for upgradation", "text": "Report and choose willingness for upgradation. Round 3 is the last round that can move you to a higher choice."},
-            {"key": "join", "name": "Join without upgradation", "text": "Report and keep this seat."},
+            {"key": "upgrade", "name": "Float (willing to upgrade)", "text": "Keep this seat and give willingness for upgradation online. Round 3 is the last round that can move you to a higher choice. If it doesn't, you report to this college after Round 3."},
+            {"key": "join", "name": "Freeze (no upgradation)", "text": "Report to the allotted college in person with your original documents and join."},
         ],
-        "warning": "From Round 2, not joining an allotted seat, or leaving it, forfeits your security deposit.",
+        "warning": "Not joining a Round 2 seat, or resigning from it, forfeits your security deposit. If you're upgraded, you lose any claim on your earlier seat.",
     },
     3: {
         "label": "Round 3",
-        "options": [{"key": "join", "name": "Join", "text": "Report to the allotted college. Round 3 is the last upgradation, so this seat is final."}],
-        "warning": "Not joining a Round 3 seat forfeits your security deposit, and MCC doesn't allow resignation from Round 3.",
+        "options": [{"key": "join", "name": "Join", "text": "Report to the allotted college in person. Round 3 is the last upgradation, so this seat is final."}],
+        "warning": "Not reporting forfeits your security deposit and removes you from later rounds. MCC doesn't allow resignation from a Round 3 seat, and after joining you can't take part in any further counselling.",
     },
     4: {
         "label": "Stray vacancy round",
         "options": [{"key": "join", "name": "Join", "text": "A stray round seat must be joined."}],
-        "warning": "Not joining a stray round seat forfeits your security deposit.",
+        "warning": "Not joining a stray round seat forfeits your security deposit, and you can't take part in any later round.",
     },
 }
 
@@ -148,15 +149,15 @@ def advise(route: dict, value: int, items: list[dict], allotted_index: int, roun
             "Round 3 was the last upgradation, so this seat is final." if round_no == 3 else "Stray round seats must be joined."
         )
     elif not higher:
-        suggestion, why = "join", "This is your first choice, so no later round can move you higher. Join and keep it."
+        suggestion, why = "join", "This is your first choice, so no later round can move you higher. Freeze and join."
     elif hopeful:
         suggestion = "upgrade"
         why = (f"{len(hopeful)} higher choice{'s' if len(hopeful) != 1 else ''} on your list reached ranks like yours by Round 3 in past years. "
-               "Opting for upgradation keeps this seat and lets MCC move you up if that happens again.")
+               "Choosing Float keeps this seat and lets MCC move you up if that happens again.")
     else:
         suggestion = "join"
-        why = ("None of your higher choices reached ranks like yours by Round 3 in past years. Joining is reasonable. "
-               "Opting for upgradation costs nothing if you'd still take a higher seat.")
+        why = ("None of your higher choices reached ranks like yours by Round 3 in past years, so Freeze (joining now) is reasonable. "
+               "Float still keeps this seat if you'd take a higher one.")
     return {
         "round": round_no, "round_label": rules["label"], "suggestion": suggestion, "why": why,
         "allotted": {"position": allotted_index + 1, "institute": allotted.get("institute_short") or allotted["institute"], "programme": allotted["programme"], "quota": allotted["quota"]},
@@ -165,6 +166,6 @@ def advise(route: dict, value: int, items: list[dict], allotted_index: int, roun
         "cautions": [
             "This shows how the same seats moved in past years. This year's movement depends on other candidates' choices and can be different.",
             "Rules can change between years. Check MCC's bulletin and notices for this year before you act.",
-            "Report and pay by MCC's deadline whichever option you choose, or you lose the seat.",
+            "Freeze or Float, upload your documents and act by MCC's deadline for the round, or you lose the seat.",
         ],
     }

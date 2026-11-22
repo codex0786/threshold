@@ -203,3 +203,10 @@ def test_suggested_quotas_come_from_the_same_round():
         {"institute": "C", "programme": "MBBS", "group": "Self-Financed Merit Seat · Round 2", "category": "Open", "value": 90000},
     ]}
     assert query(route, value=50000, category="Open", group="All India · Round 3")["elsewhere"] == [{"group": "Self-Financed Merit Seat · Round 3", "count": 1}]
+
+
+def test_rounds_after_the_stray_round_count_as_leftover():
+    from app.services.exam_routes import leftover_round
+    rounds = ["Round 1", "Round 2", "Round 3", "Stray round", "Special stray round", "Round 5", "Round 6"]
+    assert [leftover_round(rounds, r) for r in rounds] == [False, False, False, True, True, True, True]
+    assert not leftover_round(["Round 1", "Round 2"], "Round 2")

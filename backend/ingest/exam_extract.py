@@ -142,6 +142,9 @@ def mcc_round_records(path: Path, round_label: str) -> tuple[list[dict], dict]:
     return last_ranks(groups, round_label), {"source_rows": rows, "no_seat_this_round": skipped, "sequence_breaks": bad}
 
 
+SPECIAL_STRAY = "Special stray round"
+
+
 def mcc_records(path: Path, round_label: str = "Stray round") -> tuple[list[dict], dict]:
     """Allotments in MCC's narrower layout, used for Round 1 and the stray round."""
     groups: dict[tuple, list[int]] = defaultdict(list)
@@ -151,6 +154,9 @@ def mcc_records(path: Path, round_label: str = "Stray round") -> tuple[list[dict
             for table in page.find_tables().tables:
                 for row in table.extract():
                     serial = clean(row[0])
+                    if len(row) == 9:
+                        # Later 2026 rounds add a roll number after the rank. It is dropped here and never stored.
+                        row = row[:2] + row[3:]
                     if not re.fullmatch(r"\d+", serial) or len(row) != 8:
                         continue
                     rank = clean(row[1])
@@ -160,6 +166,16 @@ def mcc_records(path: Path, round_label: str = "Stray round") -> tuple[list[dict
                     rows += 1
                     groups[(institute_name(row[3]), clean(row[4]), quota_name(row[2]), clean(row[5]))].append(int(rank))
     return last_ranks(groups, round_label), {"source_rows": rows, "sequence_breaks": breaks}
+
+
+def mcc_special_stray_records(path: Path) -> tuple[list[dict], dict]:
+    """MCC's 2026 file that holds two rounds at once: the special stray vacancy round for MBBS, and Round 5 for
+    BDS and B.Sc Nursing. Each record is labelled with the round it belongs to for its course."""
+    found, check = mcc_records(path, SPECIAL_STRAY)
+    for record in found:
+        if record["programme"] != "MBBS":
+            record["group"] = record["group"].replace(SPECIAL_STRAY, "Round 5")
+    return found, check
 
 
 def clat_records(path: Path) -> tuple[list[dict], dict]:
@@ -528,6 +544,13 @@ def document(title: str, url: str, year: str, round_label: str, status: str) -> 
 
 # MCC labels its Round 1 file "Revised Provisional Result II", so the round says so wherever it's shown.
 ROUND_1 = "Round 1 (provisional)"
+MCC_LATER_LIMIT = ("After the stray round, MCC ran a special stray round for MBBS alongside Round 5 for BDS and B.Sc Nursing "
+                   "(their stray round counted as Round 4), then Round 6 for BDS and B.Sc Nursing. These rounds filled few seats, "
+                   "so each covers only the seats left over.")
+MCC_LATER_SOURCES = [
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Special Stray Vacancy Round for MBBS and Round 5 for BDS and B.Sc Nursing", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/11/20261106180438958.pdf"},
+    {"title": "NEET-UG Counselling Seats Allotment 2026, Round 6", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/11/202611201307325403.pdf"},
+]
 CLAT_LIST = "https://clat2026.consortiumofnlus.ac.in/clat-2026/fifth-list.html"
 MCC_SOURCES = [
     {"title": "NEET-UG Counselling Seats Allotment 2026, Round 1 (revised provisional result II)", "url": "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/08/20260824777992744.pdf"},
@@ -547,6 +570,16 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         found, check = reader(path, label)
         neet += found
         neet_check[label] = check
+    labels = [label for label, _, _ in rounds]
+    # Rounds MCC ran after the stray round in 2026. BDS and B.Sc Nursing counted the stray round as their Round 4.
+    if args.mcc_special_stray:
+        found, neet_check[SPECIAL_STRAY] = mcc_special_stray_records(args.mcc_special_stray)
+        neet += found
+        labels += [SPECIAL_STRAY, "Round 5"]
+    if args.mcc_round6:
+        found, neet_check["Round 6"] = mcc_records(args.mcc_round6, "Round 6")
+        neet += found
+        labels.append("Round 6")
     neet = tidy_quotas(neet, mcc_quota_key(args.mcc_stray))
     shorts = short_names([r["institute"] for r in neet])
     for record in neet:
@@ -556,7 +589,7 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
         {
             "code": "neet-ug", "stream": "Medical", "level": "UG", "name": "NEET UG (All India counselling)", "authority": "Medical Counselling Committee",
             "compare_requires_group": True,
-            "rounds": [label for label, _, _ in rounds],
+            "rounds": labels,
             "default_group": "All India and Open Seat Quota (AIIMS, JIPMER) · Round 3",
             "asks_gender": True,
             "quota_requirements": NEET_QUOTA_REQUIREMENTS,
@@ -564,12 +597,13 @@ def build(args: argparse.Namespace, existing: dict) -> dict:
             "combined_quotas": {"All India and Open Seat Quota (AIIMS, JIPMER)": ["All India", "Open Seat Quota"]},
             "metric": {"label": "NEET UG rank", "unit": "rank", "lower_is_better": True, "whole_number": True, "value_label": "Last rank allotted", "second_label": None},
             "document": document("NEET-UG Counselling Seats Allotment 2026, Rounds 1 to 3 and stray round", MCC_SOURCES[2]["url"], "2026", "Rounds 1 (provisional), 2 and 3, and stray round", "derived"),
-            "sources": MCC_SOURCES,
+            "sources": MCC_SOURCES + MCC_LATER_SOURCES[: bool(args.mcc_special_stray)] + MCC_LATER_SOURCES[1:][: bool(args.mcc_round6)],
             "limits": [
                 "Each round is shown separately. Seats filled in Round 1 whose holders kept them don't reappear in later rounds, so some top colleges, such as AIIMS New Delhi, appear only in Round 1.",
                 "Calculated by us from MCC's rank-wise allotments: the last rank allotted to each seat in that round. MCC doesn't publish these as cutoffs.",
                 "Round 1 is from MCC's revised provisional result, the latest Round 1 file MCC published, so it's labelled provisional.",
                 "Excludes the 85% state quota, which each state runs separately.",
+                *([MCC_LATER_LIMIT] if args.mcc_special_stray or args.mcc_round6 else []),
                 "Some quotas, such as NRI, ESI and minority quotas, have their own eligibility rules, so choose a quota you qualify for.",
             ],
             "check": neet_check, "records": neet,
@@ -639,6 +673,8 @@ if __name__ == "__main__":
     for name in ("mcc-stray", "mcc-round2", "mcc-round3"):
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--mcc-round1", type=Path)
+    parser.add_argument("--mcc-special-stray", type=Path, help="MCC's special stray round for MBBS and Round 5 for BDS and B.Sc Nursing")
+    parser.add_argument("--mcc-round6", type=Path)
     parser.add_argument("--clat", type=Path, nargs="+", required=True)
     parser.add_argument("--maharashtra", type=Path, nargs="+", help="One cut-off PDF per CAP round, in round order")
     parser.add_argument("--ccmt", type=Path)

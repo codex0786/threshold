@@ -140,6 +140,24 @@ function Elsewhere({ items, unit, year, onPick }: { items: { quota: string; prog
   );
 }
 
+function StateCategories({ items, unit, year, onPick }: { items: { state: string; category: string; seats: number }[]; unit: string; year: string; onPick: (state: string, category: string) => void }) {
+  return (
+    <section className="card mt-4 p-4" aria-label="State domicile categories that reached your figure">
+      <h3 className="text-base font-medium">If you hold a state domicile</h3>
+      <p className="mt-0.5 text-xs text-ink-3">Your {unit} reached seats in {year} under these state categories. Only candidates with that state&rsquo;s domicile can use them, at its own university.</p>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <li key={item.category}>
+            <button type="button" onClick={() => onPick(item.state, item.category)} className="rounded-full border border-line bg-surface px-3 py-1.5 text-left text-sm hover:border-brand hover:text-brand">
+              <span className="font-medium">{item.state}</span> · {item.category} <span className="tnum text-ink-3">({item.seats} {item.seats === 1 ? "seat" : "seats"})</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function HistoryNote({ history, hasMerit }: { history: NonNullable<ExamRoute["history"]>; hasMerit: boolean }) {
   const weakest = Object.entries(history.backtest).map(([year, groups]) => [year, groups["All seats"]?.safer ?? 100] as const).sort((a, b) => a[1] - b[1])[0];
   const tests = Object.entries(history.backtest).sort(([a], [b]) => a.localeCompare(b));
@@ -492,7 +510,7 @@ export default function ExamShortlistPage() {
               <PositionMix counts={result.counts} labels={result.positions} />
               {route.history && total > 0 && <HistoryNote history={route.history} hasMerit={/^\d+$/.test((answers.merit ?? "").replace(/[,\s]/g, ""))} />}
               <p className="mb-3 text-sm text-ink-3">
-                {result.beyond > 0 ? `Not shown: ${num(result.beyond)} ${result.beyond === 1 ? "seat" : "seats"} in this list that didn’t reach your ${route.metric.unit}${route.rounds?.length ? " in any round" : ""}${route.metric.lower_is_better ? " or come within 20% of it" : ""}. ` : ""}
+                {result.beyond > 0 ? `Not shown: ${num(result.beyond)} ${result.beyond === 1 ? "seat" : "seats"} in this list that didn’t reach your ${route.metric.unit}${route.rounds?.length ? " in any round" : ""}${route.metric.lower_is_better ? " or come within 20% of it" : route.history?.margin ? ` or come within ${route.history.margin} points of it` : ""}. ` : ""}
                 {result.hidden_female_only > 0 ? `Seats only female candidates may hold are hidden, because you chose ${answers.gender}. ` : ""}
                 {result.limit && Object.values(result.counts).some((c) => c > (result.limit ?? 0)) ? `Each group shows its first ${result.limit} in this order.` : ""}
               </p>
@@ -502,13 +520,19 @@ export default function ExamShortlistPage() {
               </div>
               {total === 0 && (
                 <Notice>
-                  No seat in {[answers.quota, answers.programme].filter(Boolean).join(", ") || "this list"} reached or came within 20% of your {route.metric.unit} in {route.document.year}.
-                  {result.elsewhere?.length ? " Your figure did reach seats in the lists below." : " Check your figure and category. Other counselling routes, such as your state’s, may still have seats."}
+                  No seat in {[answers.quota, answers.programme].filter(Boolean).join(", ") || "this list"} reached{route.metric.lower_is_better ? " or came within 20% of" : route.history?.margin ? ` or came within ${route.history.margin} points of` : ""} your {route.metric.unit} in {route.document.year}.
+                  {result.elsewhere?.length || result.state_categories?.length ? " Your figure did reach seats in the lists below." : " Check your figure and category. Other counselling routes, such as your state’s, may still have seats."}
                 </Notice>
               )}
               {!!result.elsewhere?.length && (
                 <Elsewhere items={result.elsewhere} unit={route.metric.unit} year={route.document.year} onPick={(q, p) => {
                   const next = { ...answers, quota: q, programme: route.programmes.includes(p) ? p : "", category: categoryFor(route, q, answers.category) };
+                  setAnswers(next); saveExamAnswers(route.code, next); reveal.current = true; run(route, next, order);
+                }} />
+              )}
+              {!!result.state_categories?.length && (
+                <StateCategories items={result.state_categories} unit={route.metric.unit} year={route.document.year} onPick={(state, category) => {
+                  const next = { ...answers, domicile: state, category };
                   setAnswers(next); saveExamAnswers(route.code, next); reveal.current = true; run(route, next, order);
                 }} />
               )}

@@ -50,12 +50,13 @@ def shortlist(
     code: str, value: float | None = Query(default=None, gt=0), category: str | None = None, quota: str | None = None,
     programme: str | None = None, gender: Literal["female", "male", "other"] | None = None,
     order: Literal["top", "closest"] = "top", search: str | None = None, db: Session = Depends(get_db),
+    merit: int | None = Query(default=None, gt=0, le=10_000_000, description="State merit number, where the route's bands use it"),
 ) -> dict:
     route = find(code)
     problem = None if value is None else exam_routes.invalid_value(route, value)
     if problem:
         raise HTTPException(status_code=422, detail=problem)
-    result = exam_routes.shortlist(route, value, category, quota, programme, gender, order, search)
+    result = exam_routes.shortlist(route, value, category, quota, programme, gender, order, search, merit)
     profiles = exam_routes.load().get("profiles", {}).get(code, {})
     for option in result["options"]:
         profile = profiles.get(option["institute"])

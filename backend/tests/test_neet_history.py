@@ -83,3 +83,54 @@ def test_banded_seats_come_before_seats_beyond_the_recent_range():
     out = exam_routes.shortlist(r, 4000, "Open", "All India")
     assert [o["institute"] for o in out["options"]] == ["A College, Town", "C College, Town"]
     assert out["options"][1]["history"]["band"] == "beyond"
+
+
+def test_maharashtra_bands_use_the_merit_number_and_wait_for_it():
+    rows = [{"institute": "X College", "programme": "Civil Engineering", "programme_code": "0100219110", "group": f"State Level, Stage I · {rnd}",
+             "category": "GOPENS", "value": v, "second_value": m} for rnd, v, m in (("Round 1", 90.0, 30000), ("Round 2", 88.0, 34000))]
+    r = route(rows, lower=False, rounds=["Round 1", "Round 2"])
+    r["history"] = {"years": [2023, 2024, 2025], "uses": "second_value",
+                    "closing": {"0100219110|State Level|GOPENS": {"2023": 30000, "2024": 36000, "2025": 34000}}}
+    without = exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I")["options"][0]["history"]
+    assert without["band"] is None and without["needs"] == "merit"
+    with_merit = exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I", merit=20000)["options"][0]["history"]
+    assert with_merit["band"] == "safer" and "merit number" in with_merit["explanation"] and "final-round" not in with_merit["explanation"]
+    assert exam_routes.shortlist(r, 92.0, "GOPENS", "State Level, Stage I", merit=40000)["options"][0]["history"]["band"] == "ambitious"
+
+
+def test_kea_seats_band_by_course_code_and_category():
+    rows = [{"institute": "Mysore Medical College", "programme": "MBBS-GOVT.", "programme_code": "M002MG", "group": f"Karnataka quota · {rnd}",
+             "category": "GM", "value": v} for rnd, v in (("Round 1", 9000), ("Round 2", 9461))]
+    r = route(rows, rounds=["Round 1", "Round 2"])
+    r["history"] = {"years": [2024, 2025, 2026], "key": "programme_code|category",
+                    "closing": {"M002MG|GM": {"2024": 10755, "2025": 30129, "2026": 9461}}}
+    band = exam_routes.shortlist(r, 8000, "GM", "Karnataka quota")["options"][0]["history"]
+    assert band["band"] == "safer" and band["years"] == [2024, 2025, 2026]
+
+
+def test_kea_rows_take_the_first_column_of_each_name_and_skip_other_courses(tmp_path, monkeypatch):
+    from ingest import kea_history
+
+    class Table:
+        def __init__(self, rows): self.rows = rows
+        def extract(self): return self.rows
+
+    class Page:
+        def __init__(self, rows): self.rows = rows
+        def find_tables(self): return type("T", (), {"tables": [Table(self.rows)]})()
+        def get_text(self): return "UGNEET -2024 MEDICAL MOP -UP ROUND FINAL SEAT ALLOTMENT LIST"
+
+    header = ["SL.NO", "All India Rank", "Course Code", "Name", "Course Name", "Allotted Category", "Fee", "Status", "Course Code", "Allotted Category"]
+    pages = [Page([header, ["1", "17002", "M003MG", "KIMS", "MBBS-GOVT.", "GM", "1", "Allotted", "M009MG", "2AG"],
+                   ["2", "5000", "I719AG", "SDM Ayurveda", "BAMS-GOVT", "GM", "1", "Allotted", "-", "-"]])]
+
+    class Doc(list):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    monkeypatch.setattr(kea_history.pymupdf, "open", lambda path: Doc(pages))
+    pdf = tmp_path / "round3-med.pdf"
+    pdf.write_bytes(b"%PDF-1.4")
+    found = kea_history.read_file(pdf)
+    assert found["allotments"] == [[17002, "M003MG", "GM"]]
+    assert kea_history.ROUND_TITLE["round3"].search(found["title"])

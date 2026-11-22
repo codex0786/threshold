@@ -46,6 +46,10 @@ def main(only: str | None = None) -> int:
             for label, doc in documents.items():
                 path = folder / str(year) / f"{label}.pdf"
                 key = f"{year}/{label}"
+                # A link changed in the registry means the file on disk is the wrong document.
+                if path.exists() and manifest.get(key, {}).get("url") not in (None, doc["url"]):
+                    path.unlink()
+                    print(f"{code} {key}: link changed, downloading again")
                 if not path.exists():
                     path.parent.mkdir(parents=True, exist_ok=True)
                     try:

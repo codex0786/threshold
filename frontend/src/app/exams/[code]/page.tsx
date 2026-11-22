@@ -122,19 +122,23 @@ function Alumni({ alumni }: { alumni: NonNullable<ExamProfile["alumni"]> }) {
   );
 }
 
-function HistoryNote({ history }: { history: NonNullable<ExamRoute["history"]> }) {
-  const latest = Object.keys(history.backtest).sort().at(-1);
+function HistoryNote({ history, hasMerit }: { history: NonNullable<ExamRoute["history"]>; hasMerit: boolean }) {
+  const weakest = Object.entries(history.backtest).map(([year, groups]) => [year, groups["All seats"]?.safer ?? 100] as const).sort((a, b) => a[1] - b[1])[0];
   const tests = Object.entries(history.backtest).sort(([a], [b]) => a.localeCompare(b));
   return (
     <Notice>
       <p>
-        Each seat also has a band from its closing ranks in {history.years.slice(-3).join(", ")}, using the same rule as JEE: Safer is at least 10% inside every recent closing rank,
+        Each seat also has a band from its closing {history.uses === "second_value" ? "state merit numbers" : "ranks"} in {history.years.slice(-3).join(", ")}, using the same rule as JEE: Safer is at least 10% inside every recent closing {history.uses === "second_value" ? "merit number" : "rank"},
         Competitive is within the recent range, and Ambitious is up to 20% beyond it. {history.basis}
       </p>
       <p className="mt-1">
-        How well the rule held when tested on the next year, for a rank exactly at the Safer edge:{" "}
-        {tests.map(([year, groups]) => `${year}: ${groups["All seats"]?.safer}% of seats (${groups["All India quota, Open, MBBS"]?.safer}% for All India Open MBBS)`).join("; ")}.
-        {latest && (history.backtest[latest]["All seats"]?.safer ?? 100) < 85 ? ` In ${latest} many seats closed earlier than before, so treat Safer with more care outside the All India Open list.` : ""}
+        How well the rule held when tested on the next year, for a {history.uses === "second_value" ? "merit number" : "rank"} exactly at the Safer edge:{" "}
+        {tests.map(([year, groups]) => {
+          const named = Object.keys(groups).find((g) => g !== "All seats" && g !== "Other seats");
+          return `${year}: ${groups["All seats"]?.safer}% of seats${named ? ` (${groups[named]?.safer}% for ${named})` : ""}`;
+        }).join("; ")}.
+        {weakest && weakest[1] < 85 ? ` In ${weakest[0]} many seats closed earlier than in the years before, so treat Safer with more care.` : ""}
+        {history.uses === "second_value" && !hasMerit ? " Add your state merit number to see each seat’s band." : ""}
         {" "}This describes past seats, not your chance of admission.
       </p>
     </Notice>
@@ -163,7 +167,7 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
     <article className="card card-hover band-card rise p-5 pl-6" style={{ "--band": style.color, "--i": Math.min(index, 10) } as CSSProperties}>
       <div className="flex flex-wrap items-center gap-2">
         <PositionBadge position={option.position} label={label.label} hint={label.hint} />
-        {option.history && <BandBadge band={option.history.band ?? "limited_history"} />}
+        {option.history && !option.history.needs && <BandBadge band={option.history.band ?? "limited_history"} />}
         {option.female_only && <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--competitive-soft)", color: "var(--competitive)" }}>Female candidates only</span>}
         <span className="text-xs text-ink-3">{[option.institution ? `${option.institution.type} · ${option.institution.state}` : null, option.quota, option.category].filter(Boolean).join(" · ")}</span>
       </div>
@@ -223,7 +227,7 @@ function OptionCard({ option, route, figure, labels, index }: { option: ExamOpti
               <div>
                 <h3 className="text-base font-medium">Across recent years</h3>
                 <p className="mt-1 text-sm text-ink-2">{option.history.explanation}</p>
-                <p className="tnum mt-1 text-xs text-ink-3">Last rank allotted in rounds 1 to 3: {Object.entries(option.history.closing).map(([y, r]) => `${y}: ${num(r)}`).join(" · ")}</p>
+                <p className="tnum mt-1 text-xs text-ink-3">{route.history?.uses === "second_value" ? "Worst merit number admitted in CAP rounds I to III" : "Last rank allotted in rounds 1 to 3"}: {Object.entries(option.history.closing).map(([y, r]) => `${y}: ${num(r)}`).join(" · ")}</p>
               </div>
             )}
             <div><h3 className="text-base font-medium">Data gaps</h3><ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-ink-2">{missing.map((w) => <li key={w}>{w}</li>)}</ul></div>
@@ -294,7 +298,8 @@ export default function ExamShortlistPage() {
 
   const run = useCallback(async (r: ExamRoute, a: ExamAnswers, listOrder: ListOrder) => {
     const figure = Number(a.value.replace(/[,\s]/g, ""));
-    const params = new URLSearchParams(Object.entries({ value: String(figure), category: a.category, quota: a.quota, programme: a.programme, gender: a.gender, order: listOrder }).filter(([, v]) => v));
+    const merit = (a.merit ?? "").replace(/[,\s]/g, "");
+    const params = new URLSearchParams(Object.entries({ value: String(figure), category: a.category, quota: a.quota, programme: a.programme, gender: a.gender, order: listOrder, merit: /^\d+$/.test(merit) && Number(merit) > 0 ? merit : "" }).filter(([, v]) => v));
     const request = ++latest.current;
     setLoading(true);
     setError(null);
@@ -365,6 +370,12 @@ export default function ExamShortlistPage() {
               <input className="input tnum mt-1" inputMode="decimal" value={answers.value} onChange={(e) => set({ value: e.target.value.trim() })} aria-invalid={Boolean(problem)} placeholder={route.metric.lower_is_better ? "e.g. 25,000" : route.metric.max === 100 ? "e.g. 95.5" : "e.g. 600"} />
             </label>
             {problem && <p className="text-sm" style={{ color: "var(--ambitious)" }} role="alert">{problem}</p>}
+            {route.history?.uses === "second_value" && (
+              <label className="block text-sm">Your state merit number <span className="text-ink-3">(optional)</span>
+                <input className="input tnum mt-1" inputMode="numeric" value={answers.merit ?? ""} onChange={(e) => set({ merit: e.target.value.trim() })} placeholder="e.g. 25,000" />
+                <span className="mt-1 block text-xs text-ink-3">From the CET Cell’s merit list. Bands use it, because closing percentiles have risen every year while merit numbers stayed comparable.</span>
+              </label>
+            )}
             {route.category_states && (
               <label className="block text-sm">Your domicile state
                 <select className="input mt-1" value={answers.domicile} onChange={(e) => set({ domicile: e.target.value })}>
@@ -439,7 +450,7 @@ export default function ExamShortlistPage() {
                 ))}
               </div>
               <PositionMix counts={result.counts} labels={result.positions} />
-              {route.history && <HistoryNote history={route.history} />}
+              {route.history && <HistoryNote history={route.history} hasMerit={/^\d+$/.test((answers.merit ?? "").replace(/[,\s]/g, ""))} />}
               <p className="mb-3 text-sm text-ink-3">
                 {result.beyond > 0 ? `Not shown: ${num(result.beyond)} ${result.beyond === 1 ? "seat" : "seats"} in this list that didn’t reach your ${route.metric.unit}${route.rounds?.length ? " in any round" : ""}${route.metric.lower_is_better ? " or come within 20% of it" : ""}. ` : ""}
                 {result.hidden_female_only > 0 ? `Seats only female candidates may hold are hidden, because you chose ${answers.gender}. ` : ""}

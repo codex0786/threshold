@@ -77,7 +77,7 @@ def summary(route: dict) -> dict:
     return {
         **{k: v for k, v in route.items() if k not in ("records", "history")},
         # The full history is large and only the shortlist needs it, so the summary carries what explains the bands.
-        "history": {k: route["history"][k] for k in ("years", "basis", "backtest")} if route.get("history") else None,
+        "history": {k: route["history"].get(k) for k in ("years", "basis", "backtest", "uses")} if route.get("history") else None,
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
         "categories": sorted({r["category"] for r in records}),
@@ -205,27 +205,43 @@ def _squash(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (text or "").lower())
 
 
-def seat_band(route: dict, row: dict, value: float) -> dict | None:
-    """A JEE-style band from the seat's closing ranks in recent years, where the route has a history.
+def seat_band(route: dict, row: dict, value: float, merit: int | None = None) -> dict | None:
+    """A JEE-style band from the seat's closing figures in recent years, where the route has a history.
 
-    Only for routes ranked so that lower is better, and only when the seat's institute can be told apart
-    in every year. Otherwise None, and the seat shows only this year's rounds, as before.
+    NEET history is kept on the rank students enter. Maharashtra's is kept on the state merit number, which
+    students give separately (`merit`); without it the seat has no band. Returns None when the route has no
+    history or the seat can't be found in it, and the seat shows only this year's rounds, as before.
     """
     history = route.get("history")
-    if not history or not route["metric"]["lower_is_better"]:
+    if not history:
         return None
-    institute = history["institutes"].get(_squash(row["institute"]))
-    if institute is None:
+    if history.get("uses") == "second_value":
+        figure = merit
+        key = f"{row.get('programme_code')}|{row['group'].split(', Stage')[0]}|{row['category']}"
+    elif history.get("key") == "programme_code|category":
+        # KEA's course codes name the college and seat type and stay the same across years.
+        figure = int(value)
+        key = f"{row.get('programme_code')}|{row['category']}"
+    elif route["metric"]["lower_is_better"]:
+        figure = int(value)
+        institute = history["institutes"].get(_squash(row["institute"]))
+        if institute is None:
+            return None
+        key = f"{institute}|{row['programme']}|{_squash(base_quota(row.get('group')) or '')}|{row['category']}"
+    else:
         return None
-    closing = history["closing"].get(f"{institute}|{row['programme']}|{_squash(base_quota(row.get('group')) or '')}|{row['category']}", {})
-    result = classify(int(value), [CutoffPoint(int(year), rank) for year, rank in closing.items()], max(history["years"]))
-    return {
-        "band": result.band, "explanation": result.explanation, "years": list(result.years_used),
-        "closing": {year: closing[year] for year in sorted(closing)},
-    }
+    closing = history["closing"].get(key, {})
+    if figure is None:
+        return {"band": None, "explanation": "Add your state merit number to see a band for this seat.", "years": [], "closing": {y: closing[y] for y in sorted(closing)}, "needs": "merit"}
+    result = classify(int(figure), [CutoffPoint(int(year), number) for year, number in closing.items()], max(history["years"]))
+    # These routes use the worst figure over the main rounds, not one final round as on JEE.
+    explanation = result.explanation.replace("final-round ", "")
+    if history.get("uses") == "second_value":
+        explanation = explanation.replace("Your rank", "Your merit number").replace("closing rank", "closing merit number")
+    return {"band": result.band, "explanation": explanation, "years": list(result.years_used), "closing": {y: closing[y] for y in sorted(closing)}}
 
 
-def _seat(route: dict, rows: list[dict], value: float) -> dict | None:
+def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None) -> dict | None:
     metric, rounds = route["metric"], route.get("rounds") or []
     unit, lower = metric["unit"], metric["lower_is_better"]
     index = {label: i for i, label in enumerate(rounds)}
@@ -276,14 +292,14 @@ def _seat(route: dict, rows: list[dict], value: float) -> dict | None:
         "female_only": any(r.get("female_only") for r in rows), "seats": last.get("seats"), "note": last.get("note"),
         "position": position, "rounds": ladder, "furthest": furthest, "ranking": ranking, "fee": with_fee,
         "standing": max(r.get("standing", NEUTRAL) for r in rows), "why": why,
-        "history": seat_band(route, last, value),
+        "history": seat_band(route, last, value, merit),
         "margin": abs((first or {"value": furthest})["value"] - value),
     }
 
 
 def shortlist(
     route: dict, value: float | None, category: str | None, quota: str | None, programme: str | None = None,
-    gender: str | None = None, order: str = "top", search: str | None = None,
+    gender: str | None = None, order: str = "top", search: str | None = None, merit: int | None = None,
 ) -> dict:
     """A student's seats in one route, each with every round of the year in which it was allotted."""
     missing = [name for name, given in (("figure", value is not None), ("category", bool(category))) if not given]
@@ -308,7 +324,7 @@ def shortlist(
         seats[(r["institute"], r.get("programme_code") or r["programme"], base_quota(r.get("group")))].append(r)
     options, beyond = [], 0
     for rows in seats.values():
-        seat = _seat(route, rows, value)
+        seat = _seat(route, rows, value, merit)
         if seat is None:
             beyond += 1
         else:

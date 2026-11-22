@@ -364,6 +364,7 @@ def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None)
     unit, lower = metric["unit"], metric["lower_is_better"]
     index = {label: i for i, label in enumerate(rounds)}
     rows = sorted(rows, key=lambda r: index.get(round_of(r.get("group")), len(rounds)))
+    main_rows = [r for r in rows if r["value"] is not None and not leftover_round(rounds, round_of(r.get("group")))]
     ladder = [
         {"round": round_of(r.get("group")), "value": r["value"], "second_value": r.get("second_value"), "count": r.get("count"),
          "reached": r["value"] is not None and within(route, r, value)}
@@ -412,7 +413,10 @@ def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None)
         "programme_code": last.get("programme_code"), "quota": base_quota(last.get("group")), "category": last["category"],
         "female_only": any(r.get("female_only") for r in rows), "seats": last.get("seats"), "note": last.get("note"),
         "position": position, "rounds": ladder, "furthest": furthest, "ranking": ranking, "fee": with_fee,
-        "standing": max(r.get("standing", NEUTRAL) for r in rows), "why": why,
+        # A seat's place in the list comes from its main rounds: a stray or special round fills few seats, with few
+        # candidates, so its figures make a seat look more sought-after than it was. Leftover rounds count only
+        # for seats that have nothing else.
+        "standing": max(r.get("standing", NEUTRAL) for r in (main_rows or rows)), "why": why,
         "history": seat_band(route, last, value, merit),
         "margin": abs((first or {"value": furthest})["value"] - value),
     }

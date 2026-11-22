@@ -210,3 +210,15 @@ def test_rounds_after_the_stray_round_count_as_leftover():
     rounds = ["Round 1", "Round 2", "Round 3", "Stray round", "Special stray round", "Round 5", "Round 6"]
     assert [leftover_round(rounds, r) for r in rounds] == [False, False, False, True, True, True, True]
     assert not leftover_round(["Round 1", "Round 2"], "Round 2")
+
+
+def test_standing_comes_from_main_rounds_not_leftover_ones():
+    from app.services.exam_routes import _seat
+    route = {"metric": {"unit": "rank", "lower_is_better": True, "value_label": "Closing rank"}, "rounds": ["Round 1", "Special round 1"]}
+    rows = [
+        {"institute": "A", "programme": "CSE", "category": "OPNO", "group": "UP · Round 1", "value": 800000, "standing": 40.0},
+        {"institute": "A", "programme": "CSE", "category": "OPNO", "group": "UP · Special round 1", "value": 170000, "standing": 90.0},
+    ]
+    assert _seat(route, rows, 900000)["standing"] == 40.0
+    only_leftover = [rows[1]]
+    assert _seat(route, only_leftover, 100000)["standing"] == 90.0

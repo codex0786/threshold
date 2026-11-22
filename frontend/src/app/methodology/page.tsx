@@ -59,7 +59,7 @@ export default async function Methodology() {
           <Notice tone="warn">A band is not a chance of admission. We show no percentages, because results for individual applicants are not public and a percentage could not be properly tested.</Notice>
           <p className="mt-3 text-ink-2">We did test how stable the bands were. Using three earlier years to set the band edges, a rank at the outer edge of Safer would still have been within the next year’s closing rank for 91% to 94% of seats in 2024, 2025 and 2026. At the outer edge of Ambitious, the figure was 6% to 10%. This measures how seats behaved overall, not your own odds, and future years may differ.</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-ink-2">
-            <li>Bands cover JoSAA only. CSAB special round ranks are shown separately for 2026, with no bands, because the form offers one year. State counselling is not included.</li>
+            <li>Bands cover JoSAA only. CSAB special round ranks are shown separately for 2026, with no bands, because the form offers one year. State counselling is shown separately where we have it: so far Uttar Pradesh (UPTAC), from its official 2026 opening and closing ranks.</li>
             <li>The latest year’s final round is the last one published when we collected the data.</li>
             <li>Programme-specific medical and other restrictions are not checked. See the JoSAA annexures.</li>
             <li>Faculty, doctoral, research and spending figures come from institutes’ own NIRF submissions and cover the whole institute. We keep only totals, not names, ages or genders. They don’t measure teaching, and they count towards your fit only if you turn on their sliders.</li>

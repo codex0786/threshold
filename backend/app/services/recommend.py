@@ -407,6 +407,21 @@ def advanced_notice(profile: StudentProfile) -> str | None:
     return ADVANCED_NOTICE
 
 
+# State counselling routes that rank by JEE Main, by the home state whose candidates can use their main rounds.
+STATE_ROUTES = {
+    "Uttar Pradesh": {
+        "code": "uptac", "name": "UPTAC (AKTU) B.Tech",
+        "note": "Uttar Pradesh's own counselling also ranks by JEE Main rank, and its seats close at much higher ranks than JoSAA's.",
+    },
+}
+
+
+def state_routes(profile: StudentProfile) -> list[dict]:
+    """State counselling the student can use with the same JEE Main rank, shown beside the JoSAA list."""
+    route = STATE_ROUTES.get(profile.eligibility_state or "")
+    return [route] if route else []
+
+
 def missing_rank_notices(profile: StudentProfile) -> list[str]:
     """Reserved-category seats need the category rank. Without it only OPEN seats are checked, and many options go missing.
 
@@ -430,7 +445,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
     student = profile.to_student()
     warnings: list[str] = [
         "Bands describe past cutoffs. They are not guarantees or probabilities, and future cutoffs can differ.",
-        "Bands cover JoSAA only. CSAB special round ranks are listed separately, without bands. State counselling is not included.",
+        "Bands cover JoSAA only. CSAB special round ranks are listed separately, without bands. State counselling is shown separately where we have it.",
     ]
     if profile.class12_status == "does_not_meet":
         return {
@@ -591,7 +606,7 @@ def generate(db: Session, profile: StudentProfile, per_band_limit: int = 25, rec
 
     payload = {
         "engine_version": ENGINE_VERSION, "data_year": data_year, "history_window": [window_start, data_year], "order": order,
-        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "missing_ranks": missing_ranks, "options": limited,
+        "counts": dict(counts), "excluded": excluded, "warnings": warnings, "missing_ranks": missing_ranks, "state_routes": state_routes(profile), "options": limited,
         "csab": csab_leads(db, profile, student, quota_map),
     }
     if record_run:

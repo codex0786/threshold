@@ -60,7 +60,7 @@ export type Option = {
 };
 export type Recommendations = {
   engine_version: string; data_year?: number; history_window?: [number, number]; counts: Record<string, number>;
-  excluded?: Record<string, number>; warnings: string[]; missing_ranks?: string[]; options: Option[]; result_hash?: string; csab?: CsabLeads | null;
+  excluded?: Record<string, number>; warnings: string[]; missing_ranks?: string[]; state_routes?: { code: string; name: string; note: string }[]; options: Option[]; result_hash?: string; csab?: CsabLeads | null;
 };
 export type Meta = {
   states: string[]; branch_families: Record<string, string>; career_options: Record<string, string>; career_mapped: string[];

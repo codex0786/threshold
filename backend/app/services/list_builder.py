@@ -15,7 +15,7 @@ from app.services import recommend as rec
 BANDED = ("safer", "competitive", "ambitious")
 
 
-def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 60, safety_net: int = 5, include_ambitious: bool = True) -> dict:
+def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 60, safety_net: int = 5, include_ambitious: bool = True, past_safety_net: bool = False) -> dict:
     result = rec.generate(db, profile, per_band_limit=10_000, record_run=False, order=order)
     candidates = [o for o in result["options"] if o["band"] in BANDED and (include_ambitious or o["band"] != "ambitious")]
     safer_available = sum(1 for o in candidates if o["band"] == "safer")
@@ -25,7 +25,7 @@ def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 
     safer_in = 0
     stop_reason = "ran_out"
     for option in candidates:
-        if safer_in >= net and net > 0:
+        if safer_in >= net and net > 0 and not past_safety_net:
             stop_reason = "safety_net_complete"
             break
         if len(chosen) >= size:
@@ -39,16 +39,19 @@ def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 
             safer_in += 1
         chosen.append(option)
     else:
-        stop_reason = "safety_net_complete" if net and safer_in >= net else "ran_out"
+        stop_reason = "safety_net_complete" if net and safer_in >= net and not past_safety_net else "ran_out"
 
     position_label = "top institutes first" if order == "top" else "your fit"
     items = []
     for i, o in enumerate(chosen, start=1):
         reason = f"In shortlist order ({position_label})."
-        if o["band"] == "safer" and i > len(chosen) - net:
+        if past_safety_net and o["band"] == "safer" and sum(1 for c in chosen[:i] if c["band"] == "safer") > net:
+            reason = "Past your safety net: kept because you asked for a longer list. Past rounds rarely reached this far down."
+        elif o["band"] == "safer" and (past_safety_net or i > len(chosen) - net):
             reason = "Part of your safety net: past closing ranks were comfortably beyond your rank."
         items.append({
             "position": i, "programme_id": o["programme_id"], "programme": o["programme"],
+            "degree": o.get("degree"), "duration_years": o.get("duration_years"),
             "institution": o["institution"]["short_name"], "institution_slug": o["institution"]["slug"],
             "band": o["band"], "reason": reason, "explanation": o["best_route"]["explanation"],
         })
@@ -59,6 +62,8 @@ def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 
         notes.append(f"The list stops after {net} Safer options. Past cutoffs suggest choices below them would rarely be reached, so adding more mostly lengthens the list.")
         if len(chosen) < size and all(i["band"] == "safer" for i in chosen):
             notes.append(f"It's short because every option here was Safer for your rank: JoSAA would very likely give you one of the first choices, so put the ones you want most at the top.")
+    if past_safety_net and safer_in > net:
+        notes.append(f"You asked to keep going past the safety net, so the list has {safer_in} Safer options instead of stopping at {net}. Choices well below your safety net are rarely reached, but listing them costs nothing in JoSAA.")
     if stop_reason == "size_reached":
         notes.append(f"The list reached the {size} choices you asked for before the safety net filled. Consider a longer list or fewer ambitious options.")
     if chosen and safer_available < safety_net:

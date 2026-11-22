@@ -148,6 +148,7 @@ class ListBuildRequest(BaseModel):
     size: int = Field(default=60, ge=5, le=150)
     safety_net: int = Field(default=5, ge=1, le=20)
     include_ambitious: bool = True
+    past_safety_net: bool = False
 
 
 class RoundAdviceRequest(BaseModel):

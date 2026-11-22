@@ -32,6 +32,15 @@ def test_builder_stops_once_the_safety_net_is_full(client):
     assert built["stop_reason"] == "safety_net_complete"
 
 
+def test_builder_can_keep_going_past_the_safety_net(client):
+    short = build(client, safety_net=1)
+    longer = build(client, safety_net=1, past_safety_net=True, size=60)
+    assert len(longer["items"]) >= len(short["items"])
+    assert longer["stop_reason"] != "safety_net_complete"
+    if longer["counts"]["safer"] > 1:
+        assert any("past the safety net" in n for n in longer["notes"])
+
+
 def test_builder_reserves_slots_for_the_safety_net(client):
     built = build(client, size=5, safety_net=2)
     assert len(built["items"]) <= 5

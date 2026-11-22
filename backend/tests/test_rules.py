@@ -477,3 +477,21 @@ def test_institute_first_lets_a_much_stronger_institute_lead_a_preferred_branch(
     assert standing_score(40, 70, preferred=True, first="institute") < standing_score(9, 70)
     assert standing_score(40, 70, preferred=True, first="balanced") > standing_score(9, 45)
     assert standing_score(20, 60, preferred=True, first="unknown") == standing_score(20, 60, preferred=True)
+
+
+@pytest.mark.parametrize("name, family", [
+    ("Energy Engineering", "ENERGY"),
+    ("Applied Geology", "EARTH"),
+    ("Textile Technology", "TEXTILE"),
+    ("Industrial Design", "DESIGN"),
+    ("Maritime Engineering", "OCEAN"),
+    ("B.Tech in Aviation Engineering", "AERO"),
+    ("Dairy Engineering", "BIO"),
+    # A main discipline still wins over the smaller families.
+    ("Electronics and Communication Engineering (VLSI Design)", "ECE"),
+    ("Civil and Environmental Engineering", "CIVIL"),
+    ("Energy and Electrical Vehicle Engineering", "EE"),
+    ("Engineering and Computational Mechanics", "OTHER"),
+])
+def test_smaller_branch_families(name, family):
+    assert branch_family(name) == family

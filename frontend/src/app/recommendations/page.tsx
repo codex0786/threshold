@@ -1,4 +1,5 @@
 "use client";
+import { degreeLine, programmeLabel } from "@/lib/programmes";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -32,11 +33,11 @@ function OptionCard({ option, index }: { option: Option; index: number }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2"><BandBadge band={option.band} /><span className="text-xs text-ink-3">{option.institution.type} · {option.institution.state}</span></div>
           <h2 className="mt-2 text-xl"><Link href={`/programmes/${option.programme_id}`} className="hover:underline">{option.programme}</Link></h2>
-          <p className="text-ink-2"><Link href={`/colleges/${option.institution.slug}`} className="hover:underline">{option.institution.short_name}</Link>{option.degree ? ` · ${option.degree}` : ""}</p>
+          <p className="text-ink-2"><Link href={`/colleges/${option.institution.slug}`} className="hover:underline">{option.institution.short_name}</Link>{option.degree ? ` · ${degreeLine(option.degree, option.duration_years)}` : ""}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <CompareToggle id={option.programme_id} label={`${option.institution.short_name}: ${option.programme}`} />
-          <AddToList entry={{ id: option.programme_id, label: `${option.institution.short_name}: ${option.programme}` }} />
+          <CompareToggle id={option.programme_id} label={`${option.institution.short_name}: ${programmeLabel(option.programme, option.degree, option.duration_years)}`} />
+          <AddToList entry={{ id: option.programme_id, label: `${option.institution.short_name}: ${programmeLabel(option.programme, option.degree, option.duration_years)}` }} />
         </div>
       </div>
 
@@ -107,7 +108,7 @@ function CsabPanel({ csab }: { csab: CsabLeads }) {
           {csab.options.map((o) => (
             <li key={o.programme_id} className="py-2 text-sm">
               <div className="flex flex-wrap justify-between gap-x-4">
-                <span className="font-medium">{o.institution.short_name}: {o.programme}</span>
+                <span className="font-medium">{o.institution.short_name}: {programmeLabel(o.programme, o.degree, o.duration_years)}</span>
                 <span className="tnum text-ink-2">closed at {num(o.closing_rank)}</span>
               </div>
               <p className="text-xs text-ink-3">Round {o.round} · {o.quota} quota · {o.seat_type} · {o.gender_pool_label} · <a className="underline" href={o.source_url} target="_blank" rel="noreferrer">source</a></p>

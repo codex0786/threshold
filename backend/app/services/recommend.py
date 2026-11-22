@@ -382,7 +382,7 @@ def csab_leads(db: Session, profile: StudentProfile, student, quota_map: dict) -
         "count": len(rows), "rank_used": rank, "note": CSAB_NOTE,
         "options": [
             {
-                "programme_id": r.programme_id, "programme": r.programme.name, "degree": r.programme.degree, "branch_label": FAMILY_LABELS.get(r.programme.branch_family, "Other"),
+                "programme_id": r.programme_id, "programme": r.programme.name, "degree": r.programme.degree, "duration_years": r.programme.duration_years, "branch_label": FAMILY_LABELS.get(r.programme.branch_family, "Other"),
                 "institution": institution_json(r.programme, full=False), "year": r.year, "round": r.round, "quota": r.quota, "seat_type": r.seat_type,
                 "gender_pool_label": POOL_LABEL[r.gender_pool], "closing_rank": r.closing_rank, "source_title": r.source_document.title, "source_url": r.source_document.url,
             } for r in rows[:CSAB_LIMIT]

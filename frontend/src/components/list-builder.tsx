@@ -1,4 +1,5 @@
 "use client";
+import { programmeLabel } from "@/lib/programmes";
 import { ChevronDown, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { Notice } from "@/components/ui";
@@ -13,6 +14,7 @@ export function ListBuilder({ profile, onBuilt }: { profile: Profile; onBuilt: (
   const [size, setSize] = useState(60);
   const [net, setNet] = useState(5);
   const [ambitious, setAmbitious] = useState(true);
+  const [past, setPast] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,10 +22,10 @@ export function ListBuilder({ profile, onBuilt }: { profile: Profile; onBuilt: (
     setBusy(true);
     setError(null);
     try {
-      const built = await post<BuiltList>("/preference-lists/build", { profile, order, size, safety_net: net, include_ambitious: ambitious });
+      const built = await post<BuiltList>("/preference-lists/build", { profile, order, size, safety_net: net, include_ambitious: ambitious, past_safety_net: past });
       if (!built.items.length) { setError(built.notes[0] ?? "No options matched your profile."); return; }
       track("list_built", { order, size: sizeBucket(built.items.length), safety_net: net });
-      onBuilt(`Suggested (${order === "top" ? "top institutes" : "my fit"})`, built.items.map((i) => ({ id: i.programme_id, label: `${i.institution}: ${i.programme}` })), built.notes);
+      onBuilt(`Suggested (${order === "top" ? "top institutes" : "my fit"})`, built.items.map((i) => ({ id: i.programme_id, label: `${i.institution}: ${programmeLabel(i.programme, i.degree, i.duration_years)}` })), built.notes);
       setOpen(false);
     } catch (e) {
       setError((e as Error).message);
@@ -59,7 +61,10 @@ export function ListBuilder({ profile, onBuilt }: { profile: Profile; onBuilt: (
             <input type="range" min={1} max={20} value={net} onChange={(e) => setNet(Number(e.target.value))} className="w-full accent-[var(--brand)]" />
             <span className="text-xs text-ink-3">The list ends once this many Safer choices are in.</span>
           </label>
-          <label className="flex items-center gap-2 self-center text-sm"><input type="checkbox" checked={ambitious} onChange={(e) => setAmbitious(e.target.checked)} /> Include Ambitious choices</label>
+          <div className="space-y-2 self-center text-sm">
+            <label className="flex items-center gap-2"><input type="checkbox" checked={ambitious} onChange={(e) => setAmbitious(e.target.checked)} /> Include Ambitious choices</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={past} onChange={(e) => setPast(e.target.checked)} /> Keep going past the safety net, up to the longest list</label>
+          </div>
           <div className="sm:col-span-2">
             {error && <div className="mb-3"><Notice tone="warn">{error}</Notice></div>}
             <button type="button" className="btn btn-primary" onClick={build} disabled={busy}><Wand2 size={15} aria-hidden /> {busy ? "Building…" : "Build the list"}</button>

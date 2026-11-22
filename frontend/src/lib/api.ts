@@ -106,7 +106,7 @@ export type RankEstimate = {
   percentile: number; exam_year: number; rank_low: number; rank_high: number; rank_list: string; candidates_note: string;
   method: string[]; warnings: string[]; sources: { year: number; url: string }[]; version: string;
 };
-export type BuiltItem = { position: number; programme_id: number; programme: string; institution: string; institution_slug: string; band: Band; reason: string; explanation: string };
+export type BuiltItem = { position: number; programme_id: number; programme: string; degree?: string | null; duration_years?: number | null; institution: string; institution_slug: string; band: Band; reason: string; explanation: string };
 export type BuiltList = { items: BuiltItem[]; counts: Record<string, number>; order: "top" | "fit"; size: number; safety_net: number; stop_reason: string; notes: string[]; data_year: number | null };
 export type RoundYear = { year: number; closing_at_round: number | null; round_used: number | null; final_closing: number | null; reached_by_final: boolean };
 export type HigherChoice = {
@@ -124,7 +124,7 @@ export type Completeness = {
   detail?: Record<string, number>; by_type?: Record<string, { institutions: number; nirf_rank: number; placements: number; fees: number; faculty: number }>;
 };
 export type CsabLead = {
-  programme_id: number; programme: string; degree: string | null; branch_label: string; institution: InstitutionRef; year: number; round: number; quota: string;
+  programme_id: number; programme: string; degree: string | null; duration_years?: number | null; branch_label: string; institution: InstitutionRef; year: number; round: number; quota: string;
   seat_type: string; gender_pool_label: string; closing_rank: number; source_title: string; source_url: string;
 };
 export type CsabLeads = { count: number; rank_used: number; note: string; options: CsabLead[] };

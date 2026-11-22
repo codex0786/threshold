@@ -1,4 +1,5 @@
 "use client";
+import { degreeLine, programmeLabel } from "@/lib/programmes";
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -60,10 +61,10 @@ export default function ProgrammePage({ params }: { params: Promise<{ id: string
       <header className="mb-6 mt-3 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold sm:text-5xl">{programme.name}</h1>
-          <p className="mt-1 text-ink-2">{programme.institution.short_name} · {programme.degree}{programme.duration_years ? `, ${programme.duration_years} years` : ""}</p>
+          <p className="mt-1 text-ink-2">{programme.institution.short_name} · {degreeLine(programme.degree, programme.duration_years)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <CompareToggle id={programme.id} label={`${programme.institution.short_name}: ${programme.name}`} />
+          <CompareToggle id={programme.id} label={`${programme.institution.short_name}: ${programmeLabel(programme.name, programme.degree, programme.duration_years)}`} />
           <Link href={`/finance?programme=${programme.id}`} className="btn btn-secondary !px-3 !py-1.5 text-sm">Estimate cost</Link>
         </div>
       </header>

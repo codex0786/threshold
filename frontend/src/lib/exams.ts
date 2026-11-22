@@ -11,7 +11,7 @@ export type ExamRoute = {
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
   rounds?: string[]; default_group?: string; default_programme?: string;
   quota_categories?: Record<string, string[]>; standing_basis?: string | null; list_tools?: boolean;
-  history?: { years: number[]; basis: string; uses?: string | null; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
+  history?: { years: number[]; basis: string; uses?: string | null; margin?: number | null; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
   quotas?: string[]; quota_requirements?: Record<string, string>; ranked_institute_count?: number; fee_institute_count?: number;
 };
 export type ExamRanking = { category: string; rank: number; year: number; source_url: string };

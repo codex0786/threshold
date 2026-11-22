@@ -72,3 +72,48 @@ def classify(rank: int, final_round_cutoffs: Sequence[CutoffPoint], latest_data_
         band = "beyond"
         text = f"Your rank {rank:,} is more than 20% beyond the recent closing range ({span})."
     return BandResult(band, low, high, recent[-1].year, recent[-1].closing_rank, years, text)
+
+
+# Scores (GATE) are higher-is-better and sit on a fixed 0 to 1,000 scale, so the margins are points, not a share.
+# 50 points was chosen by backtest: a score 50 points above the highest recent closing score still got the seat in
+# 89% of seats in 2025 and 94% in 2026 (CCMT, Rounds 1 to 3), close to the Safer edge on the rank routes.
+SCORE_MARGIN = 50
+
+
+def classify_score(score: int, cutoffs: Sequence[CutoffPoint], latest_data_year: int, margin: int = SCORE_MARGIN) -> BandResult:
+    """Place a score against the same seat's lowest admitted score in recent years. Higher scores are better.
+
+    `CutoffPoint.closing_rank` holds the closing score here. The bands mirror `classify`: Safer is clear of the
+    hardest recent year by the margin, Competitive is at or above the easiest year, Ambitious is within the margin
+    below it, and Beyond is further below.
+    """
+    window_start = latest_data_year - LOOKBACK_YEARS + 1
+    recent = sorted((c for c in cutoffs if c.year >= window_start), key=lambda c: c.year)
+    years = tuple(c.year for c in recent)
+    if len(recent) < MIN_YEARS_FOR_BAND:
+        latest = recent[-1] if recent else None
+        if latest and score < latest.closing_rank - margin:
+            return BandResult(
+                "beyond", None, None, latest.year, latest.closing_rank, years,
+                f"Your score {score} is more than {margin} points below the only recent closing score ({latest.closing_rank} in {latest.year}).",
+            )
+        return BandResult(
+            None, None, None, latest.year if latest else None, latest.closing_rank if latest else None, years,
+            f"Only {len(recent)} year(s) of comparable history since {window_start}, so no band is shown.",
+        )
+    closings = [c.closing_rank for c in recent]
+    low, high = min(closings), max(closings)
+    span = f"{low} to {high} across {years[0]}–{years[-1]}"
+    if score >= high + margin:
+        band: Band = "safer"
+        text = f"Your score {score} is at least {margin} points above every recent closing score ({span})."
+    elif score >= low:
+        band = "competitive"
+        text = f"Your score {score} is close to or within the recent closing range ({span})."
+    elif score >= low - margin:
+        band = "ambitious"
+        text = f"Your score {score} is below the recent closing range ({span}), but within {margin} points of it."
+    else:
+        band = "beyond"
+        text = f"Your score {score} is more than {margin} points below the recent closing range ({span})."
+    return BandResult(band, low, high, recent[-1].year, recent[-1].closing_rank, years, text)

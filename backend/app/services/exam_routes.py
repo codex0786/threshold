@@ -10,7 +10,7 @@ from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
 
-from app.services.bands import CutoffPoint, classify
+from app.services.bands import SCORE_MARGIN, CutoffPoint, classify, classify_score
 from app.services.scoring import NEUTRAL, contest_scores, reputation_score
 
 MAX_PROGRAMME_CHOICES = 8
@@ -92,7 +92,7 @@ def summary(route: dict) -> dict:
     return {
         **{k: v for k, v in route.items() if k not in ("records", "history")},
         # The full history is large and only the shortlist needs it, so the summary carries what explains the bands.
-        "history": {k: route["history"].get(k) for k in ("years", "basis", "backtest", "uses")} if route.get("history") else None,
+        "history": {k: route["history"].get(k) for k in ("years", "basis", "backtest", "uses", "margin")} if route.get("history") else None,
         "standing_basis": route.get("standing_basis"),
         "record_count": len(records),
         "institute_count": len({r["institute"] for r in records}),
@@ -274,6 +274,18 @@ def _squash(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (text or "").lower())
 
 
+# Squashed CCMT institute names that changed between years, mapped to one (kept in step with ingest.ccmt_history).
+CCMT_RENAMED = {"shrimatavaishnodeviuniversitykatrajk": "shrimatavaishnodeviuniversitykatra"}
+
+
+def ccmt_seat_key(institute: str, programme: str, group: str, category: str) -> str:
+    def squash(name: str) -> str:
+        key = re.sub(r"[^a-z0-9]", "", name.lower())
+        return CCMT_RENAMED.get(key, key)
+    number = re.search(r"\d", group).group(0)
+    return f"{squash(institute)}|{squash(programme)}|{number}|{category.strip()}"
+
+
 def seat_band(route: dict, row: dict, value: float, merit: int | None = None) -> dict | None:
     """A JEE-style band from the seat's closing figures in recent years, where the route has a history.
 
@@ -291,6 +303,13 @@ def seat_band(route: dict, row: dict, value: float, merit: int | None = None) ->
         # KEA's course codes name the college and seat type and stay the same across years.
         figure = int(value)
         key = f"{row.get('programme_code')}|{row['category']}"
+    elif history.get("key") == "institute|programme|group|category":
+        # CCMT (GATE): scores, higher is better; names matched without case, spaces or punctuation.
+        figure = int(value)
+        key = ccmt_seat_key(row["institute"], row["programme"], row["group"], row["category"])
+        closing = history["closing"].get(key, {})
+        result = classify_score(figure, [CutoffPoint(int(year), number) for year, number in closing.items()], max(history["years"]), history.get("margin", SCORE_MARGIN))
+        return {"band": result.band, "explanation": result.explanation, "years": list(result.years_used), "closing": {y: closing[y] for y in sorted(closing)}, "key": key}
     elif route["metric"]["lower_is_better"]:
         figure = int(value)
         institute = history["institutes"].get(_squash(row["institute"]))
@@ -327,7 +346,10 @@ def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None)
     first = next((step for step in ladder if step["reached"]), None)
     why = []
     if first is None:
-        if not lower or furthest * NEAR_MARGIN < value:
+        # Just out of reach: within 20% on ranks, or within the band margin on a score route that has history.
+        if lower and furthest * NEAR_MARGIN < value:
+            return None
+        if not lower and not (route.get("history") and furthest - value <= route["history"].get("margin", SCORE_MARGIN)):
             return None
         position = "near"
         where = next(step["round"] for step in figures if step["value"] == furthest)

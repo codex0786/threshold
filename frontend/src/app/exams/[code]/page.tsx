@@ -6,7 +6,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { BandBadge, Notice, PageHeader, Skeleton, SourceLink } from "@/components/ui";
 import { api, inr, num } from "@/lib/api";
 import {
-  EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
+  CATEGORY_GUIDES, categoryFor, EXAM_ICONS, type ExamAnswers, type ExamMetric, type ExamOption, type ExamProfile, type ExamRoute, type ExamShortlist, examDefaults, formatFigure,
   loadExamAnswers, POSITION_ORDER, POSITION_STYLE, saveExamAnswers, shortRound,
 } from "@/lib/exams";
 
@@ -119,6 +119,24 @@ function Alumni({ alumni }: { alumni: NonNullable<ExamProfile["alumni"]> }) {
       {alumni.employers.length > 0 && <p className="tnum mt-1 text-sm">Employers named: {alumni.employers.slice(0, 5).map((o) => `${o.label} (${o.people})`).join(", ")}.</p>}
       <p className="mt-1"><SourceLink href={alumni.source_url} label={alumni.source_title} /></p>
     </div>
+  );
+}
+
+function Elsewhere({ items, unit, year, onPick }: { items: { quota: string; programme: string; seats: number }[]; unit: string; year: string; onPick: (quota: string, programme: string) => void }) {
+  return (
+    <section className="card mt-4 p-4" aria-label="Where your figure reached seats">
+      <h3 className="text-base font-medium">Where your {unit} reached seats in {year}</h3>
+      <p className="mt-0.5 text-xs text-ink-3">Same category, other quotas and courses. Check you qualify for a quota before relying on it.</p>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <li key={`${item.quota}|${item.programme}`}>
+            <button type="button" onClick={() => onPick(item.quota, item.programme)} className="rounded-full border border-line bg-surface px-3 py-1.5 text-left text-sm hover:border-brand hover:text-brand">
+              <span className="font-medium">{item.programme}</span> · {item.quota} <span className="tnum text-ink-3">({item.seats} {item.seats === 1 ? "seat" : "seats"})</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -324,6 +342,8 @@ export default function ExamShortlistPage() {
       if (!found) return;
       const saved = loadExamAnswers(found.code);
       const start = { value: "", gender: "", domicile: "", ...examDefaults(found), ...saved };
+      // Answers saved before categories were matched to quotas may hold a pair that can never match.
+      start.category = categoryFor(found, start.quota, start.category);
       setAnswers(start);
       if (saved?.value) run(found, start, "top");
     }).catch(() => setError("These figures aren’t available right now. Please try again shortly."));
@@ -351,7 +371,8 @@ export default function ExamShortlistPage() {
   if (route === null) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><h1 className="text-3xl font-bold">Exam not found</h1><Link href="/exams" className="btn btn-primary mt-5">See covered exams</Link></div>;
 
   const Icon = EXAM_ICONS[route.stream];
-  const categories = route.categories.filter((c) => !route.category_states?.[c] || route.category_states[c] === answers.domicile || c === answers.category);
+  const forQuota = route.quota_categories?.[answers.quota];
+  const categories = route.categories.filter((c) => (!route.category_states?.[c] || route.category_states[c] === answers.domicile || c === answers.category) && (!forQuota || forQuota.includes(c)));
   const total = result ? Object.values(result.counts).reduce((a, c) => a + c, 0) : 0;
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -387,10 +408,11 @@ export default function ExamShortlistPage() {
               <select className="input mt-1" value={answers.category} onChange={(e) => set({ category: e.target.value })}>
                 <option value="">Choose</option>{categories.map((c) => <option key={c}>{c}</option>)}
               </select>
-            </label>
+            {CATEGORY_GUIDES[route.code] && <span className="mt-1 block text-xs text-ink-3">{CATEGORY_GUIDES[route.code]}</span>}
+              </label>
             {(route.quotas?.length ?? 0) > 1 && (
               <label className="block text-sm">Quota or section
-                <select className="input mt-1" value={answers.quota} onChange={(e) => set({ quota: e.target.value })}>
+                <select className="input mt-1" value={answers.quota} onChange={(e) => set({ quota: e.target.value, category: categoryFor(route, e.target.value, answers.category) })}>
                   {!route.compare_requires_group && <option value="">All</option>}
                   {route.quotas?.map((q) => <option key={q} value={q}>{q}{route.quota_requirements?.[q] ? ` (${route.quota_requirements[q]} only)` : ""}</option>)}
                 </select>
@@ -439,7 +461,7 @@ export default function ExamShortlistPage() {
                       className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${order === k ? "bg-brand-soft text-brand" : "text-ink-2 hover:text-ink"}`}>{ORDERS[k].label}</button>
                   ))}
                 </div>
-                <p className="mt-1.5 text-xs text-ink-3">{ORDERS[order].note}</p>
+                <p className="mt-1.5 text-xs text-ink-3">{order === "top" && route.standing_basis === "contest" ? "The most sought-after seats come first: few colleges here have an NIRF rank, so the order is how high each seat's closing figure was. This isn’t a quality score." : ORDERS[order].note}</p>
               </div>
               <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by round reached">
                 {["all", ...POSITION_ORDER.filter((p) => result.counts[p])].map((p) => (
@@ -450,7 +472,7 @@ export default function ExamShortlistPage() {
                 ))}
               </div>
               <PositionMix counts={result.counts} labels={result.positions} />
-              {route.history && <HistoryNote history={route.history} hasMerit={/^\d+$/.test((answers.merit ?? "").replace(/[,\s]/g, ""))} />}
+              {route.history && total > 0 && <HistoryNote history={route.history} hasMerit={/^\d+$/.test((answers.merit ?? "").replace(/[,\s]/g, ""))} />}
               <p className="mb-3 text-sm text-ink-3">
                 {result.beyond > 0 ? `Not shown: ${num(result.beyond)} ${result.beyond === 1 ? "seat" : "seats"} in this list that didn’t reach your ${route.metric.unit}${route.rounds?.length ? " in any round" : ""}${route.metric.lower_is_better ? " or come within 20% of it" : ""}. ` : ""}
                 {result.hidden_female_only > 0 ? `Seats only female candidates may hold are hidden, because you chose ${answers.gender}. ` : ""}
@@ -461,7 +483,16 @@ export default function ExamShortlistPage() {
                 {shown.map((o, i) => <OptionCard key={`${o.institute}|${o.programme_code ?? o.programme}|${o.quota}`} option={o} route={route} figure={asked} labels={result.positions} index={i} />)}
               </div>
               {total === 0 && (
-                <Notice>Nothing in this list reached or came within reach of your {route.metric.unit} in {route.document.year}. Try another quota or course, or check your figure. This covers one year and one counselling authority, so other options may still exist.</Notice>
+                <Notice>
+                  No seat in {[answers.quota, answers.programme].filter(Boolean).join(", ") || "this list"} reached or came within 20% of your {route.metric.unit} in {route.document.year}.
+                  {result.elsewhere?.length ? " Your figure did reach seats in the lists below." : " Check your figure and category. Other counselling routes, such as your state’s, may still have seats."}
+                </Notice>
+              )}
+              {!!result.elsewhere?.length && (
+                <Elsewhere items={result.elsewhere} unit={route.metric.unit} year={route.document.year} onPick={(q, p) => {
+                  const next = { ...answers, quota: q, programme: route.programmes.includes(p) ? p : "", category: categoryFor(route, q, answers.category) };
+                  setAnswers(next); saveExamAnswers(route.code, next); reveal.current = true; run(route, next, order);
+                }} />
               )}
             </>
           )}

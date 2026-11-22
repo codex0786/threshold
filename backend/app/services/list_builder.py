@@ -57,15 +57,21 @@ def build(db: Session, profile: StudentProfile, order: str = "top", size: int = 
     notes = []
     if stop_reason == "safety_net_complete":
         notes.append(f"The list stops after {net} Safer options. Past cutoffs suggest choices below them would rarely be reached, so adding more mostly lengthens the list.")
+        if len(chosen) < size and all(i["band"] == "safer" for i in chosen):
+            notes.append(f"It's short because every option here was Safer for your rank: JoSAA would very likely give you one of the first choices, so put the ones you want most at the top.")
     if stop_reason == "size_reached":
         notes.append(f"The list reached the {size} choices you asked for before the safety net filled. Consider a longer list or fewer ambitious options.")
-    if safer_available < safety_net:
+    if chosen and safer_available < safety_net:
         notes.append(f"Only {safer_available} Safer option{'s' if safer_available != 1 else ''} matched your profile, so the safety net is thinner than the {safety_net} you asked for. Add acceptable branches, institute types or states to widen it.")
     if not chosen:
-        notes.append("No banded options matched your profile. Check your ranks and Class XII state on the shortlist.")
+        # An empty list shows its first note as the error, so the plainest explanation goes first.
+        notes.insert(0, "No JoSAA option has reached a rank like yours in recent years, so there's no list to build. Check your ranks and Class XII state. State counselling may still have seats.")
     skipped_limited = result["counts"].get("limited_history", 0)
     if skipped_limited:
         notes.append(f"{skipped_limited} option{'s' if skipped_limited != 1 else ''} with limited history {'were' if skipped_limited != 1 else 'was'} left out, because one year of cutoffs can't place them. Add them by hand if you want them.")
+    # An empty list shows its first note as the error, so the IIT notice goes first only when there is a list.
+    if chosen and (notice := rec.advanced_notice(profile)):
+        notes.insert(0, notice)
     notes.append("Move anything you'd prefer higher. Order by what you want most: JoSAA will give you the highest choice your rank reaches.")
     return {
         "items": items, "counts": counts, "order": order, "size": size, "safety_net": safety_net, "stop_reason": stop_reason,

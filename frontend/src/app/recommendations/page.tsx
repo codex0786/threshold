@@ -223,7 +223,9 @@ export default function RecommendationsPage() {
         </div>
       </PageHeader>
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
-      {result?.missing_ranks?.map((m) => <div key={m} className="mb-4"><Notice tone="warn">{m}</Notice></div>)}
+      {result?.missing_ranks?.map((m) => (
+        <div key={m} className="mb-4"><Notice tone="warn">{m}{m.startsWith("IITs and IISc") && <> <Link href="/onboarding" className="font-semibold underline">Add my JEE Advanced rank</Link></>}</Notice></div>
+      ))}
       {result && result.options.length === 0 && !loading && (
         <section className="card mb-6 p-5" aria-labelledby="no-options-title">
           <h2 id="no-options-title" className="text-xl">No JoSAA seat has closed near this rank recently</h2>

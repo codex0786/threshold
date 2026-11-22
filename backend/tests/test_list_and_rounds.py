@@ -109,3 +109,14 @@ def test_course_cost_is_a_minimum_when_the_fee_record_is_partial(client, seeded)
     partial = by_id[seeded["goa_cse"]]["course_cost"]
     assert partial["status"] == "at_least" and "hostel" in partial["missing"]
     assert partial["total_inr"] == partial["annual_inr"] * partial["years"] + partial["one_time_inr"]
+
+
+def test_iit_notice_asks_for_an_advanced_rank_only_when_it_may_exist():
+    from app.schemas import StudentProfile
+    from app.services.recommend import advanced_notice, missing_rank_notices
+    base = {"category": "GEN", "gender": "male", "eligibility_state": "Uttar Pradesh"}
+    assert advanced_notice(StudentProfile(**base, main={"crl": 50})) is not None
+    assert advanced_notice(StudentProfile(**base, main={"crl": 400_000})) is None
+    with_adv = StudentProfile(**base, main={"crl": 50}, advanced={"crl": 40}, advanced_qualified=True)
+    assert advanced_notice(with_adv) is None
+    assert missing_rank_notices(StudentProfile(**base, main={"crl": 50})) == [advanced_notice(StudentProfile(**base, main={"crl": 50}))]

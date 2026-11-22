@@ -88,7 +88,9 @@ def test_exam_routes_api_refuses_figures_outside_the_scale(client):
     assert client.get("/api/v1/exams/not-a-route").status_code == 404
 
 
-def test_top_order_puts_ranked_institutes_first_then_contested_seats():
+def test_top_order_puts_ranked_institutes_first_then_contested_seats(monkeypatch):
+    # A real route needs 10 ranked institutes for NIRF to count; this small one stands in for one.
+    monkeypatch.setattr("app.services.exam_routes.MIN_RANKED_INSTITUTES", 1)
     route = {"metric": {"lower_is_better": True}, "records": [
         {"institute": "Unranked", "programme": "MBBS", "group": "All India", "category": "Open", "value": 3000},
         {"institute": "Ranked", "programme": "MBBS", "group": "All India", "category": "Open", "value": 9000, "ranking": {"rank": 5}},

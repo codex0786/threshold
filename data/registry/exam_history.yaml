@@ -13,6 +13,11 @@ routes:
         round2: {title: "NEET-UG Counselling Seats Allotment 2026, Round 2 (final result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/09/20260912351980769.pdf"}
         round3: {title: "NEET-UG Counselling Seats Allotment 2026, Round 3 (final allotment result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610011801857474.pdf"}
         stray: {title: "NEET-UG Counselling Seats Allotment 2026, Stray Round (final allotment result)", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/10/202610201457709919.pdf"}
+        # Later 2026 rounds, shown on the page but not used for bands (no earlier year had them).
+        special-stray: {title: "Final Result for UG Counselling Special Stray Vacancy Round for MBBS and 5th round of BDS/B.Sc Nursing 2026", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/11/20261106180438958.pdf"}
+        round6: {title: "Final Allotment Result for UG Round 6, 2026", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/11/202611201307325403.pdf"}
+        # MCC's rules for each round come from its UG Information Bulletin 2026 (dated 01.08.2026).
+        bulletin: {title: "UG Information Bulletin 2026 dated 01.08.2026", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2026/08/20260801170630.pdf"}
       2025:
         round1: {title: "Final Result for Round-I of NEET UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/08/20250813289226788.pdf"}
         round2: {title: "Final Result for Round 2 of UG Counselling 2025", url: "https://cdnbbsr.s3waas.gov.in/s3e0f7a4d0ef9b84b83b693bbf3feb8e6e/uploads/2025/09/202509182057444522.pdf"}

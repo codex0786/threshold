@@ -382,6 +382,12 @@ export default function ExamShortlistPage() {
           ? <>Compared with {route.authority}’s figures from {route.history.years[0]} to {route.history.years.at(-1)}. Each seat shows a band from the last three years, as on JEE, and the {route.document.year} round in which it reached your {route.metric.unit}.</>
           : <>Compared with {route.authority}’s {route.document.year} figures, round by round. One year of figures can’t support admission bands, so each seat shows the round in which it reached your {route.metric.unit}.</>
         : <>Compared with {route.authority}’s {route.document.year} cut-offs. One year of figures can’t support admission bands, so each seat shows whether its cut-off reached your {route.metric.unit}.</>} />
+      {route.list_tools && (
+        <div className="mb-6 -mt-2 flex flex-wrap items-center gap-3">
+          <Link href={`/exams/${route.code}/list`} className="btn btn-primary">Build my choice list</Link>
+          <span className="text-sm text-ink-3">An order for choice filling, and what to do after each round’s allotment.</span>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">

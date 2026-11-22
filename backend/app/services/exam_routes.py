@@ -290,13 +290,13 @@ def seat_band(route: dict, row: dict, value: float, merit: int | None = None) ->
         return None
     closing = history["closing"].get(key, {})
     if figure is None:
-        return {"band": None, "explanation": "Add your state merit number to see a band for this seat.", "years": [], "closing": {y: closing[y] for y in sorted(closing)}, "needs": "merit"}
+        return {"band": None, "explanation": "Add your state merit number to see a band for this seat.", "years": [], "closing": {y: closing[y] for y in sorted(closing)}, "needs": "merit", "key": key}
     result = classify(int(figure), [CutoffPoint(int(year), number) for year, number in closing.items()], max(history["years"]))
     # These routes use the worst figure over the main rounds, not one final round as on JEE.
     explanation = result.explanation.replace("final-round ", "")
     if history.get("uses") == "second_value":
         explanation = explanation.replace("Your rank", "Your merit number").replace("closing rank", "closing merit number")
-    return {"band": result.band, "explanation": explanation, "years": list(result.years_used), "closing": {y: closing[y] for y in sorted(closing)}}
+    return {"band": result.band, "explanation": explanation, "years": list(result.years_used), "closing": {y: closing[y] for y in sorted(closing)}, "key": key}
 
 
 def _seat(route: dict, rows: list[dict], value: float, merit: int | None = None) -> dict | None:

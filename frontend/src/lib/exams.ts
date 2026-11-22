@@ -10,7 +10,7 @@ export type ExamRoute = {
   sources?: { title: string; url: string }[]; asks_gender?: boolean;
   group_requirements?: Record<string, string>; category_states?: Record<string, string>;
   rounds?: string[]; default_group?: string; default_programme?: string;
-  quota_categories?: Record<string, string[]>; standing_basis?: string | null;
+  quota_categories?: Record<string, string[]>; standing_basis?: string | null; list_tools?: boolean;
   history?: { years: number[]; basis: string; uses?: string | null; backtest: Record<string, Record<string, { seats: number; safer: number; competitive: number; ambitious: number }>> } | null;
   quotas?: string[]; quota_requirements?: Record<string, string>; ranked_institute_count?: number; fee_institute_count?: number;
 };

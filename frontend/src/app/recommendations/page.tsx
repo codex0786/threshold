@@ -208,7 +208,7 @@ export default function RecommendationsPage() {
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="text-4xl font-bold">Your shortlist starts with your rank</h1>
         <p className="mt-2 text-ink-2">Answer a few questions, and we’ll compare your rank with official past cutoffs.</p>
-        <Link href="/onboarding" className="btn btn-primary mt-5">Find my best fit</Link>
+        <Link href="/onboarding" className="btn btn-primary mt-5">Enter my JEE ranks</Link>
         <p className="mt-4 text-sm text-ink-3">Only have your JEE Main percentile? <Link href="/rank-estimator" className="underline">Estimate your rank first</Link>.</p>
       </div>
     );

@@ -89,7 +89,7 @@ export default function RoundsPage() {
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="text-3xl">Start with your list</h1>
         <p className="mt-2 text-ink-2">To help with a round, we need your ranks and the choice list you filled on JoSAA, in the same order.</p>
-        <Link href={profile ? "/preferences" : "/onboarding"} className="btn btn-primary mt-5">{profile ? "Open my preference list" : "Find my best fit"}</Link>
+        <Link href={profile ? "/preferences" : "/onboarding"} className="btn btn-primary mt-5">{profile ? "Open my preference list" : "Enter my JEE ranks"}</Link>
       </div>
     );
   }

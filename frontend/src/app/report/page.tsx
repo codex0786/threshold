@@ -29,7 +29,7 @@ export default function ReportPage() {
   }, []);
 
   if (profile === undefined) return <div className="mx-auto max-w-3xl px-4 py-10"><Skeleton /></div>;
-  if (profile === null || empty) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><h1 className="text-3xl">Nothing to report yet</h1><p className="mt-2 text-ink-2">The report covers the choices in your preference list.</p><Link href={profile ? "/recommendations" : "/onboarding"} className="btn btn-primary mt-5">{profile ? "Go to my shortlist" : "Find my best fit"}</Link></div>;
+  if (profile === null || empty) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><h1 className="text-3xl">Nothing to report yet</h1><p className="mt-2 text-ink-2">The report covers the choices in your preference list.</p><Link href={profile ? "/recommendations" : "/onboarding"} className="btn btn-primary mt-5">{profile ? "Go to my shortlist" : "Enter my JEE ranks"}</Link></div>;
   if (error) return <div className="mx-auto max-w-3xl px-4 py-10"><Notice tone="error">{error}</Notice></div>;
   if (!report) return <div className="mx-auto max-w-3xl px-4 py-10"><Skeleton /></div>;
 

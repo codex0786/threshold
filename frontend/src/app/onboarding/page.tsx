@@ -149,7 +149,7 @@ export default function Onboarding() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <PageHeader title="Find your best-fit options" intro="We don’t ask for your name or contact details. Your answers are saved on this device, so you can come back later." />
+      <PageHeader title="Your JEE shortlist" intro="Enter your JEE Main and Advanced ranks to see JoSAA seats (IITs, NITs, IIITs, GFTIs). We don’t ask for your name or contact details; your answers stay on this device." />
       <ol className="mb-6 flex gap-1.5" aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}>
         {STEPS.map((s, i) => <li key={s} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-brand" : "bg-surface-2"}`} />)}
       </ol>
